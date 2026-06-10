@@ -1,0 +1,155 @@
+import type { Checklist, Monitoria } from "./types"
+import { media, resumoQuartis } from "./analytics"
+
+export type Periodicidade = "diario" | "semanal" | "mensal"
+
+function chaveSemana(iso: string) {
+  const d = new Date(iso + "T00:00:00")
+  const onejan = new Date(d.getFullYear(), 0, 1)
+  const dias = Math.floor((d.getTime() - onejan.getTime()) / 86400000)
+  const semana = Math.ceil((dias + onejan.getDay() + 1) / 7)
+  return `${d.getFullYear()}-S${String(semana).padStart(2, "0")}`
+}
+
+function chaveMes(iso: string) {
+  return iso.slice(0, 7) // YYYY-MM
+}
+
+const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
+
+export function rotuloPeriodo(chave: string, p: Periodicidade) {
+  if (p === "mensal") {
+    const [, m] = chave.split("-")
+    return MESES[Number(m) - 1] ?? chave
+  }
+  if (p === "semanal") return chave.split("-")[1] ?? chave
+  // diario YYYY-MM-DD
+  const [, m, d] = chave.split("-")
+  return `${d}/${m}`
+}
+
+export function serieTemporal(monitorias: Monitoria[], p: Periodicidade) {
+  const grupos = new Map<string, number[]>()
+  for (const m of monitorias) {
+    const chave =
+      p === "mensal" ? chaveMes(m.data) : p === "semanal" ? chaveSemana(m.data) : m.data
+    if (!grupos.has(chave)) grupos.set(chave, [])
+    grupos.get(chave)!.push(m.nota)
+  }
+  return Array.from(grupos.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([chave, notas]) => ({
+      chave,
+      rotulo: rotuloPeriodo(chave, p),
+      nota: Math.round(media(notas) * 10) / 10,
+      volume: notas.length,
+    }))
+}
+
+export function porCarteira(monitorias: Monitoria[]) {
+  const grupos = new Map<string, number[]>()
+  for (const m of monitorias) {
+    if (!grupos.has(m.carteira)) grupos.set(m.carteira, [])
+    grupos.get(m.carteira)!.push(m.nota)
+  }
+  return Array.from(grupos.entries())
+    .map(([carteira, notas]) => ({
+      carteira,
+      nota: Math.round(media(notas) * 10) / 10,
+      volume: notas.length,
+    }))
+    .sort((a, b) => b.nota - a.nota)
+}
+
+export function porOperador(monitorias: Monitoria[]) {
+  const grupos = new Map<string, number[]>()
+  for (const m of monitorias) {
+    if (!grupos.has(m.operadorNome)) grupos.set(m.operadorNome, [])
+    grupos.get(m.operadorNome)!.push(m.nota)
+  }
+  return Array.from(grupos.entries())
+    .map(([operador, notas]) => ({
+      operador,
+      nota: Math.round(media(notas) * 10) / 10,
+      volume: notas.length,
+      quartis: resumoQuartis(notas),
+    }))
+    .sort((a, b) => b.nota - a.nota)
+}
+
+export function porTabulacao(monitorias: Monitoria[]) {
+  const grupos = new Map<string, number>()
+  for (const m of monitorias) {
+    grupos.set(m.tabulacao, (grupos.get(m.tabulacao) ?? 0) + 1)
+  }
+  return Array.from(grupos.entries())
+    .map(([tabulacao, qtd]) => ({ tabulacao, qtd }))
+    .sort((a, b) => b.qtd - a.qtd)
+}
+
+export function distribuicaoFaixas(monitorias: Monitoria[]) {
+  const faixas = [
+    { faixa: "Crítico (<60)", min: 0, max: 59.9999, qtd: 0 },
+    { faixa: "Regular (60-74)", min: 60, max: 74.9999, qtd: 0 },
+    { faixa: "Bom (75-89)", min: 75, max: 89.9999, qtd: 0 },
+    { faixa: "Excelente (90+)", min: 90, max: 100, qtd: 0 },
+  ]
+  for (const m of monitorias) {
+    const f = faixas.find((x) => m.nota >= x.min && m.nota <= x.max)
+    if (f) f.qtd++
+  }
+  return faixas
+}
+
+/** Pareto dos itens mais reprovados (inconformes) */
+export function paretoItens(monitorias: Monitoria[], checklists: Checklist[]) {
+  const mapa = new Map<string, { texto: string; qtd: number }>()
+  const itemTexto = (id: string) => {
+    for (const c of checklists) {
+      const it = c.itens.find((i) => i.id === id)
+      if (it) return it.texto
+    }
+    return id
+  }
+  for (const m of monitorias) {
+    for (const ap of m.apontamentos) {
+      if (ap.status !== "inconforme") continue
+      const texto = itemTexto(ap.itemId)
+      const atual = mapa.get(texto) ?? { texto, qtd: 0 }
+      atual.qtd++
+      mapa.set(texto, atual)
+    }
+  }
+  const ordenado = Array.from(mapa.values()).sort((a, b) => b.qtd - a.qtd).slice(0, 8)
+  const total = ordenado.reduce((s, x) => s + x.qtd, 0)
+  let acum = 0
+  return ordenado.map((x) => {
+    acum += x.qtd
+    return {
+      item: x.texto.length > 28 ? x.texto.slice(0, 28) + "…" : x.texto,
+      itemCompleto: x.texto,
+      qtd: x.qtd,
+      acumulado: total ? Math.round((acum / total) * 1000) / 10 : 0,
+    }
+  })
+}
+
+export function kpis(monitorias: Monitoria[]) {
+  const notas = monitorias.map((m) => m.nota)
+  const q = resumoQuartis(notas)
+  const totalInconf = monitorias.reduce(
+    (s, m) => s + m.apontamentos.filter((a) => a.status === "inconforme").length,
+    0,
+  )
+  return {
+    total: monitorias.length,
+    notaMedia: Math.round(media(notas) * 10) / 10,
+    mediana: Math.round(q.mediana * 10) / 10,
+    aprovacao: notas.length
+      ? Math.round((notas.filter((n) => n >= 75).length / notas.length) * 1000) / 10
+      : 0,
+    criticos: notas.filter((n) => n < 60).length,
+    totalInconf,
+    quartis: q,
+  }
+}
