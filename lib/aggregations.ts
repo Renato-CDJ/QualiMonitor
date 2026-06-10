@@ -101,6 +101,41 @@ export function distribuicaoFaixas(monitorias: Monitoria[]) {
   return faixas
 }
 
+/** Histograma de notas em faixas de 10 pontos (0-9, 10-19, ... 90-100) */
+export function histogramaNotas(monitorias: Monitoria[]) {
+  const buckets = Array.from({ length: 10 }, (_, i) => ({
+    faixa: i === 9 ? "90-100" : `${i * 10}-${i * 10 + 9}`,
+    min: i * 10,
+    max: i === 9 ? 100 : i * 10 + 9.9999,
+    qtd: 0,
+  }))
+  for (const m of monitorias) {
+    const b = buckets.find((x) => m.nota >= x.min && m.nota <= x.max)
+    if (b) b.qtd++
+  }
+  return buckets
+}
+
+/** Resumo estatístico por carteira (quartis + média) para boxplots */
+export function quartisPorCarteira(monitorias: Monitoria[]) {
+  const grupos = new Map<string, number[]>()
+  for (const m of monitorias) {
+    if (!grupos.has(m.carteira)) grupos.set(m.carteira, [])
+    grupos.get(m.carteira)!.push(m.nota)
+  }
+  return Array.from(grupos.entries())
+    .map(([carteira, notas]) => {
+      const q = resumoQuartis(notas)
+      return {
+        carteira,
+        volume: notas.length,
+        media: Math.round(media(notas) * 10) / 10,
+        ...q,
+      }
+    })
+    .sort((a, b) => b.mediana - a.mediana)
+}
+
 /** Pareto dos itens mais reprovados (inconformes) */
 export function paretoItens(monitorias: Monitoria[], checklists: Checklist[]) {
   const mapa = new Map<string, { texto: string; qtd: number }>()

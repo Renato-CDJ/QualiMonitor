@@ -10,7 +10,6 @@ import {
   RotateCcw,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -20,14 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import {
   Dialog,
   DialogContent,
@@ -41,14 +32,12 @@ import { store } from "@/lib/store"
 import {
   serieTemporal,
   porCarteira,
-  porOperador,
   porTabulacao,
   distribuicaoFaixas,
   paretoItens,
   kpis,
   type Periodicidade,
 } from "@/lib/aggregations"
-import { notaBadgeClass, faixaNota, formatarData } from "@/lib/analytics"
 import {
   TendenciaChart,
   VolumeNotaChart,
@@ -56,7 +45,6 @@ import {
   TabulacaoPieChart,
   CarteiraBarChart,
   ParetoChart,
-  QuartilChart,
 } from "@/components/dashboard-charts"
 import { cn } from "@/lib/utils"
 
@@ -118,15 +106,9 @@ export function Dashboard() {
   const k = useMemo(() => kpis(filtradas), [filtradas])
   const serie = useMemo(() => serieTemporal(filtradas, periodo), [filtradas, periodo])
   const carteiraData = useMemo(() => porCarteira(filtradas), [filtradas])
-  const operadorData = useMemo(() => porOperador(filtradas), [filtradas])
   const tabData = useMemo(() => porTabulacao(filtradas), [filtradas])
   const faixaData = useMemo(() => distribuicaoFaixas(filtradas), [filtradas])
   const pareto = useMemo(() => paretoItens(filtradas, checklists), [filtradas, checklists])
-
-  const recentes = useMemo(
-    () => [...filtradas].sort((a, b) => b.criadoEm.localeCompare(a.criadoEm)).slice(0, 12),
-    [filtradas],
-  )
 
   if (!ready) {
     return <div className="p-6 text-sm text-muted-foreground">Carregando...</div>
@@ -274,121 +256,22 @@ export function Dashboard() {
         </Card>
       </div>
 
-      {/* Pareto + Quartil */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Pareto de Inconformidades</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Itens mais reprovados e % acumulado
-            </p>
-          </CardHeader>
-          <CardContent>
-            {pareto.length ? (
-              <ParetoChart data={pareto} />
-            ) : (
-              <p className="py-16 text-center text-sm text-muted-foreground">
-                Sem inconformidades no período.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Visão de Quartil das Notas</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Intervalo interquartil (Q1–Q3) por operador · linha = meta 75
-            </p>
-          </CardHeader>
-          <CardContent>
-            <QuartilChart monitorias={filtradas} />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Ranking de operadores */}
+      {/* Pareto */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Ranking de Operadores</CardTitle>
+          <CardTitle className="text-base">Pareto de Inconformidades</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Itens mais reprovados e % acumulado
+          </p>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Operador</TableHead>
-                <TableHead className="text-right">Monitorias</TableHead>
-                <TableHead className="text-right">Nota média</TableHead>
-                <TableHead className="text-right">Mín</TableHead>
-                <TableHead className="text-right">Mediana</TableHead>
-                <TableHead className="text-right">Máx</TableHead>
-                <TableHead className="text-right">Faixa</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {operadorData.slice(0, 10).map((o) => (
-                <TableRow key={o.operador}>
-                  <TableCell className="font-medium">{o.operador}</TableCell>
-                  <TableCell className="text-right tabular-nums">{o.volume}</TableCell>
-                  <TableCell className="text-right tabular-nums font-medium">{o.nota}</TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
-                    {o.quartis.min.toFixed(0)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
-                    {o.quartis.mediana.toFixed(0)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
-                    {o.quartis.max.toFixed(0)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Badge variant="outline" className={notaBadgeClass(o.nota)}>
-                      {faixaNota(o.nota)}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Monitorias recentes */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Monitorias Recentes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data</TableHead>
-                <TableHead>Operador</TableHead>
-                <TableHead>Carteira</TableHead>
-                <TableHead>Tabulação</TableHead>
-                <TableHead>EC/Call ID</TableHead>
-                <TableHead>Monitor</TableHead>
-                <TableHead className="text-right">Nota</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentes.map((m) => (
-                <TableRow key={m.id}>
-                  <TableCell className="tabular-nums">{formatarData(m.data)}</TableCell>
-                  <TableCell className="font-medium">{m.operadorNome}</TableCell>
-                  <TableCell className="text-muted-foreground">{m.carteira}</TableCell>
-                  <TableCell className="text-muted-foreground">{m.tabulacao}</TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {m.ecCallId}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{m.monitor}</TableCell>
-                  <TableCell className="text-right">
-                    <Badge variant="outline" className={notaBadgeClass(m.nota)}>
-                      {m.nota}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {pareto.length ? (
+            <ParetoChart data={pareto} />
+          ) : (
+            <p className="py-16 text-center text-sm text-muted-foreground">
+              Sem inconformidades no período.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
