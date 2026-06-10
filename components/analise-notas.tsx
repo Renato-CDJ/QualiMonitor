@@ -194,6 +194,10 @@ export function AnaliseNotas() {
               Linha: mediana
             </span>
             <span className="flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-2.5 rounded-full border border-foreground bg-background" />
+              Ponto: média
+            </span>
+            <span className="flex items-center gap-1.5">
               <span className="inline-block h-0.5 w-4 border-t-2 border-dashed border-chart-3" />
               Meta 75
             </span>

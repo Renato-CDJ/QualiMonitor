@@ -269,6 +269,7 @@ export function QuartilCarteiraChart({
 }) {
   const linha = data.map((d) => ({
     operador: d.carteira,
+    media: d.media,
     base: d.min,
     span: d.max - d.min,
     ...d,
@@ -282,29 +283,7 @@ export function QuartilCarteiraChart({
         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
         <XAxis dataKey="carteira" tickLine={false} axisLine={false} fontSize={11} interval={0} />
         <YAxis domain={[0, 100]} tickLine={false} axisLine={false} fontSize={12} width={36} />
-        <ChartTooltip
-          cursor={{ fill: "var(--muted)", fillOpacity: 0.3 }}
-          content={
-            <ChartTooltipContent
-              hideIndicator
-              formatter={(value, name, item) => {
-                const p = item?.payload
-                if (!p) return null
-                return (
-                  <div className="flex flex-col gap-0.5 text-xs">
-                    <span className="font-medium text-foreground">{p.carteira}</span>
-                    <span>Média: {p.media.toFixed(1)}</span>
-                    <span>Máx: {p.max.toFixed(0)}</span>
-                    <span>Q3: {p.q3.toFixed(0)}</span>
-                    <span>Mediana: {p.mediana.toFixed(0)}</span>
-                    <span>Q1: {p.q1.toFixed(0)}</span>
-                    <span>Mín: {p.min.toFixed(0)}</span>
-                  </div>
-                )
-              }}
-            />
-          }
-        />
+        <ChartTooltip cursor={{ fill: "var(--muted)", fillOpacity: 0.3 }} content={<BoxplotTooltip />} />
         <Bar dataKey="base" stackId="q" fill="transparent" isAnimationActive={false} />
         <Bar dataKey="span" stackId="q" shape={<BoxplotShape />} isAnimationActive={false} />
         <ReferenceLine y={75} stroke="var(--chart-3)" strokeDasharray="4 4" />
@@ -314,34 +293,38 @@ export function QuartilCarteiraChart({
 }
 
 /* ---------- Boxplot por operador ----------
-   Desenha um boxplot real: haste mín–máx, caixa interquartil (Q1–Q3)
-   e linha de mediana. A cor reflete o nível da mediana. */
+   Desenha um boxplot real: haste mín–máx, caixa interquartil (Q1–Q3),
+   linha de mediana e ponto de média. A cor reflete o nível da mediana. */
+function corPorMediana(mediana: number) {
+  return mediana >= 75
+    ? "var(--chart-5)"
+    : mediana >= 60
+      ? "var(--chart-3)"
+      : "var(--destructive)"
+}
+
 function BoxplotShape(props: any) {
   const { x, y, width, height, payload } = props
   if (!payload) return null
-  const { min, q1, mediana, q3, max } = payload
+  const { min, q1, mediana, q3, max, media } = payload
   const range = max - min || 1
   // y/height representam a faixa [min, max] (barra base+span)
   const px = (v: number) => y + (height * (max - v)) / range
   const cx = x + width / 2
-  const boxW = Math.min(width * 0.55, 40)
-  const capW = boxW * 0.5
+  const boxW = Math.min(width * 0.7, 46)
+  const capW = boxW * 0.55
   const boxX = cx - boxW / 2
   const yMin = px(min)
   const yMax = px(max)
   const yQ1 = px(q1)
   const yQ3 = px(q3)
   const yMed = px(mediana)
-  const cor =
-    mediana >= 75
-      ? "var(--chart-5)"
-      : mediana >= 60
-        ? "var(--chart-3)"
-        : "var(--destructive)"
+  const yMedia = px(media)
+  const cor = corPorMediana(mediana)
   return (
     <g>
       {/* haste vertical mín–máx */}
-      <line x1={cx} x2={cx} y1={yMax} y2={yMin} stroke={cor} strokeWidth={1.5} />
+      <line x1={cx} x2={cx} y1={yMax} y2={yMin} stroke={cor} strokeWidth={1.5} strokeOpacity={0.7} />
       {/* tampas mín e máx */}
       <line x1={cx - capW / 2} x2={cx + capW / 2} y1={yMax} y2={yMax} stroke={cor} strokeWidth={1.5} />
       <line x1={cx - capW / 2} x2={cx + capW / 2} y1={yMin} y2={yMin} stroke={cor} strokeWidth={1.5} />
@@ -350,16 +333,56 @@ function BoxplotShape(props: any) {
         x={boxX}
         y={yQ3}
         width={boxW}
-        height={Math.max(yQ1 - yQ3, 1)}
+        height={Math.max(yQ1 - yQ3, 2)}
         fill={cor}
-        fillOpacity={0.2}
+        fillOpacity={0.35}
         stroke={cor}
         strokeWidth={1.5}
-        rx={2}
+        rx={3}
       />
       {/* linha de mediana */}
-      <line x1={boxX} x2={boxX + boxW} y1={yMed} y2={yMed} stroke={cor} strokeWidth={2.5} />
+      <line x1={boxX} x2={boxX + boxW} y1={yMed} y2={yMed} stroke={cor} strokeWidth={3} />
+      {/* ponto de média */}
+      <circle cx={cx} cy={yMedia} r={3} fill="var(--background)" stroke={cor} strokeWidth={1.5} />
     </g>
+  )
+}
+
+/* Tooltip único para o boxplot (evita entrada duplicada das 2 barras) */
+function BoxplotTooltip({ active, payload }: any) {
+  if (!active || !payload?.length) return null
+  const p = payload[0]?.payload
+  if (!p) return null
+  const cor = corPorMediana(p.mediana)
+  const linhas = [
+    ["Máx", p.max],
+    ["Q3", p.q3],
+    ["Mediana", p.mediana],
+    ["Q1", p.q1],
+    ["Mín", p.min],
+  ] as const
+  return (
+    <div className="rounded-lg border border-border bg-popover px-3 py-2 text-xs shadow-md">
+      <div className="mb-1.5 flex items-center gap-1.5 font-medium text-popover-foreground">
+        <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: cor }} />
+        {p.operadorNome ?? p.carteira}
+        {p.volume != null && (
+          <span className="font-normal text-muted-foreground">· {p.volume} mon.</span>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 tabular-nums text-muted-foreground">
+        {linhas.map(([rotulo, valor]) => (
+          <div key={rotulo} className="flex justify-between gap-3">
+            <span>{rotulo}</span>
+            <span className="font-medium text-popover-foreground">{Number(valor).toFixed(0)}</span>
+          </div>
+        ))}
+        <div className="col-span-2 mt-1 flex justify-between gap-3 border-t border-border pt-1">
+          <span>Média</span>
+          <span className="font-medium text-popover-foreground">{Number(p.media).toFixed(1)}</span>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -382,8 +405,12 @@ export function QuartilChart({
     .filter(([, n]) => n.length >= 2)
     .map(([operador, notas]) => {
       const q = resumoQuartis(notas)
+      const med = notas.reduce((a, b) => a + b, 0) / notas.length
       return {
         operador: operador.split(" ")[0],
+        operadorNome: operador,
+        volume: notas.length,
+        media: med,
         base: q.min, // base invisível até o mínimo
         span: q.max - q.min, // a barra cobre toda a faixa mín–máx
         min: q.min,
@@ -402,32 +429,11 @@ export function QuartilChart({
 
   return (
     <ChartContainer config={config} className="w-full" style={{ height: altura }}>
-      <BarChart data={data} margin={{ left: -16, right: 8, top: 8, bottom: 8 }} barCategoryGap="20%">
+      <BarChart data={data} margin={{ left: -16, right: 8, top: 8, bottom: 8 }} barCategoryGap="22%">
         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
         <XAxis dataKey="operador" tickLine={false} axisLine={false} fontSize={11} interval={0} angle={-30} textAnchor="end" height={50} />
         <YAxis domain={[0, 100]} tickLine={false} axisLine={false} fontSize={12} width={36} />
-        <ChartTooltip
-          cursor={{ fill: "var(--muted)", fillOpacity: 0.3 }}
-          content={
-            <ChartTooltipContent
-              hideIndicator
-              formatter={(value, name, item) => {
-                const p = item?.payload
-                if (!p) return null
-                return (
-                  <div className="flex flex-col gap-0.5 text-xs">
-                    <span className="font-medium text-foreground">{p.operador}</span>
-                    <span>Máx: {p.max.toFixed(0)}</span>
-                    <span>Q3: {p.q3.toFixed(0)}</span>
-                    <span>Mediana: {p.mediana.toFixed(0)}</span>
-                    <span>Q1: {p.q1.toFixed(0)}</span>
-                    <span>Mín: {p.min.toFixed(0)}</span>
-                  </div>
-                )
-              }}
-            />
-          }
-        />
+        <ChartTooltip cursor={{ fill: "var(--muted)", fillOpacity: 0.3 }} content={<BoxplotTooltip />} />
         {/* base transparente + span desenhado como boxplot */}
         <Bar dataKey="base" stackId="q" fill="transparent" isAnimationActive={false} />
         <Bar dataKey="span" stackId="q" shape={<BoxplotShape />} isAnimationActive={false} />
