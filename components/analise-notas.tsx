@@ -173,12 +173,37 @@ export function AnaliseNotas() {
             Visão de Quartil das Notas por Operador
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Caixa = intervalo interquartil (Q1–Q3) · linha tracejada = meta 75. Quanto
-            menor a caixa, mais consistente é o operador.
+            Cada operador é representado por um boxplot. Quanto menor a caixa, mais
+            consistentes são as notas; quanto mais alta, melhor o desempenho.
           </p>
         </CardHeader>
         <CardContent>
           <QuartilChart monitorias={filtradas} maxOperadores={15} altura={420} />
+          {/* Legenda explicativa do boxplot */}
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-4 w-0.5 bg-foreground/60" />
+              Haste: nota mínima e máxima
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-3 w-4 rounded-sm border border-foreground/60 bg-foreground/15" />
+              Caixa: 50% central das notas (Q1–Q3)
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-0.5 w-4 bg-foreground" />
+              Linha: mediana
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-0.5 w-4 border-t-2 border-dashed border-chart-3" />
+              Meta 75
+            </span>
+            <span className="flex items-center gap-1.5">
+              Cores:
+              <span className="text-chart-5">verde ≥ 75</span> ·
+              <span className="text-chart-3">amarelo 60–74</span> ·
+              <span className="text-destructive">vermelho &lt; 60</span>
+            </span>
+          </div>
         </CardContent>
       </Card>
 
