@@ -372,7 +372,12 @@ export function Dashboard() {
             <TableBody>
               {recentes.map((m) => (
                 <TableRow key={m.id}>
-                  <TableCell className="tabular-nums">{formatarData(m.data)}</TableCell>
+                  <TableCell className="tabular-nums">
+                    {formatarData(m.data)}
+                    {m.horario && (
+                      <span className="ml-1 text-xs text-muted-foreground">{m.horario}</span>
+                    )}
+                  </TableCell>
                   <TableCell className="font-medium">{m.operadorNome}</TableCell>
                   <TableCell className="text-muted-foreground">{m.carteira}</TableCell>
                   <TableCell className="text-muted-foreground">{m.tabulacao}</TableCell>

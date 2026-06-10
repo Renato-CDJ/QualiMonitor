@@ -233,8 +233,93 @@ export function ParetoChart({
   )
 }
 
+/* ---------- Histograma de notas ---------- */
+export function HistogramaChart({
+  data,
+}: {
+  data: { faixa: string; qtd: number; min: number }[]
+}) {
+  const config = {
+    qtd: { label: "Monitorias", color: "var(--chart-1)" },
+  } satisfies ChartConfig
+  const cor = (min: number) =>
+    min < 60 ? "var(--destructive)" : min < 75 ? "var(--chart-3)" : "var(--chart-5)"
+  return (
+    <ChartContainer config={config} className="h-[300px] w-full">
+      <BarChart data={data} margin={{ left: -16, right: 8, top: 8 }}>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis dataKey="faixa" tickLine={false} axisLine={false} fontSize={11} interval={0} angle={-30} textAnchor="end" height={50} />
+        <YAxis tickLine={false} axisLine={false} fontSize={12} width={32} allowDecimals={false} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="qtd" radius={[4, 4, 0, 0]}>
+          {data.map((d, i) => (
+            <Cell key={i} fill={cor(d.min)} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+/* ---------- Quartil por carteira ---------- */
+export function QuartilCarteiraChart({
+  data,
+}: {
+  data: { carteira: string; min: number; q1: number; mediana: number; q3: number; max: number; media: number }[]
+}) {
+  const linha = data.map((d) => ({
+    carteira: d.carteira,
+    base: d.q1,
+    caixa: d.q3 - d.q1,
+    ...d,
+  }))
+  const config = {
+    caixa: { label: "Intervalo Q1–Q3", color: "var(--chart-2)" },
+  } satisfies ChartConfig
+  return (
+    <ChartContainer config={config} className="h-[300px] w-full">
+      <BarChart data={linha} margin={{ left: -16, right: 8, top: 8, bottom: 8 }}>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis dataKey="carteira" tickLine={false} axisLine={false} fontSize={11} interval={0} />
+        <YAxis domain={[0, 100]} tickLine={false} axisLine={false} fontSize={12} width={36} />
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              formatter={(value, name, item) => {
+                const p = item?.payload
+                if (!p) return null
+                return (
+                  <div className="flex flex-col gap-0.5 text-xs">
+                    <span>Média: {p.media.toFixed(1)}</span>
+                    <span>Mín: {p.min.toFixed(0)}</span>
+                    <span>Q1: {p.q1.toFixed(0)}</span>
+                    <span>Mediana: {p.mediana.toFixed(0)}</span>
+                    <span>Q3: {p.q3.toFixed(0)}</span>
+                    <span>Máx: {p.max.toFixed(0)}</span>
+                  </div>
+                )
+              }}
+            />
+          }
+        />
+        <Bar dataKey="base" stackId="q" fill="transparent" />
+        <Bar dataKey="caixa" stackId="q" fill="var(--color-caixa)" radius={2} fillOpacity={0.5} />
+        <ReferenceLine y={75} stroke="var(--chart-3)" strokeDasharray="4 4" />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
 /* ---------- Quartil (boxplot simplificado por operador) ---------- */
-export function QuartilChart({ monitorias }: { monitorias: Monitoria[] }) {
+export function QuartilChart({
+  monitorias,
+  maxOperadores = 8,
+  altura = 300,
+}: {
+  monitorias: Monitoria[]
+  maxOperadores?: number
+  altura?: number
+}) {
   // top operadores por volume
   const grupos = new Map<string, number[]>()
   for (const m of monitorias) {
@@ -258,14 +343,14 @@ export function QuartilChart({ monitorias }: { monitorias: Monitoria[] }) {
       }
     })
     .sort((a, b) => b.mediana - a.mediana)
-    .slice(0, 8)
+    .slice(0, maxOperadores)
 
   const config = {
     caixa: { label: "Intervalo Q1–Q3", color: "var(--chart-1)" },
   } satisfies ChartConfig
 
   return (
-    <ChartContainer config={config} className="h-[300px] w-full">
+    <ChartContainer config={config} className="w-full" style={{ height: altura }}>
       <BarChart data={data} margin={{ left: -16, right: 8, top: 8, bottom: 8 }}>
         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
         <XAxis dataKey="operador" tickLine={false} axisLine={false} fontSize={11} interval={0} />

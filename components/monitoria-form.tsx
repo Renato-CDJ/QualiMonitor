@@ -30,12 +30,14 @@ import { notaColorClass, faixaNota } from "@/lib/analytics"
 import { cn } from "@/lib/utils"
 
 const HOJE = new Date().toISOString().slice(0, 10)
+const AGORA = new Date().toTimeString().slice(0, 5)
 
 export function MonitoriaForm() {
   const { checklists, operadores, ready } = useQualityData()
 
   const [carteira, setCarteira] = useState<string>("")
   const [data, setData] = useState<string>(HOJE)
+  const [horario, setHorario] = useState<string>(AGORA)
   const [ecCallId, setEcCallId] = useState("")
   const [operadorId, setOperadorId] = useState<string | null>(null)
   const [tabulacao, setTabulacao] = useState<string>("")
@@ -97,6 +99,7 @@ export function MonitoriaForm() {
   function limparTudo() {
     setCarteira("")
     setData(HOJE)
+    setHorario(AGORA)
     setEcCallId("")
     setOperadorId(null)
     setTabulacao("")
@@ -116,6 +119,7 @@ export function MonitoriaForm() {
       carteira,
       checklistId: checklist.id,
       data,
+      horario,
       ecCallId: ecCallId.trim(),
       operadorId,
       operadorNome: operador.nome,
@@ -167,13 +171,24 @@ export function MonitoriaForm() {
               </Select>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <Label>Data da monitoria</Label>
-              <Input
-                type="date"
-                value={data}
-                onChange={(e) => setData(e.target.value)}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label>Data da monitoria</Label>
+                <Input
+                  type="date"
+                  value={data}
+                  onChange={(e) => setData(e.target.value)}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label>Horário da ligação</Label>
+                <Input
+                  type="time"
+                  value={horario}
+                  onChange={(e) => setHorario(e.target.value)}
+                />
+              </div>
             </div>
 
             <div className="flex flex-col gap-1.5">

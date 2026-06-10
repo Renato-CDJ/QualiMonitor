@@ -35,6 +35,7 @@ export interface Monitoria {
   carteira: string
   checklistId: string
   data: string // ISO date da monitoria
+  horario?: string // HH:MM horário da ligação
   ecCallId: string
   operadorId: string
   operadorNome: string
