@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ClipboardCheck, LayoutDashboard, ListChecks, BarChart3, GanttChartSquare, Users } from "lucide-react"
+import { ClipboardCheck, LayoutDashboard, ListChecks, BarChart3, GanttChartSquare, Users, MessageSquareReply } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const NAV = [
@@ -11,6 +11,7 @@ const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/analise-notas", label: "Análise de Notas", icon: GanttChartSquare },
   { href: "/operadores", label: "Operadores", icon: Users },
+  { href: "/feedback", label: "Feedback", icon: MessageSquareReply },
 ]
 
 export function TopNav() {

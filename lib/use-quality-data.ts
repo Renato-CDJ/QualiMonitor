@@ -2,18 +2,20 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { ensureSeed, store } from "./store"
-import type { Checklist, Monitoria, Operador } from "./types"
+import type { Checklist, Monitoria, Operador, FeedbackInvertido } from "./types"
 
 export function useQualityData() {
   const [checklists, setChecklistsState] = useState<Checklist[]>([])
   const [operadores, setOperadoresState] = useState<Operador[]>([])
   const [monitorias, setMonitoriasState] = useState<Monitoria[]>([])
+  const [feedbacks, setFeedbacksState] = useState<FeedbackInvertido[]>([])
   const [ready, setReady] = useState(false)
 
   const refresh = useCallback(() => {
     setChecklistsState(store.getChecklists())
     setOperadoresState(store.getOperadores())
     setMonitoriasState(store.getMonitorias())
+    setFeedbacksState(store.getFeedbacks())
   }, [])
 
   useEffect(() => {
@@ -29,5 +31,5 @@ export function useQualityData() {
     }
   }, [refresh])
 
-  return { checklists, operadores, monitorias, ready, refresh, store }
+  return { checklists, operadores, monitorias, feedbacks, ready, refresh, store }
 }
