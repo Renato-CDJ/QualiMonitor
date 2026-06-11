@@ -9,10 +9,6 @@ import {
   XCircle,
   Save,
   RotateCcw,
-  ClipboardList,
-  ListChecks,
-  Gauge,
-  FileText,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -149,10 +145,7 @@ export function MonitoriaForm() {
       <div className="flex flex-col gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <ClipboardList className="size-4 text-primary" />
-              Dados da Monitoria
-            </CardTitle>
+            <CardTitle className="text-base">Dados da Monitoria</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
@@ -252,17 +245,14 @@ export function MonitoriaForm() {
         {checklistVisivel && checklist ? (
           <Card>
             <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
-              <div className="min-w-0">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <ListChecks className="size-4 text-primary" />
-                  <span className="truncate">{checklist.nome}</span>
-                </CardTitle>
+              <div>
+                <CardTitle className="text-base">{checklist.nome}</CardTitle>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Flegue os itens que o operador NÃO realizou. Itens não flegados
                   são considerados conformes.
                 </p>
               </div>
-              <Button variant="ghost" size="sm" onClick={resetItens} className="gap-1.5 shrink-0">
+              <Button variant="ghost" size="sm" onClick={resetItens} className="gap-1.5">
                 <RotateCcw className="size-3.5" /> Limpar itens
               </Button>
             </CardHeader>
@@ -273,23 +263,13 @@ export function MonitoriaForm() {
                   <div
                     key={it.id}
                     className={cn(
-                      "flex flex-col gap-3 rounded-xl border border-border bg-secondary/30 p-3 transition-colors sm:flex-row sm:items-center",
-                      status === "conforme" && "border-l-2 border-l-chart-5/60",
-                      status === "inconforme" && "border-destructive/40 bg-destructive/5 border-l-2 border-l-destructive",
-                      status === "na" && "border-border bg-muted/40 border-l-2 border-l-muted-foreground/40",
+                      "flex flex-col gap-3 rounded-lg border border-border bg-secondary/30 p-3 sm:flex-row sm:items-center",
+                      status === "inconforme" && "border-destructive/40 bg-destructive/5",
+                      status === "na" && "border-border bg-muted/40",
                     )}
                   >
                     <div className="flex min-w-0 flex-1 items-start gap-3">
-                      <span
-                        className={cn(
-                          "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-medium tabular-nums",
-                          status === "inconforme"
-                            ? "bg-destructive/15 text-destructive"
-                            : status === "na"
-                              ? "bg-muted text-muted-foreground"
-                              : "bg-chart-5/15 text-chart-5",
-                        )}
-                      >
+                      <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md bg-secondary text-xs text-muted-foreground">
                         {idx + 1}
                       </span>
                       <div className="min-w-0">
@@ -345,12 +325,9 @@ export function MonitoriaForm() {
           </Card>
         ) : (
           <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center gap-3 py-14 text-center">
-              <div className="flex size-12 items-center justify-center rounded-full bg-secondary/60 text-muted-foreground">
-                <ListChecks className="size-6" />
-              </div>
+            <CardContent className="flex flex-col items-center justify-center gap-2 py-12 text-center">
               <p className="text-sm font-medium">Checklist não carregado</p>
-              <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
+              <p className="max-w-sm text-xs text-muted-foreground">
                 Selecione a <span className="text-foreground">Carteira</span> e a{" "}
                 <span className="text-foreground">Tabulação</span> para carregar o
                 checklist de itens da monitoria.
@@ -364,49 +341,33 @@ export function MonitoriaForm() {
       <div className="lg:sticky lg:top-20 lg:self-start">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Gauge className="size-4 text-primary" />
-              Nota da Monitoria
-            </CardTitle>
+            <CardTitle className="text-base">Nota da Monitoria</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
-            <div className="flex flex-col items-center gap-2 rounded-xl border border-border bg-secondary/30 py-6">
+            <div className="flex flex-col items-center gap-1 rounded-lg border border-border bg-secondary/30 py-6">
               <span className={cn("text-5xl font-semibold tabular-nums", notaColorClass(nota))}>
                 {nota}
               </span>
               <span className="text-xs text-muted-foreground">de 100 pontos</span>
-              <div className="mt-1 h-1.5 w-32 overflow-hidden rounded-full bg-muted">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-all",
-                    nota >= 90 ? "bg-chart-5" : nota >= 70 ? "bg-chart-3" : "bg-destructive",
-                  )}
-                  style={{ width: `${Math.max(0, Math.min(100, nota))}%` }}
-                  aria-hidden
-                />
-              </div>
               <Badge variant="outline" className="mt-1">
                 {faixaNota(nota)}
               </Badge>
             </div>
 
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="flex flex-col items-center gap-1 rounded-lg border border-chart-5/20 bg-chart-5/5 p-2">
-                <CheckCircle2 className="size-4 text-chart-5" />
+              <div className="rounded-md border border-border bg-secondary/30 p-2">
                 <p className="text-lg font-semibold tabular-nums text-chart-5">
                   {totais.conforme}
                 </p>
                 <p className="text-[11px] text-muted-foreground">Conforme</p>
               </div>
-              <div className="flex flex-col items-center gap-1 rounded-lg border border-destructive/20 bg-destructive/5 p-2">
-                <XCircle className="size-4 text-destructive" />
+              <div className="rounded-md border border-border bg-secondary/30 p-2">
                 <p className="text-lg font-semibold tabular-nums text-destructive">
                   {totais.inconforme}
                 </p>
                 <p className="text-[11px] text-muted-foreground">Inconforme</p>
               </div>
-              <div className="flex flex-col items-center gap-1 rounded-lg border border-border bg-secondary/30 p-2">
-                <MinusCircle className="size-4 text-muted-foreground" />
+              <div className="rounded-md border border-border bg-secondary/30 p-2">
                 <p className="text-lg font-semibold tabular-nums text-muted-foreground">
                   {totais.na}
                 </p>
@@ -415,9 +376,7 @@ export function MonitoriaForm() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label className="flex items-center gap-1.5">
-                <FileText className="size-3.5 text-muted-foreground" /> Observações
-              </Label>
+              <Label>Observações</Label>
               <textarea
                 value={observacao}
                 onChange={(e) => setObservacao(e.target.value)}
