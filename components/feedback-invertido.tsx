@@ -564,18 +564,21 @@ function ListaConcluidos({
                     {f.concluidoEm ? ` · Concluído em ${formatarData(f.concluidoEm.slice(0, 10))}` : ""}
                   </p>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-center">
-                    <p className={cn("text-xl font-semibold tabular-nums", notaColorClass(f.notaMonitor))}>
-                      {f.notaMonitor}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">Monitor</p>
-                  </div>
-                  <div className="text-center">
-                    <p className={cn("text-xl font-semibold tabular-nums", notaColorClass(f.notaOperador ?? 0))}>
-                      {f.notaOperador ?? 0}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">Operador</p>
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="flex items-center gap-2 rounded-xl border border-border bg-secondary/40 px-3 py-1.5">
+                    <div className="text-center">
+                      <p className={cn("text-2xl font-bold leading-none tabular-nums", notaColorClass(f.notaMonitor))}>
+                        {f.notaMonitor}
+                      </p>
+                      <p className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">Monitor</p>
+                    </div>
+                    <span className="text-muted-foreground/50">→</span>
+                    <div className="text-center">
+                      <p className={cn("text-2xl font-bold leading-none tabular-nums", notaColorClass(f.notaOperador ?? 0))}>
+                        {f.notaOperador ?? 0}
+                      </p>
+                      <p className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">Operador</p>
+                    </div>
                   </div>
                   <DiffBadge diff={diff} />
                   <Button variant="outline" size="sm" onClick={() => setAbertoId(aberto ? null : f.id)}>
@@ -627,66 +630,88 @@ function Comparativo({
   const mapMonitor = new Map(feedback.apontamentosMonitor.map((a) => [a.itemId, a.status]))
   const mapOperador = new Map((feedback.apontamentosOperador ?? []).map((a) => [a.itemId, a.status]))
 
+  const total = checklist.itens.length
   const divergencias = checklist.itens.filter(
     (it) => (mapMonitor.get(it.id) ?? "conforme") !== (mapOperador.get(it.id) ?? "conforme"),
   ).length
+  const iguais = total - divergencias
+  const pctIgual = total > 0 ? Math.round((iguais / total) * 100) : 0
 
   return (
     <div className="flex flex-col gap-4 border-t border-border pt-4">
-      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span>
-          Itens divergentes:{" "}
-          <span className={cn("font-medium", divergencias > 0 ? "text-chart-3" : "text-chart-5")}>
-            {divergencias}
-          </span>{" "}
-          de {checklist.itens.length}
-        </span>
+      {/* Resumo de concordância */}
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-secondary/30 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <span>Concordância</span>
+            <span className={cn("tabular-nums", pctIgual >= 70 ? "text-chart-5" : pctIgual >= 40 ? "text-chart-3" : "text-destructive")}>
+              {pctIgual}%
+            </span>
+          </div>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="flex items-center gap-1.5 text-chart-5">
+              <span className="size-2 rounded-full bg-chart-5" /> {iguais} iguais
+            </span>
+            <span className="flex items-center gap-1.5 text-chart-3">
+              <span className="size-2 rounded-full bg-chart-3" /> {divergencias} divergentes
+            </span>
+          </div>
+        </div>
+        <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div className="bg-chart-5 transition-all" style={{ width: `${pctIgual}%` }} aria-hidden />
+          <div className="bg-chart-3 transition-all" style={{ width: `${100 - pctIgual}%` }} aria-hidden />
+        </div>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Tabela comparativa */}
+      <div className="overflow-hidden rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border text-left text-xs text-muted-foreground">
-              <th className="py-2 pr-3 font-medium">Item</th>
-              <th className="py-2 px-3 font-medium">Monitor</th>
-              <th className="py-2 px-3 font-medium">Operador</th>
-              <th className="py-2 pl-3 font-medium text-right">Situação</th>
+            <tr className="border-b border-border bg-secondary/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="py-2.5 pl-4 pr-3 font-medium">Item</th>
+              <th className="w-[150px] py-2.5 px-3 font-medium">Monitor</th>
+              <th className="w-[150px] py-2.5 px-3 font-medium">Operador</th>
+              <th className="w-[120px] py-2.5 pl-3 pr-4 font-medium text-right">Situação</th>
             </tr>
           </thead>
           <tbody>
-            {checklist.itens.map((it) => {
+            {checklist.itens.map((it, idx) => {
               const sm = (mapMonitor.get(it.id) ?? "conforme") as StatusItem
               const so = (mapOperador.get(it.id) ?? "conforme") as StatusItem
               const divergente = sm !== so
               return (
                 <tr
                   key={it.id}
-                  className={cn("border-b border-border/60 align-top", divergente && "bg-chart-3/5")}
+                  className={cn(
+                    "border-b border-border/50 align-middle transition-colors last:border-0",
+                    divergente ? "bg-chart-3/[0.06] hover:bg-chart-3/10" : "hover:bg-secondary/30",
+                  )}
                 >
-                  <td className="py-2 pr-3">
+                  <td className="py-2.5 pl-4 pr-3">
                     <div className="flex items-start gap-2">
+                      {divergente && <span className="mt-1 size-1.5 shrink-0 rounded-full bg-chart-3" aria-hidden />}
                       <span className="leading-snug">{it.texto}</span>
                       {it.critico && <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-destructive" />}
                     </div>
                   </td>
-                  <td className="py-2 px-3">
+                  <td className="py-2.5 px-3">
                     <span className={cn("inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs", statusClass(sm))}>
                       {statusIcon(sm)} {STATUS_LABEL[sm]}
                     </span>
                   </td>
-                  <td className="py-2 px-3">
+                  <td className="py-2.5 px-3">
                     <span className={cn("inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs", statusClass(so))}>
                       {statusIcon(so)} {STATUS_LABEL[so]}
                     </span>
                   </td>
-                  <td className="py-2 pl-3 text-right">
+                  <td className="py-2.5 pl-3 pr-4 text-right">
                     {divergente ? (
-                      <Badge variant="outline" className="border-chart-3/40 bg-chart-3/10 text-chart-3">
-                        Divergente
+                      <Badge variant="outline" className="gap-1 border-chart-3/40 bg-chart-3/10 text-chart-3">
+                        <AlertTriangle className="size-3" /> Divergente
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="border-chart-5/30 bg-chart-5/10 text-chart-5">
-                        Igual
+                      <Badge variant="outline" className="gap-1 border-chart-5/30 bg-chart-5/10 text-chart-5">
+                        <Equal className="size-3" /> Igual
                       </Badge>
                     )}
                   </td>
@@ -698,13 +723,17 @@ function Comparativo({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-lg border border-border bg-secondary/30 p-3">
-          <p className="mb-1 text-xs font-medium text-muted-foreground">Observação do monitor</p>
-          <p className="text-sm">{feedback.observacaoMonitor || "—"}</p>
+        <div className="rounded-xl border border-border bg-secondary/30 p-4">
+          <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <ClipboardList className="size-3.5" /> Observação do monitor
+          </p>
+          <p className="text-sm leading-relaxed">{feedback.observacaoMonitor || "—"}</p>
         </div>
-        <div className="rounded-lg border border-border bg-secondary/30 p-3">
-          <p className="mb-1 text-xs font-medium text-muted-foreground">Justificativa do operador</p>
-          <p className="text-sm">{feedback.observacaoOperador || "—"}</p>
+        <div className="rounded-xl border border-border bg-secondary/30 p-4">
+          <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <UserCheck className="size-3.5" /> Justificativa do operador
+          </p>
+          <p className="text-sm leading-relaxed">{feedback.observacaoOperador || "—"}</p>
         </div>
       </div>
 
