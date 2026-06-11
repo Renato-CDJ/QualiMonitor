@@ -1,6 +1,5 @@
 "use client"
 
-import type React from "react"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 import {
@@ -628,148 +627,84 @@ function Comparativo({
   const mapMonitor = new Map(feedback.apontamentosMonitor.map((a) => [a.itemId, a.status]))
   const mapOperador = new Map((feedback.apontamentosOperador ?? []).map((a) => [a.itemId, a.status]))
 
-  const total = checklist.itens.length
   const divergencias = checklist.itens.filter(
     (it) => (mapMonitor.get(it.id) ?? "conforme") !== (mapOperador.get(it.id) ?? "conforme"),
   ).length
-  const concordancia = total > 0 ? Math.round(((total - divergencias) / total) * 100) : 100
-
-  const notaMonitor = feedback.notaMonitor
-  const notaOperador = feedback.notaOperador ?? 0
-  const diff = notaOperador - notaMonitor
-  const maxNota = Math.max(notaMonitor, notaOperador, 1)
 
   return (
-    <div className="flex flex-col gap-5 border-t border-border pt-5">
-      {/* Placar visual: monitor vs operador */}
-      <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-stretch">
-        <ScoreCard
-          label="Avaliação do monitor"
-          sub={feedback.monitor}
-          icon={<ClipboardList className="size-4" />}
-          nota={notaMonitor}
-          accent="monitor"
-        />
-        <div className="flex items-center justify-center">
-          <div className="flex flex-col items-center gap-1 rounded-full border border-border bg-secondary/40 px-3 py-2 sm:px-2 sm:py-4">
-            <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">vs</span>
-            <DiffBadge diff={diff} />
-          </div>
-        </div>
-        <ScoreCard
-          label="Auto-avaliação do operador"
-          sub={feedback.operadorNome}
-          icon={<UserCheck className="size-4" />}
-          nota={notaOperador}
-          accent="operador"
-        />
-      </div>
-
-      {/* Barras comparativas */}
-      <div className="flex flex-col gap-3 rounded-lg border border-border bg-secondary/20 p-4">
-        <ScoreBar label="Monitor" nota={notaMonitor} max={maxNota} tone="monitor" />
-        <ScoreBar label="Operador" nota={notaOperador} max={maxNota} tone="operador" />
-      </div>
-
-      {/* Concordância */}
-      <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Concordância da avaliação</span>
-          <span
-            className={cn(
-              "text-sm font-semibold tabular-nums",
-              concordancia >= 80 ? "text-chart-5" : concordancia >= 50 ? "text-chart-3" : "text-destructive",
-            )}
-          >
-            {concordancia}%
-          </span>
-        </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-          <div
-            className={cn(
-              "h-full rounded-full transition-all",
-              concordancia >= 80 ? "bg-chart-5" : concordancia >= 50 ? "bg-chart-3" : "bg-destructive",
-            )}
-            style={{ width: `${concordancia}%` }}
-          />
-        </div>
-        <p className="text-xs text-muted-foreground">
-          {total - divergencias} de {total} itens avaliados igualmente ·{" "}
+    <div className="flex flex-col gap-4 border-t border-border pt-4">
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <span>
+          Itens divergentes:{" "}
           <span className={cn("font-medium", divergencias > 0 ? "text-chart-3" : "text-chart-5")}>
-            {divergencias} {divergencias === 1 ? "divergência" : "divergências"}
-          </span>
-        </p>
+            {divergencias}
+          </span>{" "}
+          de {checklist.itens.length}
+        </span>
       </div>
 
-      {/* Detalhamento item a item */}
-      <div className="overflow-hidden rounded-lg border border-border">
-        <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 border-b border-border bg-secondary/40 px-4 py-2.5 text-xs font-medium text-muted-foreground">
-          <span>Item avaliado</span>
-          <span className="w-28 text-center sm:w-32">Monitor</span>
-          <span className="w-28 text-center sm:w-32">Operador</span>
-        </div>
-        <div className="divide-y divide-border/60">
-          {checklist.itens.map((it, idx) => {
-            const sm = (mapMonitor.get(it.id) ?? "conforme") as StatusItem
-            const so = (mapOperador.get(it.id) ?? "conforme") as StatusItem
-            const divergente = sm !== so
-            return (
-              <div
-                key={it.id}
-                className={cn(
-                  "grid grid-cols-[1fr_auto_auto] items-center gap-3 px-4 py-3",
-                  divergente && "bg-chart-3/5",
-                )}
-              >
-                <div className="flex min-w-0 items-start gap-2">
-                  <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded bg-secondary text-[11px] text-muted-foreground">
-                    {idx + 1}
-                  </span>
-                  <div className="min-w-0">
-                    <span className="text-sm leading-snug">{it.texto}</span>
-                    {it.critico && (
-                      <span className="ml-1.5 inline-flex items-center gap-0.5 text-[11px] font-medium text-destructive">
-                        <AlertTriangle className="size-3" /> crítico
-                      </span>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border text-left text-xs text-muted-foreground">
+              <th className="py-2 pr-3 font-medium">Item</th>
+              <th className="py-2 px-3 font-medium">Monitor</th>
+              <th className="py-2 px-3 font-medium">Operador</th>
+              <th className="py-2 pl-3 font-medium text-right">Situação</th>
+            </tr>
+          </thead>
+          <tbody>
+            {checklist.itens.map((it) => {
+              const sm = (mapMonitor.get(it.id) ?? "conforme") as StatusItem
+              const so = (mapOperador.get(it.id) ?? "conforme") as StatusItem
+              const divergente = sm !== so
+              return (
+                <tr
+                  key={it.id}
+                  className={cn("border-b border-border/60 align-top", divergente && "bg-chart-3/5")}
+                >
+                  <td className="py-2 pr-3">
+                    <div className="flex items-start gap-2">
+                      <span className="leading-snug">{it.texto}</span>
+                      {it.critico && <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-destructive" />}
+                    </div>
+                  </td>
+                  <td className="py-2 px-3">
+                    <span className={cn("inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs", statusClass(sm))}>
+                      {statusIcon(sm)} {STATUS_LABEL[sm]}
+                    </span>
+                  </td>
+                  <td className="py-2 px-3">
+                    <span className={cn("inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs", statusClass(so))}>
+                      {statusIcon(so)} {STATUS_LABEL[so]}
+                    </span>
+                  </td>
+                  <td className="py-2 pl-3 text-right">
+                    {divergente ? (
+                      <Badge variant="outline" className="border-chart-3/40 bg-chart-3/10 text-chart-3">
+                        Divergente
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="border-chart-5/30 bg-chart-5/10 text-chart-5">
+                        Igual
+                      </Badge>
                     )}
-                  </div>
-                </div>
-                <div className="flex w-28 justify-center sm:w-32">
-                  <span className={cn("inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs", statusClass(sm))}>
-                    {statusIcon(sm)} {STATUS_LABEL[sm]}
-                  </span>
-                </div>
-                <div className="flex w-28 items-center justify-center gap-1.5 sm:w-32">
-                  <span className={cn("inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs", statusClass(so))}>
-                    {statusIcon(so)} {STATUS_LABEL[so]}
-                  </span>
-                  {divergente && (
-                    <span
-                      className="size-2 shrink-0 rounded-full bg-chart-3"
-                      title="Divergente do monitor"
-                      aria-label="Divergente do monitor"
-                    />
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
       </div>
 
-      {/* Observações lado a lado */}
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-lg border-l-2 border-l-chart-1 border-t border-r border-b border-border bg-secondary/30 p-3">
-          <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <ClipboardList className="size-3.5" /> Observação do monitor
-          </p>
-          <p className="text-sm leading-relaxed">{feedback.observacaoMonitor || "—"}</p>
+        <div className="rounded-lg border border-border bg-secondary/30 p-3">
+          <p className="mb-1 text-xs font-medium text-muted-foreground">Observação do monitor</p>
+          <p className="text-sm">{feedback.observacaoMonitor || "—"}</p>
         </div>
-        <div className="rounded-lg border-l-2 border-l-chart-2 border-t border-r border-b border-border bg-secondary/30 p-3">
-          <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <UserCheck className="size-3.5" /> Justificativa do operador
-          </p>
-          <p className="text-sm leading-relaxed">{feedback.observacaoOperador || "—"}</p>
+        <div className="rounded-lg border border-border bg-secondary/30 p-3">
+          <p className="mb-1 text-xs font-medium text-muted-foreground">Justificativa do operador</p>
+          <p className="text-sm">{feedback.observacaoOperador || "—"}</p>
         </div>
       </div>
 
@@ -778,76 +713,6 @@ function Comparativo({
           <Trash2 className="size-4" /> Excluir registro
         </Button>
       </div>
-    </div>
-  )
-}
-
-function ScoreCard({
-  label,
-  sub,
-  icon,
-  nota,
-  accent,
-}: {
-  label: string
-  sub: string
-  icon: React.ReactNode
-  nota: number
-  accent: "monitor" | "operador"
-}) {
-  return (
-    <div
-      className={cn(
-        "flex items-center justify-between gap-3 rounded-lg border bg-card p-4",
-        accent === "monitor" ? "border-chart-1/30" : "border-chart-2/30",
-      )}
-    >
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <span
-          className={cn(
-            "flex items-center gap-1.5 text-xs font-medium",
-            accent === "monitor" ? "text-chart-1" : "text-chart-2",
-          )}
-        >
-          {icon} {label}
-        </span>
-        <span className="truncate text-sm text-muted-foreground">{sub}</span>
-        <Badge variant="outline" className="mt-1 w-fit text-[11px]">
-          {faixaNota(nota)}
-        </Badge>
-      </div>
-      <div className="flex flex-col items-end leading-none">
-        <span className={cn("text-4xl font-semibold tabular-nums", notaColorClass(nota))}>{nota}</span>
-        <span className="mt-1 text-[11px] text-muted-foreground">/ 100</span>
-      </div>
-    </div>
-  )
-}
-
-function ScoreBar({
-  label,
-  nota,
-  max,
-  tone,
-}: {
-  label: string
-  nota: number
-  max: number
-  tone: "monitor" | "operador"
-}) {
-  const width = Math.round((nota / max) * 100)
-  return (
-    <div className="flex items-center gap-3">
-      <span className="w-16 shrink-0 text-xs text-muted-foreground">{label}</span>
-      <div className="h-3 flex-1 overflow-hidden rounded-full bg-secondary">
-        <div
-          className={cn("h-full rounded-full transition-all", tone === "monitor" ? "bg-chart-1" : "bg-chart-2")}
-          style={{ width: `${width}%` }}
-        />
-      </div>
-      <span className={cn("w-9 shrink-0 text-right text-sm font-semibold tabular-nums", notaColorClass(nota))}>
-        {nota}
-      </span>
     </div>
   )
 }
