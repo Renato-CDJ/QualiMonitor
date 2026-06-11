@@ -1,9 +1,10 @@
-import type { Checklist, Operador, Monitoria, ApontamentoItem } from "./types"
+import type { Checklist, Operador, Monitoria, ApontamentoItem, FeedbackInvertido } from "./types"
 
 const KEYS = {
   checklists: "qm.checklists.v1",
   operadores: "qm.operadores.v1",
   monitorias: "qm.monitorias.v1",
+  feedbacks: "qm.feedbacks.v1",
   seeded: "qm.seeded.v1",
 }
 
@@ -179,11 +180,32 @@ export const store = {
     const all = read<Monitoria[]>(KEYS.monitorias, [])
     write(KEYS.monitorias, [m, ...all])
   },
+  getFeedbacks: () => read<FeedbackInvertido[]>(KEYS.feedbacks, []),
+  setFeedbacks: (v: FeedbackInvertido[]) => write(KEYS.feedbacks, v),
+  addFeedback: (f: FeedbackInvertido) => {
+    const all = read<FeedbackInvertido[]>(KEYS.feedbacks, [])
+    write(KEYS.feedbacks, [f, ...all])
+  },
+  updateFeedback: (id: string, patch: Partial<FeedbackInvertido>) => {
+    const all = read<FeedbackInvertido[]>(KEYS.feedbacks, [])
+    write(
+      KEYS.feedbacks,
+      all.map((f) => (f.id === id ? { ...f, ...patch } : f)),
+    )
+  },
+  removeFeedback: (id: string) => {
+    const all = read<FeedbackInvertido[]>(KEYS.feedbacks, [])
+    write(
+      KEYS.feedbacks,
+      all.filter((f) => f.id !== id),
+    )
+  },
   resetAll: () => {
     localStorage.removeItem(KEYS.seeded)
     localStorage.removeItem(KEYS.checklists)
     localStorage.removeItem(KEYS.operadores)
     localStorage.removeItem(KEYS.monitorias)
+    localStorage.removeItem(KEYS.feedbacks)
     ensureSeed()
   },
 }
