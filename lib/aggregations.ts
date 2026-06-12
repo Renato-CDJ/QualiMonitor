@@ -1,4 +1,4 @@
-import type { Checklist, Monitoria } from "./types"
+import type { Checklist, Monitoria, RecebimentoOperador, SiglaQuadrante } from "./types"
 import { media, resumoQuartis } from "./analytics"
 
 export type Periodicidade = "diario" | "semanal" | "mensal"
@@ -195,4 +195,102 @@ export function kpis(monitorias: Monitoria[]) {
     totalInconf,
     quartis: q,
   }
+}
+
+/* ---------------- QUADRANTE (Qualidade x Recebimento) ---------------- */
+
+export interface QuadranteInfo {
+  sigla: SiglaQuadrante
+  quadrante: "Q1" | "Q2" | "Q3" | "Q4"
+  nome: string
+  descricao: string
+}
+
+/**
+ * Mapa do Quadrante. A combinação Qualidade(A/B) + Recebimento(A/B) gera a sigla.
+ * - AA → Q1 · Alta Qualidade + Alto Recebimento
+ * - AB → Q2 · Alta Qualidade + Baixo Recebimento
+ * - BA → Q3 · Baixa Qualidade + Alto Recebimento
+ * - BB → Q4 · Baixa Qualidade + Baixo Recebimento
+ */
+export const QUADRANTE_MAPA: Record<SiglaQuadrante, QuadranteInfo> = {
+  AA: {
+    sigla: "AA",
+    quadrante: "Q1",
+    nome: "Alta Qualidade · Alto Recebimento",
+    descricao: "Destaque: entrega qualidade e volume de recebimento.",
+  },
+  AB: {
+    sigla: "AB",
+    quadrante: "Q2",
+    nome: "Alta Qualidade · Baixo Recebimento",
+    descricao: "Qualidade alta, mas recebimento abaixo do esperado.",
+  },
+  BA: {
+    sigla: "BA",
+    quadrante: "Q3",
+    nome: "Baixa Qualidade · Alto Recebimento",
+    descricao: "Recebimento alto, porém qualidade precisa melhorar.",
+  },
+  BB: {
+    sigla: "BB",
+    quadrante: "Q4",
+    nome: "Baixa Qualidade · Baixo Recebimento",
+    descricao: "Atenção: qualidade e recebimento abaixo do esperado.",
+  },
+}
+
+export interface OperadorQuadrante {
+  operador: string
+  carteira: string
+  volume: number
+  nota: number
+  qualidade: "alta" | "baixa"
+  recebimento: "alto" | "baixo" | null
+  sigla: SiglaQuadrante | null
+  info: QuadranteInfo | null
+}
+
+/**
+ * Calcula o quadrante de cada operador combinando:
+ * - Qualidade: derivada da nota média (>= meta = Alta, senão Baixa)
+ * - Recebimento: definido manualmente (RecebimentoOperador) — pode estar pendente
+ */
+export function quadranteOperadores(
+  monitorias: Monitoria[],
+  recebimentos: RecebimentoOperador[],
+  metaQualidade = 75,
+): OperadorQuadrante[] {
+  const grupos = new Map<string, { notas: number[]; carteira: string }>()
+  for (const m of monitorias) {
+    if (!grupos.has(m.operadorNome)) {
+      grupos.set(m.operadorNome, { notas: [], carteira: m.carteira })
+    }
+    grupos.get(m.operadorNome)!.notas.push(m.nota)
+  }
+  const recMap = new Map(recebimentos.map((r) => [r.operadorNome, r.nivel]))
+
+  return Array.from(grupos.entries())
+    .map(([operador, { notas, carteira }]) => {
+      const nota = Math.round(media(notas) * 10) / 10
+      const qualidade: "alta" | "baixa" = nota >= metaQualidade ? "alta" : "baixa"
+      const rec = recMap.get(operador) ?? null
+      let sigla: SiglaQuadrante | null = null
+      if (rec) {
+        const q = qualidade === "alta" ? "A" : "B"
+        const r = rec === "alto" ? "A" : "B"
+        sigla = `${q}${r}` as SiglaQuadrante
+      }
+      return {
+        operador,
+        carteira,
+        volume: notas.length,
+        nota,
+        qualidade,
+        recebimento: rec,
+        sigla,
+        info: sigla ? QUADRANTE_MAPA[sigla] : null,
+      }
+    })
+    .sort((a, b) => b.nota - a.nota)
 }

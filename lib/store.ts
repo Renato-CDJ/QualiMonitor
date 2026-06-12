@@ -1,10 +1,19 @@
-import type { Checklist, Operador, Monitoria, ApontamentoItem, FeedbackInvertido } from "./types"
+import type {
+  Checklist,
+  Operador,
+  Monitoria,
+  ApontamentoItem,
+  FeedbackInvertido,
+  RecebimentoOperador,
+  NivelRecebimento,
+} from "./types"
 
 const KEYS = {
   checklists: "qm.checklists.v1",
   operadores: "qm.operadores.v1",
   monitorias: "qm.monitorias.v1",
   feedbacks: "qm.feedbacks.v1",
+  recebimentos: "qm.recebimentos.v1",
   seeded: "qm.seeded.v1",
 }
 
@@ -200,12 +209,34 @@ export const store = {
       all.filter((f) => f.id !== id),
     )
   },
+  getRecebimentos: () => read<RecebimentoOperador[]>(KEYS.recebimentos, []),
+  setRecebimentos: (v: RecebimentoOperador[]) => write(KEYS.recebimentos, v),
+  setRecebimentoOperador: (operadorNome: string, nivel: NivelRecebimento) => {
+    const all = read<RecebimentoOperador[]>(KEYS.recebimentos, [])
+    const existe = all.some((r) => r.operadorNome === operadorNome)
+    const atualizado = existe
+      ? all.map((r) =>
+          r.operadorNome === operadorNome
+            ? { ...r, nivel, atualizadoEm: new Date().toISOString() }
+            : r,
+        )
+      : [...all, { operadorNome, nivel, atualizadoEm: new Date().toISOString() }]
+    write(KEYS.recebimentos, atualizado)
+  },
+  removeRecebimento: (operadorNome: string) => {
+    const all = read<RecebimentoOperador[]>(KEYS.recebimentos, [])
+    write(
+      KEYS.recebimentos,
+      all.filter((r) => r.operadorNome !== operadorNome),
+    )
+  },
   resetAll: () => {
     localStorage.removeItem(KEYS.seeded)
     localStorage.removeItem(KEYS.checklists)
     localStorage.removeItem(KEYS.operadores)
     localStorage.removeItem(KEYS.monitorias)
     localStorage.removeItem(KEYS.feedbacks)
+    localStorage.removeItem(KEYS.recebimentos)
     ensureSeed()
   },
 }
