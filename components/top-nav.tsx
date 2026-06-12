@@ -6,9 +6,9 @@ import { ClipboardCheck, LayoutDashboard, ListChecks, BarChart3, GanttChartSquar
 import { cn } from "@/lib/utils"
 
 const NAV = [
-  { href: "/", label: "Nova Monitoria", icon: ClipboardCheck },
+  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/nova-monitoria", label: "Nova Monitoria", icon: ClipboardCheck },
   { href: "/checklists", label: "Editor de Checklist", icon: ListChecks },
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/analise-notas", label: "Análise de Notas", icon: GanttChartSquare },
   { href: "/operadores", label: "Operadores", icon: Users },
   { href: "/feedback", label: "Feedback", icon: MessageSquareReply },

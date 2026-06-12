@@ -96,8 +96,14 @@ export function Dashboard() {
   const { monitorias, checklists, ready } = useQualityData()
   const periodo: Periodicidade = "diario"
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
-  const [dataInicio, setDataInicio] = useState<string>("")
-  const [dataFim, setDataFim] = useState<string>("")
+  const [dataInicio, setDataInicio] = useState<string>(() => {
+    const hoje = new Date()
+    return new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10)
+  })
+  const [dataFim, setDataFim] = useState<string>(() => {
+    const hoje = new Date()
+    return new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().slice(0, 10)
+  })
 
   const carteiras = useMemo(
     () => Array.from(new Set(monitorias.map((m) => m.carteira))),
