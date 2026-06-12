@@ -10,6 +10,7 @@ import {
   ArrowUpDown,
   ArrowDown,
   ArrowUp,
+  Download,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -43,6 +44,7 @@ import {
   QuartilCarteiraChart,
 } from "@/components/dashboard-charts"
 import { cn } from "@/lib/utils"
+import * as XLSX from "xlsx"
 
 function Stat({
   icon: Icon,
@@ -168,6 +170,27 @@ export function AnaliseNotas() {
       setSortKey(key)
       setSortDir(key === "operador" ? "asc" : "desc")
     }
+  }
+
+  function exportarExcel() {
+    const linhas = operadoresOrdenados.map((o) => ({
+      Operador: o.operador,
+      Monitorias: o.volume,
+      Média: o.nota,
+      Mín: Number(o.quartis.min.toFixed(0)),
+      Mediana: Number(o.quartis.mediana.toFixed(0)),
+      Máx: Number(o.quartis.max.toFixed(0)),
+      IQR: Number((o.quartis.q3 - o.quartis.q1).toFixed(0)),
+      Faixa: faixaNota(o.nota),
+    }))
+    const ws = XLSX.utils.json_to_sheet(linhas)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, "Estatísticas")
+    const carteiraNome = carteiraFiltro === "todas" ? "todas" : carteiraFiltro
+    XLSX.writeFile(
+      wb,
+      `estatisticas-operadores_${carteiraNome}_${dataInicio}_a_${dataFim}.xlsx`,
+    )
   }
 
   function SortHeader({
@@ -376,13 +399,26 @@ export function AnaliseNotas() {
       {/* Tabela estatística por operador */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <BarChart3 className="size-4 text-muted-foreground" />
-            Estatísticas Detalhadas por Operador
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Clique no cabeçalho de uma coluna para ordenar
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <BarChart3 className="size-4 text-muted-foreground" />
+                Estatísticas Detalhadas por Operador
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Clique no cabeçalho de uma coluna para ordenar
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportarExcel}
+              disabled={!operadoresOrdenados.length}
+            >
+              <Download className="size-4" />
+              Exportar Excel
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -392,9 +428,7 @@ export function AnaliseNotas() {
                 <SortHeader label="Monitorias" sortKey="volume" />
                 <SortHeader label="Média" sortKey="nota" />
                 <SortHeader label="Mín" sortKey="min" />
-                <TableHead className="text-right">Q1</TableHead>
                 <SortHeader label="Mediana" sortKey="mediana" />
-                <TableHead className="text-right">Q3</TableHead>
                 <SortHeader label="Máx" sortKey="max" />
                 <SortHeader label="IQR" sortKey="iqr" />
                 <SortHeader label="Faixa" sortKey="faixa" />
@@ -412,13 +446,7 @@ export function AnaliseNotas() {
                     {o.quartis.min.toFixed(0)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums text-muted-foreground">
-                    {o.quartis.q1.toFixed(0)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
                     {o.quartis.mediana.toFixed(0)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
-                    {o.quartis.q3.toFixed(0)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums text-muted-foreground">
                     {o.quartis.max.toFixed(0)}
