@@ -186,16 +186,16 @@ export function AnaliseNotas() {
               Haste: nota mínima e máxima
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="inline-block h-3 w-4 rounded-sm border border-foreground/60 bg-foreground/40" />
+              <span className="inline-block h-3 w-4 rounded-sm border border-foreground/60 bg-foreground/15" />
               Caixa: 50% central das notas (Q1–Q3)
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="inline-block h-1 w-4 rounded-full bg-card ring-1 ring-foreground/60" />
-              Linha clara: mediana
+              <span className="inline-block h-0.5 w-4 bg-foreground" />
+              Linha: mediana
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="inline-block size-2.5 rotate-45 border border-foreground bg-card" />
-              Losango: média
+              <span className="inline-block h-2.5 w-2.5 rounded-full border border-foreground bg-background" />
+              Ponto: média
             </span>
             <span className="flex items-center gap-1.5">
               <span className="inline-block h-0.5 w-4 border-t-2 border-dashed border-chart-3" />

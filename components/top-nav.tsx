@@ -4,7 +4,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ClipboardCheck, LayoutDashboard, ListChecks, BarChart3, GanttChartSquare, Users, MessageSquareReply } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { ThemeToggle } from "@/components/theme-toggle"
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -51,11 +50,10 @@ export function TopNav() {
           })}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
-          <span className="hidden rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground md:inline">
+        <div className="ml-auto hidden items-center gap-2 md:flex">
+          <span className="rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground">
             Dados locais (localStorage)
           </span>
-          <ThemeToggle />
         </div>
       </div>
     </header>

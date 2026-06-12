@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Toaster } from '@/components/ui/sonner'
 import { TopNav } from '@/components/top-nav'
-import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -44,21 +43,13 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} bg-background`}
+      className={`dark ${geistSans.variable} ${geistMono.variable} bg-background`}
     >
       <body className="font-sans antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          <TopNav />
-          {children}
-          <Toaster />
-          {process.env.NODE_ENV === 'production' && <Analytics />}
-        </ThemeProvider>
+        <TopNav />
+        {children}
+        <Toaster />
+        {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
   )
