@@ -22,14 +22,12 @@ import {
 import { useQualityData } from "@/lib/use-quality-data"
 import {
   kpis,
-  histogramaNotas,
   quartisPorCarteira,
   porOperador,
 } from "@/lib/aggregations"
 import { notaBadgeClass, faixaNota } from "@/lib/analytics"
 import {
   QuartilChart,
-  HistogramaChart,
   QuartilCarteiraChart,
 } from "@/components/dashboard-charts"
 import { cn } from "@/lib/utils"
@@ -89,7 +87,6 @@ export function AnaliseNotas() {
   )
 
   const k = useMemo(() => kpis(filtradas), [filtradas])
-  const histograma = useMemo(() => histogramaNotas(filtradas), [filtradas])
   const carteiraQuartis = useMemo(() => quartisPorCarteira(filtradas), [filtradas])
   const operadores = useMemo(() => porOperador(filtradas), [filtradas])
 
@@ -211,37 +208,24 @@ export function AnaliseNotas() {
         </CardContent>
       </Card>
 
-      {/* Histograma + quartil por carteira */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Distribuição de Notas (Histograma)</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Frequência de notas em faixas de 10 pontos
+      {/* Quartil por carteira */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Quartil por Carteira</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Intervalo interquartil (Q1–Q3) por carteira · linha = meta 75
+          </p>
+        </CardHeader>
+        <CardContent>
+          {carteiraQuartis.length ? (
+            <QuartilCarteiraChart data={carteiraQuartis} />
+          ) : (
+            <p className="py-16 text-center text-sm text-muted-foreground">
+              Sem dados no período.
             </p>
-          </CardHeader>
-          <CardContent>
-            <HistogramaChart data={histograma} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Quartil por Carteira</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Intervalo interquartil (Q1–Q3) por carteira · linha = meta 75
-            </p>
-          </CardHeader>
-          <CardContent>
-            {carteiraQuartis.length ? (
-              <QuartilCarteiraChart data={carteiraQuartis} />
-            ) : (
-              <p className="py-16 text-center text-sm text-muted-foreground">
-                Sem dados no período.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Tabela estatística por operador */}
       <Card>
