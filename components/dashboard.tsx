@@ -159,65 +159,77 @@ export function Dashboard() {
   return (
     <div className="flex flex-col gap-6">
       {/* Filtros */}
-      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <Select value={carteiraFiltro} onValueChange={setCarteiraFiltro}>
-            <SelectTrigger className="w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas as carteiras</SelectItem>
-              {carteiras.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Tabs value={periodo} onValueChange={(v) => setPeriodo(v as Periodicidade)}>
-            <TabsList>
-              <TabsTrigger value="diario">Diário</TabsTrigger>
-              <TabsTrigger value="semanal">Semanal</TabsTrigger>
-              <TabsTrigger value="mensal">Mensal</TabsTrigger>
-            </TabsList>
-          </Tabs>
-
-          <div className="ml-auto">
-            <Dialog>
-              <DialogTrigger
-                className={buttonVariants({
-                  variant: "ghost",
-                  size: "sm",
-                  className: "gap-2 text-muted-foreground",
-                })}
-              >
-                <RotateCcw className="size-4" /> Resetar dados
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Resetar dados de demonstração?</DialogTitle>
-                </DialogHeader>
-                <p className="text-sm text-muted-foreground">
-                  Isso apaga todas as monitorias e checklists do localStorage e recria os
-                  dados de exemplo.
-                </p>
-                <DialogFooter>
-                  <Button variant="destructive" onClick={() => store.resetAll()}>
-                    Resetar agora
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+      <div className="rounded-xl border border-border bg-card">
+        {/* Linha superior: título + reset */}
+        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <CalendarDays className="size-4 text-primary" />
+            Filtros
           </div>
+          <Dialog>
+            <DialogTrigger
+              className={buttonVariants({
+                variant: "ghost",
+                size: "sm",
+                className: "gap-2 text-muted-foreground",
+              })}
+            >
+              <RotateCcw className="size-4" /> Resetar dados
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Resetar dados de demonstração?</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-muted-foreground">
+                Isso apaga todas as monitorias e checklists do localStorage e recria os
+                dados de exemplo.
+              </p>
+              <DialogFooter>
+                <Button variant="destructive" onClick={() => store.resetAll()}>
+                  Resetar agora
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
-        {/* Filtro por data */}
-        <div className="flex flex-wrap items-end gap-3 border-t border-border pt-3">
-          <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-            <CalendarDays className="size-4" /> Período
+        {/* Linha de controles */}
+        <div className="flex flex-wrap items-end gap-x-6 gap-y-4 p-4">
+          {/* Carteira */}
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs text-muted-foreground">Carteira</Label>
+            <Select value={carteiraFiltro} onValueChange={setCarteiraFiltro}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas as carteiras</SelectItem>
+                {carteiras.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div className="flex flex-col gap-1">
+
+          {/* Agrupamento */}
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs text-muted-foreground">Agrupamento</Label>
+            <Tabs value={periodo} onValueChange={(v) => setPeriodo(v as Periodicidade)}>
+              <TabsList>
+                <TabsTrigger value="diario">Diário</TabsTrigger>
+                <TabsTrigger value="semanal">Semanal</TabsTrigger>
+                <TabsTrigger value="mensal">Mensal</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+          {/* Divisória vertical */}
+          <div className="hidden h-10 w-px self-end bg-border lg:block" aria-hidden />
+
+          {/* Período: De / Até */}
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="data-inicio" className="text-xs text-muted-foreground">
               De
             </Label>
@@ -230,7 +242,7 @@ export function Dashboard() {
               className="w-40"
             />
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="data-fim" className="text-xs text-muted-foreground">
               Até
             </Label>
@@ -243,23 +255,32 @@ export function Dashboard() {
               className="w-40"
             />
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => aplicarPreset("hoje")}>
-              Hoje
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => aplicarPreset(7)}>
-              7 dias
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => aplicarPreset(30)}>
-              30 dias
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => aplicarPreset("tudo")}>
-              Tudo
-            </Button>
+
+          {/* Atalhos */}
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs text-muted-foreground">Atalhos</Label>
+            <div className="flex items-center gap-1.5">
+              <Button variant="outline" size="sm" onClick={() => aplicarPreset("hoje")}>
+                Hoje
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => aplicarPreset(7)}>
+                7 dias
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => aplicarPreset(30)}>
+                30 dias
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => aplicarPreset("tudo")}>
+                Tudo
+              </Button>
+            </div>
           </div>
-          <span className="ml-auto text-xs text-muted-foreground">
-            Exibindo: <span className="text-foreground">{periodoLabel}</span>
-          </span>
+        </div>
+
+        {/* Rodapé: período ativo */}
+        <div className="flex items-center gap-2 border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
+          <span className="inline-flex size-1.5 rounded-full bg-primary" aria-hidden />
+          Exibindo resultados de:{" "}
+          <span className="font-medium text-foreground">{periodoLabel}</span>
         </div>
       </div>
 
