@@ -5,6 +5,7 @@ import { Grid2x2, Plus, Tag, Type, Download, Inbox, ArrowUpDown, ArrowUp, ArrowD
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -55,6 +56,15 @@ type SortDir = "asc" | "desc"
 
 const META_QUALIDADE = 85
 
+function inicioDoMes() {
+  const d = new Date()
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10)
+}
+
+function hojeISO() {
+  return new Date().toISOString().slice(0, 10)
+}
+
 /** Estilo de cor por sigla de quadrante */
 function siglaClass(sigla: SiglaQuadrante | null) {
   switch (sigla) {
@@ -79,6 +89,8 @@ function rotuloVisao(op: OperadorQuadrante, visao: Visao) {
 export function Quadrante() {
   const { monitorias, recebimentos, ready, store } = useQualityData()
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
+  const [dataInicio, setDataInicio] = useState<string>(inicioDoMes)
+  const [dataFim, setDataFim] = useState<string>(hojeISO)
   const [visao, setVisao] = useState<Visao>("sigla")
   const [sortKey, setSortKey] = useState<SortKey>("nota")
   const [sortDir, setSortDir] = useState<SortDir>("desc")
@@ -95,10 +107,13 @@ export function Quadrante() {
 
   const filtradas = useMemo(
     () =>
-      carteiraFiltro === "todas"
-        ? monitorias
-        : monitorias.filter((m) => m.carteira === carteiraFiltro),
-    [monitorias, carteiraFiltro],
+      monitorias.filter((m) => {
+        if (carteiraFiltro !== "todas" && m.carteira !== carteiraFiltro) return false
+        if (dataInicio && m.data < dataInicio) return false
+        if (dataFim && m.data > dataFim) return false
+        return true
+      }),
+    [monitorias, carteiraFiltro, dataInicio, dataFim],
   )
 
   const dados = useMemo(
@@ -241,6 +256,43 @@ export function Quadrante() {
             </SelectContent>
           </Select>
         </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="data-inicio" className="text-xs text-muted-foreground">
+            De
+          </Label>
+          <Input
+            id="data-inicio"
+            type="date"
+            value={dataInicio}
+            max={dataFim || undefined}
+            onChange={(e) => setDataInicio(e.target.value)}
+            className="w-40"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="data-fim" className="text-xs text-muted-foreground">
+            Até
+          </Label>
+          <Input
+            id="data-fim"
+            type="date"
+            value={dataFim}
+            min={dataInicio || undefined}
+            onChange={(e) => setDataFim(e.target.value)}
+            className="w-40"
+          />
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setDataInicio(inicioDoMes())
+            setDataFim(hojeISO())
+          }}
+        >
+          Mês atual
+        </Button>
 
         {/* Toggle de visão: Siglas x Nome completo */}
         <div className="flex flex-col gap-1.5">

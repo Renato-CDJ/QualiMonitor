@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ClipboardCheck, LayoutDashboard, ListChecks, BarChart3, GanttChartSquare, Users, MessageSquareReply, Grid2x2 } from "lucide-react"
+import { ClipboardCheck, LayoutDashboard, ListChecks, BarChart3, GanttChartSquare, MessageSquareReply, Grid2x2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -12,7 +12,6 @@ const NAV = [
   { href: "/checklists", label: "Editor de Checklist", icon: ListChecks },
   { href: "/analise-notas", label: "Análise de Notas", icon: GanttChartSquare },
   { href: "/quadrante", label: "Quadrante", icon: Grid2x2 },
-  { href: "/operadores", label: "Operadores", icon: Users },
   { href: "/feedback", label: "Feedback", icon: MessageSquareReply },
 ]
 
