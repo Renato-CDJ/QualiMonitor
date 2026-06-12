@@ -67,10 +67,10 @@ function makeLeaderLabel(corResolver: (name: string, index: number) => string, m
     const sin = Math.sin(-RADIAN * midAngle)
     const sx = cx + (outerRadius + 2) * cos
     const sy = cy + (outerRadius + 2) * sin
-    const mx = cx + (outerRadius + 16) * cos
-    const my = cy + (outerRadius + 16) * sin
+    const mx = cx + (outerRadius + 12) * cos
+    const my = cy + (outerRadius + 12) * sin
     const dir = cos >= 0 ? 1 : -1
-    const ex = mx + dir * 16
+    const ex = mx + dir * 12
     const ey = my
     const anchor = cos >= 0 ? "start" : "end"
     const tx = ex + dir * 5
@@ -245,8 +245,8 @@ export function FaixasPieChart({
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
-      <ChartContainer config={config} className="mx-auto aspect-square h-[300px]">
-        <PieChart margin={{ top: 16, right: 90, bottom: 16, left: 90 }}>
+      <ChartContainer config={config} className="mx-auto h-[300px] w-full">
+        <PieChart margin={{ top: 24, right: 110, bottom: 24, left: 110 }}>
           <ChartTooltip content={<ChartTooltipContent nameKey="faixa" />} />
           <Pie
             data={data}
@@ -282,14 +282,14 @@ export function TabulacaoPieChart({
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
-      <ChartContainer config={config} className="mx-auto aspect-square h-[300px]">
-        <PieChart margin={{ top: 16, right: 90, bottom: 16, left: 90 }}>
+      <ChartContainer config={config} className="mx-auto h-[300px] w-full">
+        <PieChart margin={{ top: 24, right: 120, bottom: 24, left: 120 }}>
           <ChartTooltip content={<ChartTooltipContent nameKey="tabulacao" />} />
           <Pie
             data={data}
             dataKey="qtd"
             nameKey="tabulacao"
-            outerRadius={78}
+            outerRadius={70}
             labelLine={false}
             label={makeLeaderLabel((_, i) => PIE_COLORS[i % PIE_COLORS.length], mostrarNotas)}
           >
