@@ -87,7 +87,7 @@ export function VolumeNotaChart({
         variant="outline"
         size="sm"
         onClick={() => setMostrarNotas((v) => !v)}
-        className="absolute right-0 top-0 z-10 gap-1.5"
+        className="absolute right-0 -top-10 z-10 gap-1.5"
       >
         {mostrarNotas ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
         {mostrarNotas ? "Ocultar notas" : "Exibir notas"}
