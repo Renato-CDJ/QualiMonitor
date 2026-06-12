@@ -279,7 +279,7 @@ export function Dashboard() {
           icon={CheckCircle2}
           label="Taxa de aprovação"
           value={`${k.aprovacao}%`}
-          sub="nota ≥ 75"
+          sub="nota > 85"
           tone={k.aprovacao >= 75 ? "good" : "default"}
         />
         <Kpi

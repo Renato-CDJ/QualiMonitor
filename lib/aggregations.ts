@@ -189,7 +189,7 @@ export function kpis(monitorias: Monitoria[]) {
     notaMedia: Math.round(media(notas) * 10) / 10,
     mediana: Math.round(q.mediana * 10) / 10,
     aprovacao: notas.length
-      ? Math.round((notas.filter((n) => n >= 75).length / notas.length) * 1000) / 10
+      ? Math.round((notas.filter((n) => n > 85).length / notas.length) * 1000) / 10
       : 0,
     criticos: notas.filter((n) => n < 60).length,
     totalInconf,
