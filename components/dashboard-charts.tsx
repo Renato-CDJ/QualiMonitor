@@ -13,6 +13,7 @@ import {
   Line,
   Pie,
   PieChart,
+  ReferenceArea,
   ReferenceLine,
   XAxis,
   YAxis,
@@ -487,11 +488,13 @@ export function QuartilCarteiraChart({
    Desenha um boxplot real: haste mín–máx, caixa interquartil (Q1–Q3),
    linha de mediana e ponto de média. A cor reflete o nível da mediana. */
 function corPorMediana(mediana: number) {
-  return mediana >= 75
-    ? "var(--chart-5)"
-    : mediana >= 60
-      ? "var(--chart-3)"
-      : "var(--destructive)"
+  return mediana >= 90
+    ? "var(--chart-5)" // Q1 Excelente
+    : mediana >= 75
+      ? "var(--chart-1)" // Q2 Bom
+      : mediana >= 60
+        ? "var(--chart-3)" // Q3 Regular
+        : "var(--destructive)" // Q4 Crítico
 }
 
 function BoxplotShape(props: any) {
@@ -645,13 +648,20 @@ export function QuartilChart({
     <ChartContainer config={config} className="w-full" style={{ height: altura }}>
       <BarChart data={data} margin={{ left: -16, right: 8, top: 8, bottom: 8 }} barCategoryGap="22%">
         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+        {/* Faixas de fundo dos 4 quadrantes (Q1–Q4) */}
+        <ReferenceArea y1={90} y2={100} fill="var(--chart-5)" fillOpacity={0.07} ifOverflow="extendDomain" />
+        <ReferenceArea y1={75} y2={90} fill="var(--chart-1)" fillOpacity={0.07} ifOverflow="extendDomain" />
+        <ReferenceArea y1={60} y2={75} fill="var(--chart-3)" fillOpacity={0.07} ifOverflow="extendDomain" />
+        <ReferenceArea y1={0} y2={60} fill="var(--destructive)" fillOpacity={0.07} ifOverflow="extendDomain" />
         <XAxis dataKey="operador" tickLine={false} axisLine={false} fontSize={11} interval={0} angle={-30} textAnchor="end" height={50} />
-        <YAxis domain={[0, 100]} tickLine={false} axisLine={false} fontSize={12} width={36} />
+        <YAxis domain={[0, 100]} ticks={[0, 60, 75, 90, 100]} tickLine={false} axisLine={false} fontSize={12} width={36} />
         <ChartTooltip cursor={{ fill: "var(--muted)", fillOpacity: 0.3 }} content={<BoxplotTooltip />} />
         {/* base transparente + span desenhado como boxplot */}
         <Bar dataKey="base" stackId="q" fill="transparent" isAnimationActive={false} />
         <Bar dataKey="span" stackId="q" shape={<BoxplotShape />} isAnimationActive={false} />
+        <ReferenceLine y={90} stroke="var(--chart-5)" strokeDasharray="4 4" strokeOpacity={0.5} />
         <ReferenceLine y={75} stroke="var(--chart-3)" strokeDasharray="4 4" label={{ value: "meta 75", position: "right", fontSize: 10, fill: "var(--muted-foreground)" }} />
+        <ReferenceLine y={60} stroke="var(--destructive)" strokeDasharray="4 4" strokeOpacity={0.5} />
       </BarChart>
     </ChartContainer>
   )

@@ -73,6 +73,14 @@ export function porOperador(monitorias: Monitoria[]) {
       nota: Math.round(media(notas) * 10) / 10,
       volume: notas.length,
       quartis: resumoQuartis(notas),
+      // Quadrantes por faixa de nota:
+      // Q1 = Excelente (90+), Q2 = Bom (75-89), Q3 = Regular (60-74), Q4 = Crítico (<60)
+      faixas: {
+        excelente: notas.filter((n) => n >= 90).length,
+        bom: notas.filter((n) => n >= 75 && n < 90).length,
+        regular: notas.filter((n) => n >= 60 && n < 75).length,
+        critico: notas.filter((n) => n < 60).length,
+      },
     }))
     .sort((a, b) => b.nota - a.nota)
 }

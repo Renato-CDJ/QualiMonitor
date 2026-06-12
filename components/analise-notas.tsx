@@ -92,6 +92,10 @@ type SortKey =
   | "max"
   | "iqr"
   | "faixa"
+  | "q1"
+  | "q2"
+  | "q3"
+  | "q4"
 type SortDir = "asc" | "desc"
 
 function inicioDoMes() {
@@ -106,6 +110,7 @@ function hojeISO() {
 export function AnaliseNotas() {
   const { monitorias, ready } = useQualityData()
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
+  const [faixaFiltro, setFaixaFiltro] = useState<string>("todas")
   const [dataInicio, setDataInicio] = useState<string>(inicioDoMes)
   const [dataFim, setDataFim] = useState<string>(hojeISO)
   const [sortKey, setSortKey] = useState<SortKey>("nota")
@@ -122,9 +127,13 @@ export function AnaliseNotas() {
         if (carteiraFiltro !== "todas" && m.carteira !== carteiraFiltro) return false
         if (dataInicio && m.data < dataInicio) return false
         if (dataFim && m.data > dataFim) return false
+        if (faixaFiltro === "excelente" && m.nota < 90) return false
+        if (faixaFiltro === "bom" && (m.nota < 75 || m.nota >= 90)) return false
+        if (faixaFiltro === "regular" && (m.nota < 60 || m.nota >= 75)) return false
+        if (faixaFiltro === "critico" && m.nota >= 60) return false
         return true
       }),
-    [monitorias, carteiraFiltro, dataInicio, dataFim],
+    [monitorias, carteiraFiltro, dataInicio, dataFim, faixaFiltro],
   )
 
   const k = useMemo(() => kpis(filtradas), [filtradas])
@@ -150,6 +159,14 @@ export function AnaliseNotas() {
           return o.quartis.q3 - o.quartis.q1
         case "faixa":
           return o.nota
+        case "q1":
+          return o.faixas.excelente
+        case "q2":
+          return o.faixas.bom
+        case "q3":
+          return o.faixas.regular
+        case "q4":
+          return o.faixas.critico
       }
     }
     const arr = [...operadores].sort((a, b) => {
@@ -181,6 +198,10 @@ export function AnaliseNotas() {
       Mediana: Number(o.quartis.mediana.toFixed(0)),
       Máx: Number(o.quartis.max.toFixed(0)),
       IQR: Number((o.quartis.q3 - o.quartis.q1).toFixed(0)),
+      "Q1 Excelente (90+)": o.faixas.excelente,
+      "Q2 Bom (75-89)": o.faixas.bom,
+      "Q3 Regular (60-74)": o.faixas.regular,
+      "Q4 Crítico (<60)": o.faixas.critico,
       Faixa: faixaNota(o.nota),
     }))
     const ws = XLSX.utils.json_to_sheet(linhas)
@@ -259,6 +280,21 @@ export function AnaliseNotas() {
                   {c}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-xs text-muted-foreground">Faixa</Label>
+          <Select value={faixaFiltro} onValueChange={setFaixaFiltro}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas as faixas</SelectItem>
+              <SelectItem value="excelente">Q1 · Excelente (90+)</SelectItem>
+              <SelectItem value="bom">Q2 · Bom (75-89)</SelectItem>
+              <SelectItem value="regular">Q3 · Regular (60-74)</SelectItem>
+              <SelectItem value="critico">Q4 · Crítico (&lt;60)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -368,10 +404,11 @@ export function AnaliseNotas() {
               Meta 75
             </span>
             <span className="flex items-center gap-1.5">
-              Cores:
-              <span className="text-chart-5">verde ≥ 75</span> ·
-              <span className="text-chart-3">amarelo 60–74</span> ·
-              <span className="text-destructive">vermelho &lt; 60</span>
+              Quadrantes:
+              <span className="text-chart-5">Q1 Excelente (90+)</span> ·
+              <span className="text-chart-1">Q2 Bom (75-89)</span> ·
+              <span className="text-chart-3">Q3 Regular (60-74)</span> ·
+              <span className="text-destructive">Q4 Crítico (&lt;60)</span>
             </span>
           </div>
         </CardContent>
@@ -406,7 +443,8 @@ export function AnaliseNotas() {
                 Estatísticas Detalhadas por Operador
               </CardTitle>
               <p className="text-xs text-muted-foreground">
-                Clique no cabeçalho de uma coluna para ordenar
+                Clique no cabeçalho para ordenar · Q1 Excelente (90+) · Q2 Bom
+                (75-89) · Q3 Regular (60-74) · Q4 Crítico (&lt;60)
               </p>
             </div>
             <Button
@@ -431,6 +469,10 @@ export function AnaliseNotas() {
                 <SortHeader label="Mediana" sortKey="mediana" />
                 <SortHeader label="Máx" sortKey="max" />
                 <SortHeader label="IQR" sortKey="iqr" />
+                <SortHeader label="Q1" sortKey="q1" />
+                <SortHeader label="Q2" sortKey="q2" />
+                <SortHeader label="Q3" sortKey="q3" />
+                <SortHeader label="Q4" sortKey="q4" />
                 <SortHeader label="Faixa" sortKey="faixa" />
               </TableRow>
             </TableHeader>
@@ -453,6 +495,18 @@ export function AnaliseNotas() {
                   </TableCell>
                   <TableCell className="text-right tabular-nums text-muted-foreground">
                     {(o.quartis.q3 - o.quartis.q1).toFixed(0)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums font-medium text-chart-5">
+                    {o.faixas.excelente || "—"}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums font-medium text-chart-1">
+                    {o.faixas.bom || "—"}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums font-medium text-chart-3">
+                    {o.faixas.regular || "—"}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums font-medium text-destructive">
+                    {o.faixas.critico || "—"}
                   </TableCell>
                   <TableCell className="text-right">
                     <Badge variant="outline" className={notaBadgeClass(o.nota)}>
