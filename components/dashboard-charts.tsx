@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   Area,
   AreaChart,
@@ -8,6 +9,7 @@ import {
   CartesianGrid,
   Cell,
   ComposedChart,
+  LabelList,
   Line,
   Pie,
   PieChart,
@@ -23,6 +25,8 @@ import {
 } from "@/components/ui/chart"
 import type { Monitoria } from "@/lib/types"
 import { resumoQuartis } from "@/lib/analytics"
+import { Button } from "@/components/ui/button"
+import { Eye, EyeOff } from "lucide-react"
 
 const PIE_COLORS = [
   "var(--chart-1)",
@@ -76,33 +80,56 @@ export function VolumeNotaChart({
     volume: { label: "Monitorias", color: "var(--chart-2)" },
     nota: { label: "Nota média", color: "var(--chart-1)" },
   } satisfies ChartConfig
+  const [mostrarNotas, setMostrarNotas] = useState(false)
   return (
-    <ChartContainer config={config} className="h-[260px] w-full">
-      <ComposedChart data={data} margin={{ left: -16, right: 8, top: 8 }}>
-        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
-        <XAxis dataKey="rotulo" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
-        <YAxis yAxisId="left" tickLine={false} axisLine={false} fontSize={12} width={32} />
-        <YAxis
-          yAxisId="right"
-          orientation="right"
-          domain={[0, 100]}
-          tickLine={false}
-          axisLine={false}
-          fontSize={12}
-          width={32}
-        />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar yAxisId="left" dataKey="volume" fill="var(--color-volume)" radius={[4, 4, 0, 0]} />
-        <Line
-          yAxisId="right"
-          type="monotone"
-          dataKey="nota"
-          stroke="var(--color-nota)"
-          strokeWidth={2}
-          dot={false}
-        />
-      </ComposedChart>
-    </ChartContainer>
+    <div className="relative">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setMostrarNotas((v) => !v)}
+        className="absolute right-0 -top-10 z-10 gap-1.5"
+      >
+        {mostrarNotas ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+        {mostrarNotas ? "Ocultar notas" : "Exibir notas"}
+      </Button>
+      <ChartContainer config={config} className="h-[260px] w-full">
+        <ComposedChart data={data} margin={{ left: -16, right: 8, top: 24 }}>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis dataKey="rotulo" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+          <YAxis yAxisId="left" tickLine={false} axisLine={false} fontSize={12} width={32} />
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            domain={[0, 100]}
+            tickLine={false}
+            axisLine={false}
+            fontSize={12}
+            width={32}
+          />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Bar yAxisId="left" dataKey="volume" fill="var(--color-volume)" radius={[4, 4, 0, 0]} />
+          <Line
+            yAxisId="right"
+            type="monotone"
+            dataKey="nota"
+            stroke="var(--color-nota)"
+            strokeWidth={2}
+            dot={{ r: 3, fill: "var(--color-nota)" }}
+          >
+            {mostrarNotas && (
+              <LabelList
+                dataKey="nota"
+                position="top"
+                offset={10}
+                fontSize={12}
+                fontWeight={600}
+                fill="var(--foreground)"
+              />
+            )}
+          </Line>
+        </ComposedChart>
+      </ChartContainer>
+    </div>
   )
 }
 
