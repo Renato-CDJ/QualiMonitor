@@ -1,9 +1,21 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Activity, TrendingUp, Target, Gauge, BarChart3 } from "lucide-react"
+import {
+  Activity,
+  TrendingUp,
+  Target,
+  Gauge,
+  BarChart3,
+  ArrowUpDown,
+  ArrowDown,
+  ArrowUp,
+} from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -69,9 +81,33 @@ function Stat({
   )
 }
 
+type SortKey =
+  | "operador"
+  | "volume"
+  | "nota"
+  | "min"
+  | "mediana"
+  | "max"
+  | "iqr"
+  | "faixa"
+type SortDir = "asc" | "desc"
+
+function inicioDoMes() {
+  const d = new Date()
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10)
+}
+
+function hojeISO() {
+  return new Date().toISOString().slice(0, 10)
+}
+
 export function AnaliseNotas() {
   const { monitorias, ready } = useQualityData()
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
+  const [dataInicio, setDataInicio] = useState<string>(inicioDoMes)
+  const [dataFim, setDataFim] = useState<string>(hojeISO)
+  const [sortKey, setSortKey] = useState<SortKey>("nota")
+  const [sortDir, setSortDir] = useState<SortDir>("desc")
 
   const carteiras = useMemo(
     () => Array.from(new Set(monitorias.map((m) => m.carteira))),
@@ -80,15 +116,86 @@ export function AnaliseNotas() {
 
   const filtradas = useMemo(
     () =>
-      carteiraFiltro === "todas"
-        ? monitorias
-        : monitorias.filter((m) => m.carteira === carteiraFiltro),
-    [monitorias, carteiraFiltro],
+      monitorias.filter((m) => {
+        if (carteiraFiltro !== "todas" && m.carteira !== carteiraFiltro) return false
+        if (dataInicio && m.data < dataInicio) return false
+        if (dataFim && m.data > dataFim) return false
+        return true
+      }),
+    [monitorias, carteiraFiltro, dataInicio, dataFim],
   )
 
   const k = useMemo(() => kpis(filtradas), [filtradas])
   const carteiraQuartis = useMemo(() => quartisPorCarteira(filtradas), [filtradas])
   const operadores = useMemo(() => porOperador(filtradas), [filtradas])
+
+  const operadoresOrdenados = useMemo(() => {
+    const valor = (o: (typeof operadores)[number]) => {
+      switch (sortKey) {
+        case "operador":
+          return o.operador
+        case "volume":
+          return o.volume
+        case "nota":
+          return o.nota
+        case "min":
+          return o.quartis.min
+        case "mediana":
+          return o.quartis.mediana
+        case "max":
+          return o.quartis.max
+        case "iqr":
+          return o.quartis.q3 - o.quartis.q1
+        case "faixa":
+          return o.nota
+      }
+    }
+    const arr = [...operadores].sort((a, b) => {
+      const va = valor(a)
+      const vb = valor(b)
+      if (typeof va === "string" && typeof vb === "string") {
+        return va.localeCompare(vb, "pt-BR")
+      }
+      return (va as number) - (vb as number)
+    })
+    return sortDir === "desc" ? arr.reverse() : arr
+  }, [operadores, sortKey, sortDir])
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"))
+    } else {
+      setSortKey(key)
+      setSortDir(key === "operador" ? "asc" : "desc")
+    }
+  }
+
+  function SortHeader({
+    label,
+    sortKey: key,
+    align = "right",
+  }: {
+    label: string
+    sortKey: SortKey
+    align?: "left" | "right"
+  }) {
+    const active = sortKey === key
+    const Icon = !active ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown
+    return (
+      <TableHead className={align === "right" ? "text-right" : undefined}>
+        <button
+          type="button"
+          onClick={() => toggleSort(key)}
+          className={`inline-flex items-center gap-1 hover:text-foreground ${
+            align === "right" ? "flex-row-reverse" : ""
+          } ${active ? "text-foreground" : ""}`}
+        >
+          {label}
+          <Icon className="size-3.5 opacity-70" />
+        </button>
+      </TableHead>
+    )
+  }
 
   const desvioPadrao = useMemo(() => {
     const notas = filtradas.map((m) => m.nota)
@@ -114,22 +221,61 @@ export function AnaliseNotas() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Filtro */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Select value={carteiraFiltro} onValueChange={setCarteiraFiltro}>
-          <SelectTrigger className="w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todas">Todas as carteiras</SelectItem>
-            {carteiras.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <span className="text-xs text-muted-foreground">
+      {/* Filtros */}
+      <div className="flex flex-wrap items-end gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-xs text-muted-foreground">Carteira</Label>
+          <Select value={carteiraFiltro} onValueChange={setCarteiraFiltro}>
+            <SelectTrigger className="w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas as carteiras</SelectItem>
+              {carteiras.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="data-inicio" className="text-xs text-muted-foreground">
+            De
+          </Label>
+          <Input
+            id="data-inicio"
+            type="date"
+            value={dataInicio}
+            max={dataFim || undefined}
+            onChange={(e) => setDataInicio(e.target.value)}
+            className="w-40"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="data-fim" className="text-xs text-muted-foreground">
+            Até
+          </Label>
+          <Input
+            id="data-fim"
+            type="date"
+            value={dataFim}
+            min={dataInicio || undefined}
+            onChange={(e) => setDataFim(e.target.value)}
+            className="w-40"
+          />
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setDataInicio(inicioDoMes())
+            setDataFim(hojeISO())
+          }}
+        >
+          Mês atual
+        </Button>
+        <span className="pb-1.5 text-xs text-muted-foreground">
           {filtradas.length} monitorias analisadas
         </span>
       </div>
@@ -234,25 +380,28 @@ export function AnaliseNotas() {
             <BarChart3 className="size-4 text-muted-foreground" />
             Estatísticas Detalhadas por Operador
           </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Clique no cabeçalho de uma coluna para ordenar
+          </p>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Operador</TableHead>
-                <TableHead className="text-right">Monitorias</TableHead>
-                <TableHead className="text-right">Média</TableHead>
-                <TableHead className="text-right">Mín</TableHead>
+                <SortHeader label="Operador" sortKey="operador" align="left" />
+                <SortHeader label="Monitorias" sortKey="volume" />
+                <SortHeader label="Média" sortKey="nota" />
+                <SortHeader label="Mín" sortKey="min" />
                 <TableHead className="text-right">Q1</TableHead>
-                <TableHead className="text-right">Mediana</TableHead>
+                <SortHeader label="Mediana" sortKey="mediana" />
                 <TableHead className="text-right">Q3</TableHead>
-                <TableHead className="text-right">Máx</TableHead>
-                <TableHead className="text-right">IQR</TableHead>
-                <TableHead className="text-right">Faixa</TableHead>
+                <SortHeader label="Máx" sortKey="max" />
+                <SortHeader label="IQR" sortKey="iqr" />
+                <SortHeader label="Faixa" sortKey="faixa" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {operadores.map((o) => (
+              {operadoresOrdenados.map((o) => (
                 <TableRow key={o.operador}>
                   <TableCell className="font-medium">{o.operador}</TableCell>
                   <TableCell className="text-right tabular-nums">{o.volume}</TableCell>
