@@ -8,6 +8,7 @@ import {
   CartesianGrid,
   Cell,
   ComposedChart,
+  LabelList,
   Line,
   Pie,
   PieChart,
@@ -76,52 +77,42 @@ export function VolumeNotaChart({
     volume: { label: "Monitorias", color: "var(--chart-2)" },
     nota: { label: "Nota média", color: "var(--chart-1)" },
   } satisfies ChartConfig
-  const notaMedia =
-    data.length > 0
-      ? Math.round((data.reduce((acc, d) => acc + d.nota, 0) / data.length) * 10) / 10
-      : 0
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">Nota média do período</span>
-        <span className="flex items-baseline gap-1">
-          <span
-            className="inline-block size-2.5 rounded-full"
-            style={{ backgroundColor: "var(--chart-1)" }}
-            aria-hidden
-          />
-          <span className="text-2xl font-semibold tabular-nums text-foreground">
-            {notaMedia}
-          </span>
-        </span>
-      </div>
-      <ChartContainer config={config} className="h-[260px] w-full">
-        <ComposedChart data={data} margin={{ left: -16, right: 8, top: 8 }}>
-          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
-          <XAxis dataKey="rotulo" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
-          <YAxis yAxisId="left" tickLine={false} axisLine={false} fontSize={12} width={32} />
-          <YAxis
-            yAxisId="right"
-            orientation="right"
-            domain={[0, 100]}
-            tickLine={false}
-            axisLine={false}
-            fontSize={12}
-            width={32}
-          />
-          <ChartTooltip content={<ChartTooltipContent />} />
-          <Bar yAxisId="left" dataKey="volume" fill="var(--color-volume)" radius={[4, 4, 0, 0]} />
-          <Line
-            yAxisId="right"
-            type="monotone"
+    <ChartContainer config={config} className="h-[260px] w-full">
+      <ComposedChart data={data} margin={{ left: -16, right: 8, top: 24 }}>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis dataKey="rotulo" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+        <YAxis yAxisId="left" tickLine={false} axisLine={false} fontSize={12} width={32} />
+        <YAxis
+          yAxisId="right"
+          orientation="right"
+          domain={[0, 100]}
+          tickLine={false}
+          axisLine={false}
+          fontSize={12}
+          width={32}
+        />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar yAxisId="left" dataKey="volume" fill="var(--color-volume)" radius={[4, 4, 0, 0]} />
+        <Line
+          yAxisId="right"
+          type="monotone"
+          dataKey="nota"
+          stroke="var(--color-nota)"
+          strokeWidth={2}
+          dot={{ r: 3, fill: "var(--color-nota)" }}
+        >
+          <LabelList
             dataKey="nota"
-            stroke="var(--color-nota)"
-            strokeWidth={2}
-            dot={false}
+            position="top"
+            offset={10}
+            fontSize={12}
+            fontWeight={600}
+            fill="var(--color-nota)"
           />
-        </ComposedChart>
-      </ChartContainer>
-    </div>
+        </Line>
+      </ComposedChart>
+    </ChartContainer>
   )
 }
 
