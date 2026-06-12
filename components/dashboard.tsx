@@ -323,13 +323,6 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <FaixasPieChart data={faixaData} />
-            <div className="mt-2 flex flex-wrap justify-center gap-3 text-xs text-muted-foreground">
-              {faixaData.map((f) => (
-                <span key={f.faixa}>
-                  {f.faixa}: <span className="text-foreground">{f.qtd}</span>
-                </span>
-              ))}
-            </div>
           </CardContent>
         </Card>
         <Card>

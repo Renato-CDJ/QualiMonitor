@@ -19,8 +19,6 @@ import {
 } from "recharts"
 import {
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -37,6 +35,76 @@ const PIE_COLORS = [
   "var(--chart-4)",
   "var(--chart-5)",
 ]
+
+/* Cores semânticas por faixa de nota */
+const FAIXA_CORES: Record<string, string> = {
+  excelente: "#16a34a", // verde
+  bom: "#3b82f6", // azul
+  regular: "#f97316", // laranja
+  critico: "#ef4444", // vermelho
+}
+
+function corFaixa(faixa: string, fallback: string) {
+  const f = faixa
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+  if (f.includes("excelente")) return FAIXA_CORES.excelente
+  if (f.includes("bom")) return FAIXA_CORES.bom
+  if (f.includes("regular")) return FAIXA_CORES.regular
+  if (f.includes("critico")) return FAIXA_CORES.critico
+  return fallback
+}
+
+const RADIAN = Math.PI / 180
+
+/* Rótulo externo com linha de conexão (leader line) ligada à fatia */
+function makeLeaderLabel(corResolver: (name: string, index: number) => string, mostrarValor: boolean) {
+  return function LeaderLabel(props: any) {
+    const { cx, cy, midAngle, outerRadius, percent, name, value, index } = props
+    const cor = corResolver(name, index)
+    const cos = Math.cos(-RADIAN * midAngle)
+    const sin = Math.sin(-RADIAN * midAngle)
+    const sx = cx + (outerRadius + 2) * cos
+    const sy = cy + (outerRadius + 2) * sin
+    const mx = cx + (outerRadius + 16) * cos
+    const my = cy + (outerRadius + 16) * sin
+    const dir = cos >= 0 ? 1 : -1
+    const ex = mx + dir * 16
+    const ey = my
+    const anchor = cos >= 0 ? "start" : "end"
+    const tx = ex + dir * 5
+    return (
+      <g>
+        <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={cor} fill="none" strokeWidth={1.25} />
+        <circle cx={sx} cy={sy} r={2.5} fill={cor} stroke="none" />
+        <text
+          x={tx}
+          y={ey - (mostrarValor ? 6 : 0)}
+          textAnchor={anchor}
+          dominantBaseline="central"
+          fontSize={11}
+          fontWeight={600}
+          fill="var(--foreground)"
+        >
+          {name}
+        </text>
+        {mostrarValor && (
+          <text
+            x={tx}
+            y={ey + 8}
+            textAnchor={anchor}
+            dominantBaseline="central"
+            fontSize={10}
+            fill="var(--muted-foreground)"
+          >
+            {`${value} (${Math.round((percent ?? 0) * 100)}%)`}
+          </text>
+        )}
+      </g>
+    )
+  }
+}
 
 /* ---------- Botão reutilizável: exibir/ocultar notas ---------- */
 function ToggleNotasButton({
@@ -170,34 +238,30 @@ export function FaixasPieChart({
   data: { faixa: string; qtd: number }[]
 }) {
   const config: ChartConfig = data.reduce((acc, d, i) => {
-    acc[d.faixa] = { label: d.faixa, color: PIE_COLORS[i % PIE_COLORS.length] }
+    acc[d.faixa] = { label: d.faixa, color: corFaixa(d.faixa, PIE_COLORS[i % PIE_COLORS.length]) }
     return acc
   }, {} as ChartConfig)
   const [mostrarNotas, setMostrarNotas] = useState(false)
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
-      <ChartContainer config={config} className="mx-auto aspect-square h-[260px]">
-        <PieChart>
+      <ChartContainer config={config} className="mx-auto aspect-square h-[300px]">
+        <PieChart margin={{ top: 16, right: 90, bottom: 16, left: 90 }}>
           <ChartTooltip content={<ChartTooltipContent nameKey="faixa" />} />
-          <Pie data={data} dataKey="qtd" nameKey="faixa" innerRadius={55} outerRadius={95} paddingAngle={2}>
-            {data.map((_, i) => (
-              <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+          <Pie
+            data={data}
+            dataKey="qtd"
+            nameKey="faixa"
+            innerRadius={48}
+            outerRadius={78}
+            paddingAngle={2}
+            labelLine={false}
+            label={makeLeaderLabel((name, i) => corFaixa(name, PIE_COLORS[i % PIE_COLORS.length]), mostrarNotas)}
+          >
+            {data.map((d, i) => (
+              <Cell key={i} fill={corFaixa(d.faixa, PIE_COLORS[i % PIE_COLORS.length])} />
             ))}
-            {mostrarNotas && (
-              <LabelList
-                dataKey="qtd"
-                className="fill-foreground"
-                stroke="none"
-                fontSize={12}
-                fontWeight={600}
-              />
-            )}
           </Pie>
-          <ChartLegend
-            content={<ChartLegendContent nameKey="faixa" />}
-            className="flex-wrap gap-x-4 gap-y-1"
-          />
         </PieChart>
       </ChartContainer>
     </div>
@@ -218,27 +282,21 @@ export function TabulacaoPieChart({
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
-      <ChartContainer config={config} className="mx-auto aspect-square h-[260px]">
-        <PieChart>
+      <ChartContainer config={config} className="mx-auto aspect-square h-[300px]">
+        <PieChart margin={{ top: 16, right: 90, bottom: 16, left: 90 }}>
           <ChartTooltip content={<ChartTooltipContent nameKey="tabulacao" />} />
-          <Pie data={data} dataKey="qtd" nameKey="tabulacao" outerRadius={95}>
+          <Pie
+            data={data}
+            dataKey="qtd"
+            nameKey="tabulacao"
+            outerRadius={78}
+            labelLine={false}
+            label={makeLeaderLabel((_, i) => PIE_COLORS[i % PIE_COLORS.length], mostrarNotas)}
+          >
             {data.map((_, i) => (
               <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
             ))}
-            {mostrarNotas && (
-              <LabelList
-                dataKey="qtd"
-                className="fill-foreground"
-                stroke="none"
-                fontSize={12}
-                fontWeight={600}
-              />
-            )}
           </Pie>
-          <ChartLegend
-            content={<ChartLegendContent nameKey="tabulacao" />}
-            className="flex-wrap gap-x-4 gap-y-1"
-          />
         </PieChart>
       </ChartContainer>
     </div>
