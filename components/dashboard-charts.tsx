@@ -36,6 +36,27 @@ const PIE_COLORS = [
   "var(--chart-5)",
 ]
 
+/* ---------- Botão reutilizável: exibir/ocultar notas ---------- */
+function ToggleNotasButton({
+  mostrar,
+  onToggle,
+}: {
+  mostrar: boolean
+  onToggle: () => void
+}) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={onToggle}
+      className="absolute right-0 -top-10 z-10 gap-1.5"
+    >
+      {mostrar ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+      {mostrar ? "Ocultar notas" : "Exibir notas"}
+    </Button>
+  )
+}
+
 /* ---------- Tendência (linha/área) ---------- */
 export function TendenciaChart({
   data,
@@ -45,28 +66,43 @@ export function TendenciaChart({
   const config = {
     nota: { label: "Nota média", color: "var(--chart-1)" },
   } satisfies ChartConfig
+  const [mostrarNotas, setMostrarNotas] = useState(false)
   return (
-    <ChartContainer config={config} className="h-[260px] w-full">
-      <AreaChart data={data} margin={{ left: -16, right: 8, top: 8 }}>
-        <defs>
-          <linearGradient id="fillNota" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="var(--color-nota)" stopOpacity={0.35} />
-            <stop offset="95%" stopColor="var(--color-nota)" stopOpacity={0.02} />
-          </linearGradient>
-        </defs>
-        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
-        <XAxis dataKey="rotulo" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
-        <YAxis domain={[0, 100]} tickLine={false} axisLine={false} fontSize={12} width={40} />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <Area
-          type="monotone"
-          dataKey="nota"
-          stroke="var(--color-nota)"
-          strokeWidth={2}
-          fill="url(#fillNota)"
-        />
-      </AreaChart>
-    </ChartContainer>
+    <div className="relative">
+      <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
+      <ChartContainer config={config} className="h-[260px] w-full">
+        <AreaChart data={data} margin={{ left: -16, right: 8, top: 24 }}>
+          <defs>
+            <linearGradient id="fillNota" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="var(--color-nota)" stopOpacity={0.35} />
+              <stop offset="95%" stopColor="var(--color-nota)" stopOpacity={0.02} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis dataKey="rotulo" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+          <YAxis domain={[0, 100]} tickLine={false} axisLine={false} fontSize={12} width={40} />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Area
+            type="monotone"
+            dataKey="nota"
+            stroke="var(--color-nota)"
+            strokeWidth={2}
+            fill="url(#fillNota)"
+          >
+            {mostrarNotas && (
+              <LabelList
+                dataKey="nota"
+                position="top"
+                offset={10}
+                fontSize={12}
+                fontWeight={600}
+                fill="var(--foreground)"
+              />
+            )}
+          </Area>
+        </AreaChart>
+      </ChartContainer>
+    </div>
   )
 }
 
@@ -83,15 +119,7 @@ export function VolumeNotaChart({
   const [mostrarNotas, setMostrarNotas] = useState(false)
   return (
     <div className="relative">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setMostrarNotas((v) => !v)}
-        className="absolute right-0 -top-10 z-10 gap-1.5"
-      >
-        {mostrarNotas ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-        {mostrarNotas ? "Ocultar notas" : "Exibir notas"}
-      </Button>
+      <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
       <ChartContainer config={config} className="h-[260px] w-full">
         <ComposedChart data={data} margin={{ left: -16, right: 8, top: 24 }}>
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
@@ -143,17 +171,30 @@ export function FaixasPieChart({
     acc[d.faixa] = { label: d.faixa, color: PIE_COLORS[i % PIE_COLORS.length] }
     return acc
   }, {} as ChartConfig)
+  const [mostrarNotas, setMostrarNotas] = useState(false)
   return (
-    <ChartContainer config={config} className="mx-auto aspect-square h-[260px]">
-      <PieChart>
-        <ChartTooltip content={<ChartTooltipContent nameKey="faixa" />} />
-        <Pie data={data} dataKey="qtd" nameKey="faixa" innerRadius={55} outerRadius={95} paddingAngle={2}>
-          {data.map((_, i) => (
-            <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-          ))}
-        </Pie>
-      </PieChart>
-    </ChartContainer>
+    <div className="relative">
+      <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
+      <ChartContainer config={config} className="mx-auto aspect-square h-[260px]">
+        <PieChart>
+          <ChartTooltip content={<ChartTooltipContent nameKey="faixa" />} />
+          <Pie data={data} dataKey="qtd" nameKey="faixa" innerRadius={55} outerRadius={95} paddingAngle={2}>
+            {data.map((_, i) => (
+              <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+            ))}
+            {mostrarNotas && (
+              <LabelList
+                dataKey="qtd"
+                className="fill-foreground"
+                stroke="none"
+                fontSize={12}
+                fontWeight={600}
+              />
+            )}
+          </Pie>
+        </PieChart>
+      </ChartContainer>
+    </div>
   )
 }
 
@@ -167,17 +208,30 @@ export function TabulacaoPieChart({
     acc[d.tabulacao] = { label: d.tabulacao, color: PIE_COLORS[i % PIE_COLORS.length] }
     return acc
   }, {} as ChartConfig)
+  const [mostrarNotas, setMostrarNotas] = useState(false)
   return (
-    <ChartContainer config={config} className="mx-auto aspect-square h-[260px]">
-      <PieChart>
-        <ChartTooltip content={<ChartTooltipContent nameKey="tabulacao" />} />
-        <Pie data={data} dataKey="qtd" nameKey="tabulacao" outerRadius={95}>
-          {data.map((_, i) => (
-            <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-          ))}
-        </Pie>
-      </PieChart>
-    </ChartContainer>
+    <div className="relative">
+      <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
+      <ChartContainer config={config} className="mx-auto aspect-square h-[260px]">
+        <PieChart>
+          <ChartTooltip content={<ChartTooltipContent nameKey="tabulacao" />} />
+          <Pie data={data} dataKey="qtd" nameKey="tabulacao" outerRadius={95}>
+            {data.map((_, i) => (
+              <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+            ))}
+            {mostrarNotas && (
+              <LabelList
+                dataKey="qtd"
+                className="fill-foreground"
+                stroke="none"
+                fontSize={12}
+                fontWeight={600}
+              />
+            )}
+          </Pie>
+        </PieChart>
+      </ChartContainer>
+    </div>
   )
 }
 
@@ -190,23 +244,38 @@ export function CarteiraBarChart({
   const config = {
     nota: { label: "Nota média", color: "var(--chart-1)" },
   } satisfies ChartConfig
+  const [mostrarNotas, setMostrarNotas] = useState(false)
   return (
-    <ChartContainer config={config} className="h-[260px] w-full">
-      <BarChart data={data} layout="vertical" margin={{ left: 8, right: 24 }}>
-        <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--border)" />
-        <XAxis type="number" domain={[0, 100]} tickLine={false} axisLine={false} fontSize={12} />
-        <YAxis
-          type="category"
-          dataKey="carteira"
-          tickLine={false}
-          axisLine={false}
-          fontSize={12}
-          width={80}
-        />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar dataKey="nota" fill="var(--color-nota)" radius={[0, 4, 4, 0]} />
-      </BarChart>
-    </ChartContainer>
+    <div className="relative">
+      <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
+      <ChartContainer config={config} className="h-[260px] w-full">
+        <BarChart data={data} layout="vertical" margin={{ left: 8, right: 24, top: 16 }}>
+          <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis type="number" domain={[0, 100]} tickLine={false} axisLine={false} fontSize={12} />
+          <YAxis
+            type="category"
+            dataKey="carteira"
+            tickLine={false}
+            axisLine={false}
+            fontSize={12}
+            width={80}
+          />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Bar dataKey="nota" fill="var(--color-nota)" radius={[0, 4, 4, 0]}>
+            {mostrarNotas && (
+              <LabelList
+                dataKey="nota"
+                position="right"
+                offset={8}
+                fontSize={12}
+                fontWeight={600}
+                fill="var(--foreground)"
+              />
+            )}
+          </Bar>
+        </BarChart>
+      </ChartContainer>
+    </div>
   )
 }
 
@@ -220,43 +289,70 @@ export function ParetoChart({
     qtd: { label: "Inconformidades", color: "var(--chart-4)" },
     acumulado: { label: "% acumulado", color: "var(--chart-3)" },
   } satisfies ChartConfig
+  const [mostrarNotas, setMostrarNotas] = useState(false)
   return (
-    <ChartContainer config={config} className="h-[300px] w-full">
-      <ComposedChart data={data} margin={{ left: -16, right: 8, top: 8, bottom: 60 }}>
-        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
-        <XAxis
-          dataKey="item"
-          tickLine={false}
-          axisLine={false}
-          fontSize={11}
-          angle={-35}
-          textAnchor="end"
-          interval={0}
-          height={60}
-        />
-        <YAxis yAxisId="left" tickLine={false} axisLine={false} fontSize={12} width={32} />
-        <YAxis
-          yAxisId="right"
-          orientation="right"
-          domain={[0, 100]}
-          tickLine={false}
-          axisLine={false}
-          fontSize={12}
-          width={36}
-          unit="%"
-        />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar yAxisId="left" dataKey="qtd" fill="var(--color-qtd)" radius={[4, 4, 0, 0]} />
-        <Line
-          yAxisId="right"
-          type="monotone"
-          dataKey="acumulado"
-          stroke="var(--color-acumulado)"
-          strokeWidth={2}
-          dot={{ r: 3 }}
-        />
-      </ComposedChart>
-    </ChartContainer>
+    <div className="relative">
+      <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
+      <ChartContainer config={config} className="h-[300px] w-full">
+        <ComposedChart data={data} margin={{ left: -16, right: 8, top: 24, bottom: 60 }}>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis
+            dataKey="item"
+            tickLine={false}
+            axisLine={false}
+            fontSize={11}
+            angle={-35}
+            textAnchor="end"
+            interval={0}
+            height={60}
+          />
+          <YAxis yAxisId="left" tickLine={false} axisLine={false} fontSize={12} width={32} />
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            domain={[0, 100]}
+            tickLine={false}
+            axisLine={false}
+            fontSize={12}
+            width={36}
+            unit="%"
+          />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Bar yAxisId="left" dataKey="qtd" fill="var(--color-qtd)" radius={[4, 4, 0, 0]}>
+            {mostrarNotas && (
+              <LabelList
+                dataKey="qtd"
+                position="top"
+                offset={8}
+                fontSize={12}
+                fontWeight={600}
+                fill="var(--foreground)"
+              />
+            )}
+          </Bar>
+          <Line
+            yAxisId="right"
+            type="monotone"
+            dataKey="acumulado"
+            stroke="var(--color-acumulado)"
+            strokeWidth={2}
+            dot={{ r: 3 }}
+          >
+            {mostrarNotas && (
+              <LabelList
+                dataKey="acumulado"
+                position="top"
+                offset={10}
+                fontSize={11}
+                fontWeight={600}
+                fill="var(--color-acumulado)"
+                formatter={(v: number) => `${Math.round(v)}%`}
+              />
+            )}
+          </Line>
+        </ComposedChart>
+      </ChartContainer>
+    </div>
   )
 }
 
