@@ -244,15 +244,6 @@ export function Dashboard() {
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs text-muted-foreground">Atalhos</Label>
             <div className="flex items-center gap-1.5">
-              <Button variant="outline" size="sm" onClick={() => aplicarPreset("hoje")}>
-                Hoje
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => aplicarPreset(7)}>
-                7 dias
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => aplicarPreset(30)}>
-                30 dias
-              </Button>
               <Button variant="ghost" size="sm" onClick={() => aplicarPreset("tudo")}>
                 Tudo
               </Button>
