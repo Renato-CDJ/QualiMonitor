@@ -14,7 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Select,
   SelectContent,
@@ -95,7 +94,7 @@ function Kpi({
 
 export function Dashboard() {
   const { monitorias, checklists, ready } = useQualityData()
-  const [periodo, setPeriodo] = useState<Periodicidade>("diario")
+  const periodo: Periodicidade = "diario"
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
   const [dataInicio, setDataInicio] = useState<string>("")
   const [dataFim, setDataFim] = useState<string>("")
@@ -212,21 +211,6 @@ export function Dashboard() {
               </SelectContent>
             </Select>
           </div>
-
-          {/* Agrupamento */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-muted-foreground">Agrupamento</Label>
-            <Tabs value={periodo} onValueChange={(v) => setPeriodo(v as Periodicidade)}>
-              <TabsList>
-                <TabsTrigger value="diario">Diário</TabsTrigger>
-                <TabsTrigger value="semanal">Semanal</TabsTrigger>
-                <TabsTrigger value="mensal">Mensal</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-
-          {/* Divisória vertical */}
-          <div className="hidden h-10 w-px self-end bg-border lg:block" aria-hidden />
 
           {/* Período: De / Até */}
           <div className="flex flex-col gap-1.5">
