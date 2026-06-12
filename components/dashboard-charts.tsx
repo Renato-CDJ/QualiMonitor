@@ -19,6 +19,8 @@ import {
 } from "recharts"
 import {
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -192,6 +194,10 @@ export function FaixasPieChart({
               />
             )}
           </Pie>
+          <ChartLegend
+            content={<ChartLegendContent nameKey="faixa" />}
+            className="flex-wrap gap-x-4 gap-y-1"
+          />
         </PieChart>
       </ChartContainer>
     </div>
@@ -229,6 +235,10 @@ export function TabulacaoPieChart({
               />
             )}
           </Pie>
+          <ChartLegend
+            content={<ChartLegendContent nameKey="tabulacao" />}
+            className="flex-wrap gap-x-4 gap-y-1"
+          />
         </PieChart>
       </ChartContainer>
     </div>
