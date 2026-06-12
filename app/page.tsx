@@ -1,4 +1,4 @@
-import { MonitoriaForm } from "@/components/monitoria-form"
+import { Dashboard } from "@/components/dashboard"
 import { PageHeader } from "@/components/page-header"
 
 export default function Page() {
@@ -6,10 +6,10 @@ export default function Page() {
     <main className="mx-auto max-w-[1400px] px-4 py-6 md:px-6 md:py-8">
       <div className="flex flex-col gap-6">
         <PageHeader
-          title="Nova Monitoria"
-          description="Selecione a carteira, busque o operador e a tabulação para carregar o checklist. A nota inicia em 100 e os apontamentos descontam os pesos definidos."
+          title="Dashboard Analítico"
+          description="Visão somente leitura para acompanhamento. Comparativos de notas, distribuição, Pareto de inconformidades e análise de quartil."
         />
-        <MonitoriaForm />
+        <Dashboard />
       </div>
     </main>
   )

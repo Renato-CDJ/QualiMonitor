@@ -14,7 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Select,
   SelectContent,
@@ -95,10 +94,16 @@ function Kpi({
 
 export function Dashboard() {
   const { monitorias, checklists, ready } = useQualityData()
-  const [periodo, setPeriodo] = useState<Periodicidade>("diario")
+  const periodo: Periodicidade = "diario"
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
-  const [dataInicio, setDataInicio] = useState<string>("")
-  const [dataFim, setDataFim] = useState<string>("")
+  const [dataInicio, setDataInicio] = useState<string>(() => {
+    const hoje = new Date()
+    return new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10)
+  })
+  const [dataFim, setDataFim] = useState<string>(() => {
+    const hoje = new Date()
+    return new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().slice(0, 10)
+  })
 
   const carteiras = useMemo(
     () => Array.from(new Set(monitorias.map((m) => m.carteira))),
@@ -213,21 +218,6 @@ export function Dashboard() {
             </Select>
           </div>
 
-          {/* Agrupamento */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-muted-foreground">Agrupamento</Label>
-            <Tabs value={periodo} onValueChange={(v) => setPeriodo(v as Periodicidade)}>
-              <TabsList>
-                <TabsTrigger value="diario">Diário</TabsTrigger>
-                <TabsTrigger value="semanal">Semanal</TabsTrigger>
-                <TabsTrigger value="mensal">Mensal</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-
-          {/* Divisória vertical */}
-          <div className="hidden h-10 w-px self-end bg-border lg:block" aria-hidden />
-
           {/* Período: De / Até */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="data-inicio" className="text-xs text-muted-foreground">
@@ -260,15 +250,6 @@ export function Dashboard() {
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs text-muted-foreground">Atalhos</Label>
             <div className="flex items-center gap-1.5">
-              <Button variant="outline" size="sm" onClick={() => aplicarPreset("hoje")}>
-                Hoje
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => aplicarPreset(7)}>
-                7 dias
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => aplicarPreset(30)}>
-                30 dias
-              </Button>
               <Button variant="ghost" size="sm" onClick={() => aplicarPreset("tudo")}>
                 Tudo
               </Button>
@@ -342,13 +323,6 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <FaixasPieChart data={faixaData} />
-            <div className="mt-2 flex flex-wrap justify-center gap-3 text-xs text-muted-foreground">
-              {faixaData.map((f) => (
-                <span key={f.faixa}>
-                  {f.faixa}: <span className="text-foreground">{f.qtd}</span>
-                </span>
-              ))}
-            </div>
           </CardContent>
         </Card>
         <Card>
