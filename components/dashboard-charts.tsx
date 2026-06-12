@@ -80,7 +80,7 @@ export function VolumeNotaChart({
     volume: { label: "Monitorias", color: "var(--chart-2)" },
     nota: { label: "Nota média", color: "var(--chart-1)" },
   } satisfies ChartConfig
-  const [mostrarNotas, setMostrarNotas] = useState(true)
+  const [mostrarNotas, setMostrarNotas] = useState(false)
   return (
     <div className="relative">
       <Button
