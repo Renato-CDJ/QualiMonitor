@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Grid2x2, Plus, Tag, Type, Download, Inbox } from "lucide-react"
+import { Grid2x2, Plus, Tag, Type, Download, Inbox, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -43,7 +43,17 @@ import { toast } from "sonner"
 
 type Visao = "sigla" | "nome"
 
-const META_QUALIDADE = 75
+type SortKey =
+  | "operador"
+  | "carteira"
+  | "volume"
+  | "nota"
+  | "qualidade"
+  | "recebimento"
+  | "quadrante"
+type SortDir = "asc" | "desc"
+
+const META_QUALIDADE = 85
 
 /** Estilo de cor por sigla de quadrante */
 function siglaClass(sigla: SiglaQuadrante | null) {
@@ -70,6 +80,8 @@ export function Quadrante() {
   const { monitorias, recebimentos, ready, store } = useQualityData()
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
   const [visao, setVisao] = useState<Visao>("sigla")
+  const [sortKey, setSortKey] = useState<SortKey>("nota")
+  const [sortDir, setSortDir] = useState<SortDir>("desc")
 
   // estado do dialog de recebimento
   const [dialogAberto, setDialogAberto] = useState(false)
@@ -93,6 +105,53 @@ export function Quadrante() {
     () => quadranteOperadores(filtradas, recebimentos, META_QUALIDADE),
     [filtradas, recebimentos],
   )
+
+  // ordem usada para classificar valores categóricos
+  const ordemQualidade: Record<string, number> = { alta: 1, baixa: 0 }
+  const ordemRecebimento: Record<string, number> = { alto: 2, baixo: 1 }
+  const ordemQuadrante: Record<SiglaQuadrante, number> = { AA: 4, AB: 3, BA: 2, BB: 1 }
+
+  const dadosOrdenados = useMemo(() => {
+    const valor = (o: OperadorQuadrante): string | number => {
+      switch (sortKey) {
+        case "operador":
+          return o.operador
+        case "carteira":
+          return o.carteira
+        case "volume":
+          return o.volume
+        case "nota":
+          return o.nota
+        case "qualidade":
+          return ordemQualidade[o.qualidade] ?? -1
+        case "recebimento":
+          return o.recebimento ? ordemRecebimento[o.recebimento] : 0
+        case "quadrante":
+          return o.sigla ? ordemQuadrante[o.sigla] : 0
+        default:
+          return 0
+      }
+    }
+    const arr = [...dados].sort((a, b) => {
+      const va = valor(a)
+      const vb = valor(b)
+      if (typeof va === "string" && typeof vb === "string") {
+        return va.localeCompare(vb)
+      }
+      return (va as number) - (vb as number)
+    })
+    return sortDir === "desc" ? arr.reverse() : arr
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dados, sortKey, sortDir])
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"))
+    } else {
+      setSortKey(key)
+      setSortDir(key === "operador" || key === "carteira" ? "asc" : "desc")
+    }
+  }
 
   // operadores agrupados por quadrante (apenas os com recebimento definido)
   const porQuadrante = useMemo(() => {
@@ -346,26 +405,74 @@ export function Quadrante() {
         <CardHeader>
           <CardTitle className="text-base">Resultado por Operador</CardTitle>
           <p className="text-xs text-muted-foreground">
-            Qualidade calculada pelas notas · Recebimento definido manualmente ·
-            Visão: {visao === "sigla" ? "Siglas (AA, AB, BA, BB)" : "Nome completo"}
+            Clique no cabeçalho para ordenar · Qualidade calculada pelas notas ·
+            Recebimento definido manualmente · Visão:{" "}
+            {visao === "sigla" ? "Siglas (AA, AB, BA, BB)" : "Nome completo"}
           </p>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Operador</TableHead>
-                <TableHead>Carteira</TableHead>
-                <TableHead className="text-right">Monitorias</TableHead>
-                <TableHead className="text-right">Nota Média</TableHead>
-                <TableHead className="text-center">Qualidade</TableHead>
-                <TableHead className="text-center">Recebimento</TableHead>
-                <TableHead className="text-center">Quadrante</TableHead>
+                <SortHeader
+                  label="Operador"
+                  sortKey="operador"
+                  align="left"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortHeader
+                  label="Carteira"
+                  sortKey="carteira"
+                  align="left"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortHeader
+                  label="Monitorias"
+                  sortKey="volume"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortHeader
+                  label="Nota Média"
+                  sortKey="nota"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortHeader
+                  label="Qualidade"
+                  sortKey="qualidade"
+                  align="center"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortHeader
+                  label="Recebimento"
+                  sortKey="recebimento"
+                  align="center"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortHeader
+                  label="Quadrante"
+                  sortKey="quadrante"
+                  align="center"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
                 <TableHead className="text-right">Ação</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {dados.map((o) => (
+              {dadosOrdenados.map((o) => (
                 <TableRow key={o.operador}>
                   <TableCell className="font-medium">{o.operador}</TableCell>
                   <TableCell className="text-muted-foreground">{o.carteira}</TableCell>
@@ -434,6 +541,47 @@ export function Quadrante() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function SortHeader({
+  label,
+  sortKey: key,
+  align = "right",
+  activeKey,
+  dir,
+  onSort,
+}: {
+  label: string
+  sortKey: SortKey
+  align?: "left" | "right" | "center"
+  activeKey: SortKey
+  dir: SortDir
+  onSort: (key: SortKey) => void
+}) {
+  const active = activeKey === key
+  const Icon = !active ? ArrowUpDown : dir === "asc" ? ArrowUp : ArrowDown
+  const alignClass =
+    align === "right" ? "text-right" : align === "center" ? "text-center" : undefined
+  const flexClass =
+    align === "right"
+      ? "flex-row-reverse"
+      : align === "center"
+        ? "justify-center"
+        : ""
+  return (
+    <TableHead className={alignClass}>
+      <button
+        type="button"
+        onClick={() => onSort(key)}
+        className={`inline-flex items-center gap-1 hover:text-foreground ${flexClass} ${
+          active ? "text-foreground" : ""
+        }`}
+      >
+        {label}
+        <Icon className="size-3.5" />
+      </button>
+    </TableHead>
   )
 }
 
