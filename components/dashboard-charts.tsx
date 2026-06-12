@@ -67,10 +67,10 @@ function makeLeaderLabel(corResolver: (name: string, index: number) => string, m
     const sin = Math.sin(-RADIAN * midAngle)
     const sx = cx + (outerRadius + 2) * cos
     const sy = cy + (outerRadius + 2) * sin
-    const mx = cx + (outerRadius + 16) * cos
-    const my = cy + (outerRadius + 16) * sin
+    const mx = cx + (outerRadius + 12) * cos
+    const my = cy + (outerRadius + 12) * sin
     const dir = cos >= 0 ? 1 : -1
-    const ex = mx + dir * 16
+    const ex = mx + dir * 12
     const ey = my
     const anchor = cos >= 0 ? "start" : "end"
     const tx = ex + dir * 5
@@ -245,8 +245,8 @@ export function FaixasPieChart({
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
-      <ChartContainer config={config} className="mx-auto aspect-square h-[300px]">
-        <PieChart margin={{ top: 16, right: 90, bottom: 16, left: 90 }}>
+      <ChartContainer config={config} className="mx-auto h-[300px] w-full">
+        <PieChart margin={{ top: 24, right: 110, bottom: 24, left: 110 }}>
           <ChartTooltip content={<ChartTooltipContent nameKey="faixa" />} />
           <Pie
             data={data}
@@ -282,14 +282,14 @@ export function TabulacaoPieChart({
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
-      <ChartContainer config={config} className="mx-auto aspect-square h-[300px]">
-        <PieChart margin={{ top: 16, right: 90, bottom: 16, left: 90 }}>
+      <ChartContainer config={config} className="mx-auto h-[300px] w-full">
+        <PieChart margin={{ top: 24, right: 120, bottom: 24, left: 120 }}>
           <ChartTooltip content={<ChartTooltipContent nameKey="tabulacao" />} />
           <Pie
             data={data}
             dataKey="qtd"
             nameKey="tabulacao"
-            outerRadius={78}
+            outerRadius={70}
             labelLine={false}
             label={makeLeaderLabel((_, i) => PIE_COLORS[i % PIE_COLORS.length], mostrarNotas)}
           >
@@ -502,8 +502,8 @@ function BoxplotShape(props: any) {
   // y/height representam a faixa [min, max] (barra base+span)
   const px = (v: number) => y + (height * (max - v)) / range
   const cx = x + width / 2
-  const boxW = Math.min(width * 0.7, 46)
-  const capW = boxW * 0.55
+  const boxW = Math.min(width * 0.78, 40)
+  const capW = boxW
   const boxX = cx - boxW / 2
   const yMin = px(min)
   const yMax = px(max)
@@ -512,29 +512,52 @@ function BoxplotShape(props: any) {
   const yMed = px(mediana)
   const yMedia = px(media)
   const cor = corPorMediana(mediana)
+  const boxH = Math.max(yQ1 - yQ3, 3)
   return (
     <g>
       {/* haste vertical mín–máx */}
-      <line x1={cx} x2={cx} y1={yMax} y2={yMin} stroke={cor} strokeWidth={1.5} strokeOpacity={0.7} />
+      <line x1={cx} x2={cx} y1={yMax} y2={yQ3} stroke={cor} strokeWidth={2} strokeOpacity={0.8} />
+      <line x1={cx} x2={cx} y1={yQ1} y2={yMin} stroke={cor} strokeWidth={2} strokeOpacity={0.8} />
       {/* tampas mín e máx */}
-      <line x1={cx - capW / 2} x2={cx + capW / 2} y1={yMax} y2={yMax} stroke={cor} strokeWidth={1.5} />
-      <line x1={cx - capW / 2} x2={cx + capW / 2} y1={yMin} y2={yMin} stroke={cor} strokeWidth={1.5} />
-      {/* caixa interquartil Q1–Q3 */}
+      <line x1={cx - capW / 2} x2={cx + capW / 2} y1={yMax} y2={yMax} stroke={cor} strokeWidth={2.5} strokeLinecap="round" />
+      <line x1={cx - capW / 2} x2={cx + capW / 2} y1={yMin} y2={yMin} stroke={cor} strokeWidth={2.5} strokeLinecap="round" />
+      {/* caixa interquartil Q1–Q3 (preenchimento sólido) */}
       <rect
         x={boxX}
         y={yQ3}
         width={boxW}
-        height={Math.max(yQ1 - yQ3, 2)}
+        height={boxH}
         fill={cor}
-        fillOpacity={0.35}
+        fillOpacity={0.55}
         stroke={cor}
-        strokeWidth={1.5}
-        rx={3}
+        strokeWidth={2}
+        rx={4}
       />
-      {/* linha de mediana */}
-      <line x1={boxX} x2={boxX + boxW} y1={yMed} y2={yMed} stroke={cor} strokeWidth={3} />
-      {/* ponto de média */}
-      <circle cx={cx} cy={yMedia} r={3} fill="var(--background)" stroke={cor} strokeWidth={1.5} />
+      {/* linha de mediana destacada (clara, com contraste) */}
+      <line x1={boxX} x2={boxX + boxW} y1={yMed} y2={yMed} stroke="var(--card)" strokeWidth={3.5} strokeLinecap="round" />
+      <line x1={boxX} x2={boxX + boxW} y1={yMed} y2={yMed} stroke={cor} strokeWidth={1.5} strokeLinecap="round" />
+      {/* ponto de média (losango) */}
+      <rect
+        x={cx - 3.5}
+        y={yMedia - 3.5}
+        width={7}
+        height={7}
+        transform={`rotate(45 ${cx} ${yMedia})`}
+        fill="var(--card)"
+        stroke={cor}
+        strokeWidth={2}
+      />
+      {/* rótulo da mediana */}
+      <text
+        x={boxX + boxW + 5}
+        y={yMed}
+        dy={3.5}
+        fontSize={10}
+        fontWeight={600}
+        fill={cor}
+      >
+        {Math.round(mediana)}
+      </text>
     </g>
   )
 }
