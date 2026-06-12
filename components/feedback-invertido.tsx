@@ -16,6 +16,8 @@ import {
   TrendingUp,
   Equal,
   UserCheck,
+  Table2,
+  LayoutGrid,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -629,6 +631,7 @@ function Comparativo({
 }) {
   const mapMonitor = new Map(feedback.apontamentosMonitor.map((a) => [a.itemId, a.status]))
   const mapOperador = new Map((feedback.apontamentosOperador ?? []).map((a) => [a.itemId, a.status]))
+  const [modo, setModo] = useState<"tabela" | "cards">("tabela")
 
   const total = checklist.itens.length
   const divergencias = checklist.itens.filter(
@@ -663,59 +666,151 @@ function Comparativo({
         </div>
       </div>
 
-      {/* Comparativo em cards por item */}
-      <div className="grid gap-3 lg:grid-cols-2">
-        {checklist.itens.map((it) => {
-          const sm = (mapMonitor.get(it.id) ?? "conforme") as StatusItem
-          const so = (mapOperador.get(it.id) ?? "conforme") as StatusItem
-          const divergente = sm !== so
-          return (
-            <div
-              key={it.id}
-              className={cn(
-                "flex flex-col gap-3 rounded-xl border p-4 transition-colors",
-                divergente
-                  ? "border-chart-3/40 bg-chart-3/[0.06]"
-                  : "border-border bg-secondary/30",
-              )}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-2">
-                  {it.critico && <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-destructive" />}
-                  <span className="text-sm font-medium leading-snug">{it.texto}</span>
-                </div>
-                {divergente ? (
-                  <Badge variant="outline" className="shrink-0 gap-1 border-chart-3/40 bg-chart-3/10 text-chart-3">
-                    <AlertTriangle className="size-3" /> Divergente
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="shrink-0 gap-1 border-chart-5/30 bg-chart-5/10 text-chart-5">
-                    <Equal className="size-3" /> Igual
-                  </Badge>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col gap-1.5 rounded-lg border border-border/60 bg-background/40 p-2.5">
-                  <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                    <ClipboardList className="size-3" /> Monitor
-                  </span>
-                  <span className={cn("inline-flex w-fit items-center gap-1 rounded-md border px-2 py-0.5 text-xs", statusClass(sm))}>
-                    {statusIcon(sm)} {STATUS_LABEL[sm]}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-1.5 rounded-lg border border-border/60 bg-background/40 p-2.5">
-                  <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                    <UserCheck className="size-3" /> Operador
-                  </span>
-                  <span className={cn("inline-flex w-fit items-center gap-1 rounded-md border px-2 py-0.5 text-xs", statusClass(so))}>
-                    {statusIcon(so)} {STATUS_LABEL[so]}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )
-        })}
+      {/* Comparativo: cabeçalho com alternância de visualização */}
+      <div className="flex items-center justify-between gap-2">
+        <h4 className="text-sm font-medium text-muted-foreground">Comparativo por item</h4>
+        <div className="flex items-center gap-0.5 rounded-lg border border-border bg-secondary/30 p-0.5">
+          <Button
+            type="button"
+            variant={modo === "tabela" ? "secondary" : "ghost"}
+            size="sm"
+            className="h-7 gap-1.5 px-2.5 text-xs"
+            onClick={() => setModo("tabela")}
+            aria-pressed={modo === "tabela"}
+            title="Visualizar em tabela"
+          >
+            <Table2 className="size-3.5" /> Tabela
+          </Button>
+          <Button
+            type="button"
+            variant={modo === "cards" ? "secondary" : "ghost"}
+            size="sm"
+            className="h-7 gap-1.5 px-2.5 text-xs"
+            onClick={() => setModo("cards")}
+            aria-pressed={modo === "cards"}
+            title="Visualizar em cards"
+          >
+            <LayoutGrid className="size-3.5" /> Cards
+          </Button>
+        </div>
       </div>
+
+      {/* Tabela comparativa (padrão) */}
+      {modo === "tabela" && (
+        <div className="overflow-hidden rounded-xl border border-border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-secondary/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                <th className="py-2.5 pl-4 pr-3 font-medium">Item</th>
+                <th className="w-[150px] py-2.5 px-3 font-medium">Monitor</th>
+                <th className="w-[150px] py-2.5 px-3 font-medium">Operador</th>
+                <th className="w-[120px] py-2.5 pl-3 pr-4 font-medium text-right">Situação</th>
+              </tr>
+            </thead>
+            <tbody>
+              {checklist.itens.map((it) => {
+                const sm = (mapMonitor.get(it.id) ?? "conforme") as StatusItem
+                const so = (mapOperador.get(it.id) ?? "conforme") as StatusItem
+                const divergente = sm !== so
+                return (
+                  <tr
+                    key={it.id}
+                    className={cn(
+                      "border-b border-border/50 align-middle transition-colors last:border-0",
+                      divergente ? "bg-chart-3/[0.06] hover:bg-chart-3/10" : "hover:bg-secondary/30",
+                    )}
+                  >
+                    <td className="py-2.5 pl-4 pr-3">
+                      <div className="flex items-start gap-2">
+                        {divergente && <span className="mt-1 size-1.5 shrink-0 rounded-full bg-chart-3" aria-hidden />}
+                        <span className="leading-snug">{it.texto}</span>
+                        {it.critico && <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-destructive" />}
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <span className={cn("inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs", statusClass(sm))}>
+                        {statusIcon(sm)} {STATUS_LABEL[sm]}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <span className={cn("inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs", statusClass(so))}>
+                        {statusIcon(so)} {STATUS_LABEL[so]}
+                      </span>
+                    </td>
+                    <td className="py-2.5 pl-3 pr-4 text-right">
+                      {divergente ? (
+                        <Badge variant="outline" className="gap-1 border-chart-3/40 bg-chart-3/10 text-chart-3">
+                          <AlertTriangle className="size-3" /> Divergente
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="gap-1 border-chart-5/30 bg-chart-5/10 text-chart-5">
+                          <Equal className="size-3" /> Igual
+                        </Badge>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Comparativo em cards por item (opcional) */}
+      {modo === "cards" && (
+        <div className="grid gap-3 lg:grid-cols-2">
+          {checklist.itens.map((it) => {
+            const sm = (mapMonitor.get(it.id) ?? "conforme") as StatusItem
+            const so = (mapOperador.get(it.id) ?? "conforme") as StatusItem
+            const divergente = sm !== so
+            return (
+              <div
+                key={it.id}
+                className={cn(
+                  "flex flex-col gap-3 rounded-xl border p-4 transition-colors",
+                  divergente
+                    ? "border-chart-3/40 bg-chart-3/[0.06]"
+                    : "border-border bg-secondary/30",
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2">
+                    {it.critico && <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-destructive" />}
+                    <span className="text-sm font-medium leading-snug">{it.texto}</span>
+                  </div>
+                  {divergente ? (
+                    <Badge variant="outline" className="shrink-0 gap-1 border-chart-3/40 bg-chart-3/10 text-chart-3">
+                      <AlertTriangle className="size-3" /> Divergente
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="shrink-0 gap-1 border-chart-5/30 bg-chart-5/10 text-chart-5">
+                      <Equal className="size-3" /> Igual
+                    </Badge>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1.5 rounded-lg border border-border/60 bg-background/40 p-2.5">
+                    <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      <ClipboardList className="size-3" /> Monitor
+                    </span>
+                    <span className={cn("inline-flex w-fit items-center gap-1 rounded-md border px-2 py-0.5 text-xs", statusClass(sm))}>
+                      {statusIcon(sm)} {STATUS_LABEL[sm]}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1.5 rounded-lg border border-border/60 bg-background/40 p-2.5">
+                    <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      <UserCheck className="size-3" /> Operador
+                    </span>
+                    <span className={cn("inline-flex w-fit items-center gap-1 rounded-md border px-2 py-0.5 text-xs", statusClass(so))}>
+                      {statusIcon(so)} {STATUS_LABEL[so]}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl border border-border bg-secondary/30 p-4">
