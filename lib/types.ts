@@ -75,6 +75,27 @@ export interface FeedbackInvertido {
   concluidoEm?: string
 }
 
+/**
+ * Recebimento do operador definido manualmente pelo gestor.
+ * "alto" ou "baixo" — combinado com a Qualidade (das notas) gera o Quadrante.
+ */
+export type NivelRecebimento = "alto" | "baixo"
+
+export interface RecebimentoOperador {
+  operadorNome: string
+  nivel: NivelRecebimento
+  atualizadoEm: string
+}
+
+/**
+ * Matriz de Quadrante (2x2): Qualidade (Alta/Baixa) x Recebimento (Alto/Baixo)
+ * - AA = Alta Qualidade + Alto Recebimento  → Q1
+ * - AB = Alta Qualidade + Baixo Recebimento → Q2
+ * - BA = Baixa Qualidade + Alto Recebimento → Q3
+ * - BB = Baixa Qualidade + Baixo Recebimento → Q4
+ */
+export type SiglaQuadrante = "AA" | "AB" | "BA" | "BB"
+
 export const TABULACOES = [
   "Venda",
   "Não Venda",
