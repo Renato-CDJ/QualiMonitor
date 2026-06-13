@@ -353,6 +353,50 @@ export function CarteiraBarChart({
   )
 }
 
+/* ---------- Conformidade x Inconformidade por carteira (barras agrupadas) ---------- */
+export function ConformidadeCarteiraChart({
+  data,
+}: {
+  data: { carteira: string; pctConforme: number; pctInconforme: number }[]
+}) {
+  const config = {
+    pctConforme: { label: "% Conforme", color: "var(--chart-5)" },
+    pctInconforme: { label: "% Inconforme", color: "var(--destructive)" },
+  } satisfies ChartConfig
+  const [mostrarNotas, setMostrarNotas] = useState(false)
+  const altura = Math.max(260, data.length * 56)
+  return (
+    <div className="relative">
+      <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
+      <ChartContainer config={config} style={{ height: altura }} className="w-full">
+        <BarChart data={data} layout="vertical" margin={{ left: 8, right: 32, top: 16 }}>
+          <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis type="number" domain={[0, 100]} unit="%" tickLine={false} axisLine={false} fontSize={12} />
+          <YAxis
+            type="category"
+            dataKey="carteira"
+            tickLine={false}
+            axisLine={false}
+            fontSize={12}
+            width={90}
+          />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Bar dataKey="pctConforme" fill="var(--color-pctConforme)" radius={[0, 4, 4, 0]}>
+            {mostrarNotas && (
+              <LabelList dataKey="pctConforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v: number) => `${v}%`} />
+            )}
+          </Bar>
+          <Bar dataKey="pctInconforme" fill="var(--color-pctInconforme)" radius={[0, 4, 4, 0]}>
+            {mostrarNotas && (
+              <LabelList dataKey="pctInconforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v: number) => `${v}%`} />
+            )}
+          </Bar>
+        </BarChart>
+      </ChartContainer>
+    </div>
+  )
+}
+
 /* ---------- Pareto: itens mais reprovados ---------- */
 export function ParetoChart({
   data,

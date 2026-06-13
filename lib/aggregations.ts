@@ -243,6 +243,59 @@ export function aderenciaItens(monitorias: Monitoria[], checklists: Checklist[])
     .sort((a, b) => b.pctConforme - a.pctConforme)
 }
 
+export interface ConformidadeCarteira {
+  carteira: string
+  volume: number // qtd de monitorias
+  nota: number // nota média
+  conforme: number
+  inconforme: number
+  na: number
+  avaliados: number // conforme + inconforme
+  pctConforme: number
+  pctInconforme: number
+}
+
+/**
+ * Ranking de carteiras por conformidade/inconformidade dos apontamentos.
+ * Considera todos os itens apontados nas monitorias de cada carteira.
+ * % são calculados sobre os itens avaliados (exclui N.A.).
+ */
+export function conformidadePorCarteira(monitorias: Monitoria[]): ConformidadeCarteira[] {
+  const grupos = new Map<
+    string,
+    { notas: number[]; conforme: number; inconforme: number; na: number }
+  >()
+  for (const m of monitorias) {
+    if (!grupos.has(m.carteira)) {
+      grupos.set(m.carteira, { notas: [], conforme: 0, inconforme: 0, na: 0 })
+    }
+    const g = grupos.get(m.carteira)!
+    g.notas.push(m.nota)
+    for (const ap of m.apontamentos) {
+      if (ap.status === "conforme") g.conforme++
+      else if (ap.status === "inconforme") g.inconforme++
+      else g.na++
+    }
+  }
+  const round1 = (n: number) => Math.round(n * 10) / 10
+  return Array.from(grupos.entries())
+    .map(([carteira, g]) => {
+      const avaliados = g.conforme + g.inconforme
+      return {
+        carteira,
+        volume: g.notas.length,
+        nota: round1(media(g.notas)),
+        conforme: g.conforme,
+        inconforme: g.inconforme,
+        na: g.na,
+        avaliados,
+        pctConforme: avaliados ? round1((g.conforme / avaliados) * 100) : 0,
+        pctInconforme: avaliados ? round1((g.inconforme / avaliados) * 100) : 0,
+      }
+    })
+    .sort((a, b) => b.pctConforme - a.pctConforme)
+}
+
 /** Totais consolidados de conforme/inconforme/N.A. para todos os apontamentos */
 export function resumoConformidade(monitorias: Monitoria[]) {
   let conforme = 0
