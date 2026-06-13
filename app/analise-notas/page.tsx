@@ -7,7 +7,7 @@ export default function AnaliseNotasPage() {
       <div className="flex flex-col gap-6">
         <PageHeader
           title="Análise de Notas"
-          description="Visão aprofundada da distribuição das notas: quartis por operador e carteira, histograma de frequência e estatísticas descritivas (média, mediana, desvio padrão e amplitude interquartil)."
+          description="Visão aprofundada da distribuição das notas: dispersão dos operadores por quadrantes de desempenho, distribuição por faixa (Excelente, Bom, Regular e Crítico), histograma de frequência e nota média."
         />
         <AnaliseNotas />
       </div>

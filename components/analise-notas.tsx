@@ -4,8 +4,9 @@ import { useMemo, useState } from "react"
 import {
   Activity,
   TrendingUp,
-  Target,
-  Gauge,
+  Award,
+  ThumbsUp,
+  AlertTriangle,
   BarChart3,
   ArrowUpDown,
   ArrowDown,
@@ -33,16 +34,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useQualityData } from "@/lib/use-quality-data"
-import {
-  kpis,
-  quartisPorCarteira,
-  porOperador,
-} from "@/lib/aggregations"
+import { kpis, porOperador } from "@/lib/aggregations"
 import { notaBadgeClass, faixaNota } from "@/lib/analytics"
-import {
-  QuartilChart,
-  QuartilCarteiraChart,
-} from "@/components/dashboard-charts"
+import { DispersaoOperadoresChart } from "@/components/dashboard-charts"
 import { cn } from "@/lib/utils"
 import * as XLSX from "xlsx"
 
@@ -57,7 +51,7 @@ function Stat({
   label: string
   value: string
   sub?: string
-  tone?: "default" | "good" | "bad"
+  tone?: "default" | "good" | "bad" | "excelente" | "bom" | "regular" | "critico"
 }) {
   return (
     <Card>
@@ -67,8 +61,10 @@ function Stat({
           <p
             className={cn(
               "mt-1 text-2xl font-semibold tabular-nums",
-              tone === "good" && "text-chart-5",
-              tone === "bad" && "text-destructive",
+              (tone === "good" || tone === "excelente") && "text-chart-5",
+              tone === "bom" && "text-chart-1",
+              tone === "regular" && "text-chart-3",
+              (tone === "bad" || tone === "critico") && "text-destructive",
             )}
           >
             {value}
@@ -137,7 +133,6 @@ export function AnaliseNotas() {
   )
 
   const k = useMemo(() => kpis(filtradas), [filtradas])
-  const carteiraQuartis = useMemo(() => quartisPorCarteira(filtradas), [filtradas])
   const operadores = useMemo(() => porOperador(filtradas), [filtradas])
 
   const operadoresOrdenados = useMemo(() => {
@@ -241,23 +236,20 @@ export function AnaliseNotas() {
     )
   }
 
-  const desvioPadrao = useMemo(() => {
-    const notas = filtradas.map((m) => m.nota)
-    if (notas.length < 2) return 0
-    const m = notas.reduce((a, b) => a + b, 0) / notas.length
-    const v = notas.reduce((s, n) => s + (n - m) ** 2, 0) / notas.length
-    return Math.round(Math.sqrt(v) * 10) / 10
+  const faixaContagem = useMemo(() => {
+    const c = { excelente: 0, bom: 0, regular: 0, critico: 0 }
+    for (const m of filtradas) {
+      if (m.nota >= 90) c.excelente++
+      else if (m.nota >= 75) c.bom++
+      else if (m.nota >= 60) c.regular++
+      else c.critico++
+    }
+    return c
   }, [filtradas])
 
-  const amplitude = useMemo(
-    () => Math.round((k.quartis.max - k.quartis.min) * 10) / 10,
-    [k],
-  )
-
-  const iqr = useMemo(
-    () => Math.round((k.quartis.q3 - k.quartis.q1) * 10) / 10,
-    [k],
-  )
+  const totalNotas = filtradas.length
+  const pctFaixa = (n: number) =>
+    totalNotas ? Math.round((n / totalNotas) * 100) : 0
 
   if (!ready) {
     return <div className="p-6 text-sm text-muted-foreground">Carregando...</div>
@@ -339,8 +331,8 @@ export function AnaliseNotas() {
         </span>
       </div>
 
-      {/* Estatísticas descritivas */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      {/* Distribuição por faixa de desempenho */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         <Stat
           icon={TrendingUp}
           label="Nota média"
@@ -349,87 +341,67 @@ export function AnaliseNotas() {
           tone={k.notaMedia >= 75 ? "good" : "bad"}
         />
         <Stat
-          icon={Gauge}
-          label="Desvio padrão"
-          value={String(desvioPadrao)}
-          sub="dispersão das notas"
+          icon={Award}
+          label="Excelente (90+)"
+          value={String(faixaContagem.excelente)}
+          sub={`${pctFaixa(faixaContagem.excelente)}% das notas`}
+          tone="excelente"
+        />
+        <Stat
+          icon={ThumbsUp}
+          label="Bom (75-89)"
+          value={String(faixaContagem.bom)}
+          sub={`${pctFaixa(faixaContagem.bom)}% das notas`}
+          tone="bom"
         />
         <Stat
           icon={Activity}
-          label="Amplitude interquartil"
-          value={String(iqr)}
-          sub={`Q1 ${k.quartis.q1.toFixed(0)} · Q3 ${k.quartis.q3.toFixed(0)}`}
+          label="Regular (60-74)"
+          value={String(faixaContagem.regular)}
+          sub={`${pctFaixa(faixaContagem.regular)}% das notas`}
+          tone="regular"
         />
         <Stat
-          icon={Target}
-          label="Amplitude total"
-          value={String(amplitude)}
-          sub={`mín ${k.quartis.min.toFixed(0)} · máx ${k.quartis.max.toFixed(0)}`}
+          icon={AlertTriangle}
+          label="Crítico (<60)"
+          value={String(faixaContagem.critico)}
+          sub={`${pctFaixa(faixaContagem.critico)}% das notas`}
+          tone="critico"
         />
       </div>
 
-      {/* Quartil por operador — destaque principal */}
+      {/* Dispersão de notas por operador — destaque principal */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            Visão de Quartil das Notas por Operador
+            Dispersão das Notas por Operador
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Cada operador é representado por um boxplot. Quanto menor a caixa, mais
-            consistentes são as notas; quanto mais alta, melhor o desempenho.
+            Os operadores são distribuídos em quatro quadrantes conforme a faixa de
+            desempenho da nota média. O tamanho do ponto indica o volume de
+            monitorias.
           </p>
         </CardHeader>
         <CardContent>
-          <QuartilChart monitorias={filtradas} maxOperadores={15} altura={420} />
-          {/* Legenda explicativa do boxplot */}
-          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+          <DispersaoOperadoresChart monitorias={filtradas} altura={420} />
+          <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:flex sm:flex-wrap sm:items-center sm:gap-x-5">
             <span className="flex items-center gap-1.5">
-              <span className="inline-block h-4 w-0.5 bg-foreground/60" />
-              Haste: nota mínima e máxima
+              <span className="inline-block size-2.5 rounded-full bg-chart-5" />
+              Sup. esquerdo · Excelente (90+)
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="inline-block h-3 w-4 rounded-sm border border-foreground/60 bg-foreground/40" />
-              Caixa: 50% central das notas (Q1–Q3)
+              <span className="inline-block size-2.5 rounded-full bg-chart-1" />
+              Sup. direito · Bom (75-89)
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="inline-block h-1 w-4 rounded-full bg-card ring-1 ring-foreground/60" />
-              Linha clara: mediana
+              <span className="inline-block size-2.5 rounded-full bg-chart-3" />
+              Inf. esquerdo · Regular (60-74)
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="inline-block size-2.5 rotate-45 border border-foreground bg-card" />
-              Losango: média
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block h-0.5 w-4 border-t-2 border-dashed border-chart-3" />
-              Meta 75
-            </span>
-            <span className="flex items-center gap-1.5">
-              Quadrantes:
-              <span className="text-chart-5">Q1 Excelente (90+)</span> ·
-              <span className="text-chart-1">Q2 Bom (75-89)</span> ·
-              <span className="text-chart-3">Q3 Regular (60-74)</span> ·
-              <span className="text-destructive">Q4 Crítico (&lt;60)</span>
+              <span className="inline-block size-2.5 rounded-full bg-destructive" />
+              Inf. direito · Crítico (&lt;60)
             </span>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Quartil por carteira */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Quartil por Carteira</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Intervalo interquartil (Q1–Q3) por carteira · linha = meta 75
-          </p>
-        </CardHeader>
-        <CardContent>
-          {carteiraQuartis.length ? (
-            <QuartilCarteiraChart data={carteiraQuartis} />
-          ) : (
-            <p className="py-16 text-center text-sm text-muted-foreground">
-              Sem dados no período.
-            </p>
-          )}
         </CardContent>
       </Card>
 

@@ -177,6 +177,99 @@ export function paretoItens(monitorias: Monitoria[], checklists: Checklist[]) {
   })
 }
 
+export interface ItemAderencia {
+  itemId: string
+  texto: string
+  carteira: string
+  critico: boolean
+  conforme: number
+  inconforme: number
+  na: number
+  total: number // total de apontamentos (inclui N.A.)
+  avaliados: number // conforme + inconforme (exclui N.A.)
+  pctConforme: number // conforme / avaliados
+  pctInconforme: number // inconforme / avaliados
+  pctNa: number // na / total
+}
+
+/**
+ * Aderência por item do checklist. Para cada item conta quantas vezes foi
+ * marcado como Conforme, Inconforme e Não se aplica, calculando os percentuais.
+ * - % Conforme e % Inconforme usam como base os itens avaliados (exclui N.A.)
+ * - % N.A. usa como base o total de apontamentos do item
+ */
+export function aderenciaItens(monitorias: Monitoria[], checklists: Checklist[]): ItemAderencia[] {
+  const meta = new Map<string, { texto: string; carteira: string; critico: boolean }>()
+  for (const c of checklists) {
+    for (const it of c.itens) {
+      if (!meta.has(it.id)) {
+        meta.set(it.id, { texto: it.texto, carteira: c.carteira, critico: !!it.critico })
+      }
+    }
+  }
+
+  const mapa = new Map<string, { conforme: number; inconforme: number; na: number }>()
+  for (const m of monitorias) {
+    for (const ap of m.apontamentos) {
+      const atual = mapa.get(ap.itemId) ?? { conforme: 0, inconforme: 0, na: 0 }
+      if (ap.status === "conforme") atual.conforme++
+      else if (ap.status === "inconforme") atual.inconforme++
+      else atual.na++
+      mapa.set(ap.itemId, atual)
+    }
+  }
+
+  const round1 = (n: number) => Math.round(n * 10) / 10
+  return Array.from(mapa.entries())
+    .map(([itemId, c]) => {
+      const info = meta.get(itemId)
+      const total = c.conforme + c.inconforme + c.na
+      const avaliados = c.conforme + c.inconforme
+      return {
+        itemId,
+        texto: info?.texto ?? itemId,
+        carteira: info?.carteira ?? "—",
+        critico: info?.critico ?? false,
+        conforme: c.conforme,
+        inconforme: c.inconforme,
+        na: c.na,
+        total,
+        avaliados,
+        pctConforme: avaliados ? round1((c.conforme / avaliados) * 100) : 0,
+        pctInconforme: avaliados ? round1((c.inconforme / avaliados) * 100) : 0,
+        pctNa: total ? round1((c.na / total) * 100) : 0,
+      }
+    })
+    .sort((a, b) => b.pctConforme - a.pctConforme)
+}
+
+/** Totais consolidados de conforme/inconforme/N.A. para todos os apontamentos */
+export function resumoConformidade(monitorias: Monitoria[]) {
+  let conforme = 0
+  let inconforme = 0
+  let na = 0
+  for (const m of monitorias) {
+    for (const ap of m.apontamentos) {
+      if (ap.status === "conforme") conforme++
+      else if (ap.status === "inconforme") inconforme++
+      else na++
+    }
+  }
+  const total = conforme + inconforme + na
+  const avaliados = conforme + inconforme
+  const round1 = (n: number) => Math.round(n * 10) / 10
+  return {
+    conforme,
+    inconforme,
+    na,
+    total,
+    avaliados,
+    pctConforme: avaliados ? round1((conforme / avaliados) * 100) : 0,
+    pctInconforme: avaliados ? round1((inconforme / avaliados) * 100) : 0,
+    pctNa: total ? round1((na / total) * 100) : 0,
+  }
+}
+
 export function kpis(monitorias: Monitoria[]) {
   const notas = monitorias.map((m) => m.nota)
   const q = resumoQuartis(notas)

@@ -15,8 +15,11 @@ import {
   PieChart,
   ReferenceArea,
   ReferenceLine,
+  Scatter,
+  ScatterChart,
   XAxis,
   YAxis,
+  ZAxis,
 } from "recharts"
 import {
   ChartContainer,
@@ -26,6 +29,7 @@ import {
 } from "@/components/ui/chart"
 import type { Monitoria } from "@/lib/types"
 import { resumoQuartis } from "@/lib/analytics"
+import { porOperador } from "@/lib/aggregations"
 import { Button } from "@/components/ui/button"
 import { Eye, EyeOff } from "lucide-react"
 
@@ -600,6 +604,249 @@ function BoxplotTooltip({ active, payload }: any) {
         </div>
       </div>
     </div>
+  )
+}
+
+/* ---------- Dispersão por quadrantes de desempenho ----------
+   O gráfico é dividido em 4 quadrantes fixos por faixa de desempenho:
+   superior-esquerdo = Excelente (90+), superior-direito = Bom (75-89),
+   inferior-esquerdo = Regular (60-74), inferior-direito = Crítico (<60).
+   Cada operador é posicionado dentro do quadrante da sua faixa. */
+export function DispersaoOperadoresChart({
+  monitorias,
+  altura = 420,
+}: {
+  monitorias: Monitoria[]
+  altura?: number
+}) {
+  const base = porOperador(monitorias).map((o) => ({
+    operador: o.operador,
+    nota: o.nota,
+    volume: o.volume,
+    mediana: Math.round(o.quartis.mediana),
+    faixa:
+      o.nota >= 90
+        ? "excelente"
+        : o.nota >= 75
+          ? "bom"
+          : o.nota >= 60
+            ? "regular"
+            : "critico",
+  }))
+
+  // Quadrantes: cada um ocupa um canto do plano 0-100 (divisão em 50/50).
+  const quadrantes = {
+    excelente: { label: "Excelente (90+)", cor: FAIXA_CORES.excelente, xMin: 4, xMax: 46, yMin: 54, yMax: 96 },
+    bom: { label: "Bom (75-89)", cor: FAIXA_CORES.bom, xMin: 54, xMax: 96, yMin: 54, yMax: 96 },
+    regular: { label: "Regular (60-74)", cor: FAIXA_CORES.regular, xMin: 4, xMax: 46, yMin: 4, yMax: 46 },
+    critico: { label: "Crítico (<60)", cor: FAIXA_CORES.critico, xMin: 54, xMax: 96, yMin: 4, yMax: 46 },
+  } as const
+
+  type FaixaKey = keyof typeof quadrantes
+
+  // Distribui os operadores de cada faixa em uma grade dentro do seu quadrante.
+  const dados = (Object.keys(quadrantes) as FaixaKey[]).flatMap((faixa) => {
+    const itens = base.filter((d) => d.faixa === faixa)
+    const q = quadrantes[faixa]
+    const n = itens.length
+    const cols = Math.max(1, Math.ceil(Math.sqrt(n)))
+    const rows = Math.max(1, Math.ceil(n / cols))
+    return itens.map((it, i) => {
+      const col = i % cols
+      const row = Math.floor(i / cols)
+      const x = q.xMin + ((col + 0.5) / cols) * (q.xMax - q.xMin)
+      const y = q.yMax - ((row + 0.5) / rows) * (q.yMax - q.yMin)
+      return { ...it, qx: x, qy: y }
+    })
+  })
+
+  const config: ChartConfig = Object.fromEntries(
+    (Object.entries(quadrantes) as [FaixaKey, (typeof quadrantes)[FaixaKey]][]).map(([k, v]) => [
+      k,
+      { label: v.label, color: v.cor },
+    ]),
+  )
+
+  if (!base.length) {
+    return (
+      <p className="py-16 text-center text-sm text-muted-foreground">
+        Sem dados no período.
+      </p>
+    )
+  }
+
+  const contagem = (faixa: FaixaKey) => base.filter((d) => d.faixa === faixa).length
+
+  return (
+    <ChartContainer config={config} className="w-full" style={{ height: altura }}>
+      <ScatterChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+        <XAxis type="number" dataKey="qx" domain={[0, 100]} hide />
+        <YAxis type="number" dataKey="qy" domain={[0, 100]} hide />
+        <ZAxis type="number" dataKey="volume" range={[80, 500]} />
+
+        {/* Áreas dos quadrantes com rótulo e contagem */}
+        {(Object.entries(quadrantes) as [FaixaKey, (typeof quadrantes)[FaixaKey]][]).map(
+          ([k, v]) => (
+            <ReferenceArea
+              key={k}
+              x1={v.xMin - 4}
+              x2={v.xMax + 4}
+              y1={v.yMin - 4}
+              y2={v.yMax + 4}
+              fill={v.cor}
+              fillOpacity={0.08}
+              stroke={v.cor}
+              strokeOpacity={0.35}
+              strokeDasharray="4 4"
+              label={{
+                value: `${v.label} · ${contagem(k)}`,
+                position: "insideTopLeft",
+                fontSize: 12,
+                fontWeight: 600,
+                fill: v.cor,
+              }}
+            />
+          ),
+        )}
+
+        {/* Linhas divisórias centrais */}
+        <ReferenceLine x={50} stroke="var(--border)" />
+        <ReferenceLine y={50} stroke="var(--border)" />
+
+        <ChartTooltip
+          cursor={{ strokeDasharray: "3 3" }}
+          content={({ active, payload }) => {
+            if (!active || !payload?.length) return null
+            const p = payload[0].payload as (typeof dados)[number]
+            return (
+              <div className="rounded-lg border bg-background px-3 py-2 text-xs shadow-md">
+                <p className="font-medium text-foreground">{p.operador}</p>
+                <p className="mt-1 text-muted-foreground">
+                  Nota média: <span className="font-medium text-foreground">{p.nota}</span>
+                </p>
+                <p className="text-muted-foreground">
+                  Mediana: <span className="font-medium text-foreground">{p.mediana}</span>
+                </p>
+                <p className="text-muted-foreground">
+                  Monitorias: <span className="font-medium text-foreground">{p.volume}</span>
+                </p>
+              </div>
+            )
+          }}
+        />
+        {(Object.entries(quadrantes) as [FaixaKey, (typeof quadrantes)[FaixaKey]][]).map(
+          ([k, v]) => (
+            <Scatter
+              key={k}
+              name={v.label}
+              data={dados.filter((d) => d.faixa === k)}
+              dataKey="qy"
+              fill={v.cor}
+              fillOpacity={0.75}
+              stroke={v.cor}
+              strokeWidth={1}
+            />
+          ),
+        )}
+      </ScatterChart>
+    </ChartContainer>
+  )
+}
+
+/* ---------- Insights: cores de conformidade ---------- */
+const CONFORMIDADE_CORES = {
+  conforme: "#16a34a", // verde
+  inconforme: "#ef4444", // vermelho
+  na: "#94a3b8", // cinza
+}
+
+/* ---------- Insights: donut consolidado conforme / inconforme / N.A. ---------- */
+export function ConformidadePieChart({
+  data,
+}: {
+  data: { tipo: string; qtd: number; cor: string }[]
+}) {
+  const config: ChartConfig = data.reduce((acc, d) => {
+    acc[d.tipo] = { label: d.tipo, color: d.cor }
+    return acc
+  }, {} as ChartConfig)
+  const [mostrarNotas, setMostrarNotas] = useState(true)
+  return (
+    <div className="relative">
+      <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
+      <ChartContainer config={config} className="mx-auto h-[300px] w-full">
+        <PieChart margin={{ top: 24, right: 110, bottom: 24, left: 110 }}>
+          <ChartTooltip content={<ChartTooltipContent nameKey="tipo" />} />
+          <Pie
+            data={data}
+            dataKey="qtd"
+            nameKey="tipo"
+            innerRadius={48}
+            outerRadius={78}
+            paddingAngle={2}
+            labelLine={false}
+            label={makeLeaderLabel((name) => {
+              const d = data.find((x) => x.tipo === name)
+              return d?.cor ?? PIE_COLORS[0]
+            }, mostrarNotas)}
+          >
+            {data.map((d, i) => (
+              <Cell key={i} fill={d.cor} />
+            ))}
+          </Pie>
+        </PieChart>
+      </ChartContainer>
+    </div>
+  )
+}
+
+/* ---------- Insights: barras horizontais de aderência por item ----------
+   Usa o % de conforme (aderência) ou inconforme (oportunidade). A cor é fixa
+   conforme o tipo de visão (verde p/ aderência, vermelho p/ oportunidade). */
+export function AderenciaItensChart({
+  data,
+  tipo,
+}: {
+  data: { item: string; itemCompleto: string; pct: number; qtd: number }[]
+  tipo: "aderencia" | "oportunidade"
+}) {
+  const cor = tipo === "aderencia" ? CONFORMIDADE_CORES.conforme : CONFORMIDADE_CORES.inconforme
+  const config = {
+    pct: {
+      label: tipo === "aderencia" ? "% Conforme" : "% Inconforme",
+      color: cor,
+    },
+  } satisfies ChartConfig
+  const altura = Math.max(200, data.length * 40 + 40)
+  return (
+    <ChartContainer config={config} className="w-full" style={{ height: altura }}>
+      <BarChart data={data} layout="vertical" margin={{ left: 8, right: 40, top: 8, bottom: 8 }}>
+        <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis type="number" domain={[0, 100]} unit="%" tickLine={false} axisLine={false} fontSize={12} />
+        <YAxis
+          type="category"
+          dataKey="item"
+          tickLine={false}
+          axisLine={false}
+          fontSize={11}
+          width={150}
+        />
+        <ChartTooltip
+          content={<ChartTooltipContent nameKey="item" labelKey="item" />}
+        />
+        <Bar dataKey="pct" fill={cor} radius={[0, 4, 4, 0]}>
+          <LabelList
+            dataKey="pct"
+            position="right"
+            offset={8}
+            fontSize={11}
+            fontWeight={600}
+            fill="var(--foreground)"
+            formatter={(v: number) => `${v}%`}
+          />
+        </Bar>
+      </BarChart>
+    </ChartContainer>
   )
 }
 
