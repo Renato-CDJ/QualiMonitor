@@ -122,12 +122,13 @@ function ToggleNotasButton({
   return (
     <Button
       variant="outline"
-      size="sm"
+      size="icon"
       onClick={onToggle}
-      className="absolute right-0 -top-16 z-10 gap-1.5"
+      className="absolute right-0 -top-16 z-10 size-8"
+      title={mostrar ? "Ocultar notas" : "Exibir notas"}
+      aria-label={mostrar ? "Ocultar notas" : "Exibir notas"}
     >
       {mostrar ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-      {mostrar ? "Ocultar notas" : "Exibir notas"}
     </Button>
   )
 }
