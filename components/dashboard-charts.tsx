@@ -124,7 +124,7 @@ function ToggleNotasButton({
       variant="outline"
       size="sm"
       onClick={onToggle}
-      className="absolute right-0 -top-10 z-10 gap-1.5"
+      className="absolute right-0 -top-16 z-10 gap-1.5"
     >
       {mostrar ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
       {mostrar ? "Ocultar notas" : "Exibir notas"}
