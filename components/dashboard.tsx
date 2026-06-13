@@ -33,7 +33,6 @@ import { useQualityData } from "@/lib/use-quality-data"
 import { store } from "@/lib/store"
 import {
   serieTemporal,
-  porCarteira,
   porTabulacao,
   distribuicaoFaixas,
   paretoItens,
@@ -45,7 +44,6 @@ import {
   VolumeNotaChart,
   FaixasPieChart,
   TabulacaoPieChart,
-  CarteiraBarChart,
   ParetoChart,
 } from "@/components/dashboard-charts"
 import { cn } from "@/lib/utils"
@@ -152,7 +150,6 @@ export function Dashboard() {
 
   const k = useMemo(() => kpis(filtradas), [filtradas])
   const serie = useMemo(() => serieTemporal(filtradas, periodo), [filtradas, periodo])
-  const carteiraData = useMemo(() => porCarteira(filtradas), [filtradas])
   const tabData = useMemo(() => porTabulacao(filtradas), [filtradas])
   const faixaData = useMemo(() => distribuicaoFaixas(filtradas), [filtradas])
   const pareto = useMemo(() => paretoItens(filtradas, checklists), [filtradas, checklists])
@@ -314,8 +311,8 @@ export function Dashboard() {
         </Card>
       </div>
 
-      {/* Pizza faixas + pizza tabulação + barras carteira */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      {/* Pizza faixas + pizza tabulação */}
+      <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Distribuição por Faixa</CardTitle>
@@ -332,15 +329,6 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <TabulacaoPieChart data={tabData} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Nota Média por Carteira</CardTitle>
-            <p className="text-xs text-muted-foreground">Gráfico de barras</p>
-          </CardHeader>
-          <CardContent>
-            <CarteiraBarChart data={carteiraData} />
           </CardContent>
         </Card>
       </div>
