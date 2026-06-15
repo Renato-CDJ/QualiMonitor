@@ -397,6 +397,131 @@ export function ConformidadeCarteiraChart({
   )
 }
 
+/* ---------- Barras: nota média por monitor ---------- */
+export function MonitorBarChart({
+  data,
+}: {
+  data: { monitor: string; nota: number; volume: number }[]
+}) {
+  const config = {
+    nota: { label: "Nota média", color: "var(--chart-1)" },
+  } satisfies ChartConfig
+  const [mostrarNotas, setMostrarNotas] = useState(false)
+  const altura = Math.max(260, data.length * 48)
+  return (
+    <div className="relative">
+      <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
+      <ChartContainer config={config} style={{ height: altura }} className="w-full">
+        <BarChart data={data} layout="vertical" margin={{ left: 8, right: 32, top: 16 }}>
+          <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis type="number" domain={[0, 100]} tickLine={false} axisLine={false} fontSize={12} />
+          <YAxis
+            type="category"
+            dataKey="monitor"
+            tickLine={false}
+            axisLine={false}
+            fontSize={12}
+            width={110}
+          />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Bar dataKey="nota" fill="var(--color-nota)" radius={[0, 4, 4, 0]}>
+            {mostrarNotas && (
+              <LabelList
+                dataKey="nota"
+                position="right"
+                offset={8}
+                fontSize={12}
+                fontWeight={600}
+                fill="var(--foreground)"
+              />
+            )}
+          </Bar>
+        </BarChart>
+      </ChartContainer>
+    </div>
+  )
+}
+
+/* ---------- Barras: % conforme x inconforme por monitor ---------- */
+export function MonitorConformidadeChart({
+  data,
+}: {
+  data: { monitor: string; pctConforme: number; pctInconforme: number }[]
+}) {
+  const config = {
+    pctConforme: { label: "% Conforme", color: "var(--chart-5)" },
+    pctInconforme: { label: "% Inconforme", color: "var(--destructive)" },
+  } satisfies ChartConfig
+  const [mostrarNotas, setMostrarNotas] = useState(false)
+  const altura = Math.max(260, data.length * 56)
+  return (
+    <div className="relative">
+      <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
+      <ChartContainer config={config} style={{ height: altura }} className="w-full">
+        <BarChart data={data} layout="vertical" margin={{ left: 8, right: 32, top: 16 }}>
+          <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis type="number" domain={[0, 100]} unit="%" tickLine={false} axisLine={false} fontSize={12} />
+          <YAxis
+            type="category"
+            dataKey="monitor"
+            tickLine={false}
+            axisLine={false}
+            fontSize={12}
+            width={110}
+          />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Bar dataKey="pctConforme" fill="var(--color-pctConforme)" radius={[0, 4, 4, 0]}>
+            {mostrarNotas && (
+              <LabelList dataKey="pctConforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v: number) => `${v}%`} />
+            )}
+          </Bar>
+          <Bar dataKey="pctInconforme" fill="var(--color-pctInconforme)" radius={[0, 4, 4, 0]}>
+            {mostrarNotas && (
+              <LabelList dataKey="pctInconforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v: number) => `${v}%`} />
+            )}
+          </Bar>
+        </BarChart>
+      </ChartContainer>
+    </div>
+  )
+}
+
+/* ---------- Barras agrupadas: contagem conforme x inconforme por monitor ---------- */
+export function MonitorContagemChart({
+  data,
+}: {
+  data: { monitor: string; conforme: number; inconforme: number }[]
+}) {
+  const config = {
+    conforme: { label: "Conformidades", color: "var(--chart-5)" },
+    inconforme: { label: "Inconformidades", color: "var(--destructive)" },
+  } satisfies ChartConfig
+  const [mostrarNotas, setMostrarNotas] = useState(false)
+  return (
+    <div className="relative">
+      <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
+      <ChartContainer config={config} className="h-[300px] w-full">
+        <BarChart data={data} margin={{ left: -16, right: 8, top: 24, bottom: 8 }}>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis dataKey="monitor" tickLine={false} axisLine={false} fontSize={11} interval={0} />
+          <YAxis tickLine={false} axisLine={false} fontSize={12} width={36} allowDecimals={false} />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Bar dataKey="conforme" fill="var(--color-conforme)" radius={[4, 4, 0, 0]}>
+            {mostrarNotas && (
+              <LabelList dataKey="conforme" position="top" offset={8} fontSize={11} fontWeight={600} fill="var(--foreground)" />
+            )}
+          </Bar>
+          <Bar dataKey="inconforme" fill="var(--color-inconforme)" radius={[4, 4, 0, 0]}>
+            {mostrarNotas && (
+              <LabelList dataKey="inconforme" position="top" offset={8} fontSize={11} fontWeight={600} fill="var(--foreground)" />
+            )}
+          </Bar>
+        </BarChart>
+      </ChartContainer>
+    </div>
+  )
+}
+
 /* ---------- Pareto: itens mais reprovados ---------- */
 export function ParetoChart({
   data,
