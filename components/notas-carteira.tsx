@@ -9,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuCheckboxItem,
@@ -166,7 +167,9 @@ export function NotasCarteira() {
               }
             />
             <DropdownMenuContent align="end" className="w-60">
-              <DropdownMenuLabel>Selecionar carteiras</DropdownMenuLabel>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Selecionar carteiras</DropdownMenuLabel>
+              </DropdownMenuGroup>
               <DropdownMenuItem
                 onClick={(e) => {
                   e.preventDefault()

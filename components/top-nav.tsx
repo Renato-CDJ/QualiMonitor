@@ -2,13 +2,14 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ClipboardCheck, LayoutDashboard, ListChecks, BarChart3, GanttChartSquare, MessageSquareReply, Grid2x2, Lightbulb, Wallet } from "lucide-react"
+import { ClipboardCheck, LayoutDashboard, ListChecks, BarChart3, GanttChartSquare, MessageSquareReply, Grid2x2, Lightbulb, Wallet, UserCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/notas-carteira", label: "Notas Carteira", icon: Wallet },
+  { href: "/resultado-monitor", label: "Resultado Monitor", icon: UserCheck },
   { href: "/nova-monitoria", label: "Nova Monitoria", icon: ClipboardCheck },
   { href: "/checklists", label: "Editor de Checklist", icon: ListChecks },
   { href: "/analise-notas", label: "Análise de Notas", icon: GanttChartSquare },

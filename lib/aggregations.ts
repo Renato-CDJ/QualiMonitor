@@ -85,6 +85,74 @@ export function porOperador(monitorias: Monitoria[]) {
     .sort((a, b) => b.nota - a.nota)
 }
 
+export function porMonitor(monitorias: Monitoria[]) {
+  const grupos = new Map<string, number[]>()
+  for (const m of monitorias) {
+    if (!grupos.has(m.monitor)) grupos.set(m.monitor, [])
+    grupos.get(m.monitor)!.push(m.nota)
+  }
+  return Array.from(grupos.entries())
+    .map(([monitor, notas]) => ({
+      monitor,
+      nota: Math.round(media(notas) * 10) / 10,
+      volume: notas.length,
+    }))
+    .sort((a, b) => b.nota - a.nota)
+}
+
+export interface ConformidadeMonitor {
+  monitor: string
+  volume: number
+  nota: number
+  conforme: number
+  inconforme: number
+  na: number
+  avaliados: number
+  pctConforme: number
+  pctInconforme: number
+}
+
+/**
+ * Consolida, por monitor, a quantidade de itens conformes/inconformes/N.A.
+ * apontados em suas monitorias, além da nota média e do volume.
+ * % calculados sobre os itens avaliados (exclui N.A.).
+ */
+export function conformidadePorMonitor(monitorias: Monitoria[]): ConformidadeMonitor[] {
+  const grupos = new Map<
+    string,
+    { notas: number[]; conforme: number; inconforme: number; na: number }
+  >()
+  for (const m of monitorias) {
+    if (!grupos.has(m.monitor)) {
+      grupos.set(m.monitor, { notas: [], conforme: 0, inconforme: 0, na: 0 })
+    }
+    const g = grupos.get(m.monitor)!
+    g.notas.push(m.nota)
+    for (const ap of m.apontamentos) {
+      if (ap.status === "conforme") g.conforme++
+      else if (ap.status === "inconforme") g.inconforme++
+      else g.na++
+    }
+  }
+  const round1 = (n: number) => Math.round(n * 10) / 10
+  return Array.from(grupos.entries())
+    .map(([monitor, g]) => {
+      const avaliados = g.conforme + g.inconforme
+      return {
+        monitor,
+        volume: g.notas.length,
+        nota: round1(media(g.notas)),
+        conforme: g.conforme,
+        inconforme: g.inconforme,
+        na: g.na,
+        avaliados,
+        pctConforme: avaliados ? round1((g.conforme / avaliados) * 100) : 0,
+        pctInconforme: avaliados ? round1((g.inconforme / avaliados) * 100) : 0,
+      }
+    })
+    .sort((a, b) => b.nota - a.nota)
+}
+
 export function porTabulacao(monitorias: Monitoria[]) {
   const grupos = new Map<string, number>()
   for (const m of monitorias) {
