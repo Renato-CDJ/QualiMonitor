@@ -51,7 +51,7 @@ import {
   conformidadePorCarteira,
 } from "@/lib/aggregations"
 import {
-  MonitorBarChart,
+  MonitorVolumePieChart,
   MonitorConformidadeChart,
   MonitorContagemChart,
   CarteiraBarChart,
@@ -402,17 +402,17 @@ export function ResultadoMonitor() {
         />
       </div>
 
-      {/* Nota média por monitor */}
+      {/* Quantidade de monitorias por monitor */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Nota Média por Monitor</CardTitle>
+          <CardTitle className="text-base">Quantidade de Monitorias por Monitor</CardTitle>
           <p className="text-xs text-muted-foreground">
-            Comparativo da nota média aplicada por cada monitor
+            Distribuição do volume de monitorias realizadas por cada monitor
           </p>
         </CardHeader>
         <CardContent>
           {rankMonitores.length ? (
-            <MonitorBarChart data={rankMonitores} />
+            <MonitorVolumePieChart data={rankMonitores} />
           ) : (
             <p className="py-16 text-center text-sm text-muted-foreground">
               Sem dados para os filtros selecionados.

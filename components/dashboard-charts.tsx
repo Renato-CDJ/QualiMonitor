@@ -442,6 +442,43 @@ export function MonitorBarChart({
   )
 }
 
+/* ---------- Pizza: quantidade de monitorias por monitor ---------- */
+export function MonitorVolumePieChart({
+  data,
+}: {
+  data: { monitor: string; volume: number }[]
+}) {
+  const config: ChartConfig = data.reduce((acc, d, i) => {
+    acc[d.monitor] = { label: d.monitor, color: PIE_COLORS[i % PIE_COLORS.length] }
+    return acc
+  }, {} as ChartConfig)
+  const [mostrarNotas, setMostrarNotas] = useState(false)
+  return (
+    <div className="relative">
+      <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
+      <ChartContainer config={config} className="mx-auto h-[300px] w-full">
+        <PieChart margin={{ top: 24, right: 120, bottom: 24, left: 120 }}>
+          <ChartTooltip content={<ChartTooltipContent nameKey="monitor" />} />
+          <Pie
+            data={data}
+            dataKey="volume"
+            nameKey="monitor"
+            innerRadius={48}
+            outerRadius={78}
+            paddingAngle={2}
+            labelLine={false}
+            label={makeLeaderLabel((_, i) => PIE_COLORS[i % PIE_COLORS.length], mostrarNotas)}
+          >
+            {data.map((_, i) => (
+              <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+            ))}
+          </Pie>
+        </PieChart>
+      </ChartContainer>
+    </div>
+  )
+}
+
 /* ---------- Barras: % conforme x inconforme por monitor ---------- */
 export function MonitorConformidadeChart({
   data,
