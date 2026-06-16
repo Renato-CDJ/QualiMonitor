@@ -33,6 +33,7 @@ const MENUS: { id: string; label: string; icon: React.ComponentType<{ className?
     icon: ClipboardCheck,
     items: [
       { href: "/nova-monitoria", label: "Nova Monitoria", icon: ClipboardCheck },
+      { href: "/resultado-monitor", label: "Resultado Monitor", icon: UserCheck },
       { href: "/checklists", label: "Editor de Checklist", icon: ListChecks },
       { href: "/feedback", label: "Feedback", icon: MessageSquareReply },
     ],
@@ -44,7 +45,6 @@ const MENUS: { id: string; label: string; icon: React.ComponentType<{ className?
     items: [
       { href: "/", label: "Dashboard", icon: LayoutDashboard },
       { href: "/notas-carteira", label: "Notas Carteira", icon: Wallet },
-      { href: "/resultado-monitor", label: "Resultado Monitor", icon: UserCheck },
       { href: "/analise-notas", label: "Análise de Notas", icon: GanttChartSquare },
       { href: "/insights", label: "Insights", icon: Lightbulb },
       { href: "/quadrante", label: "Quadrante", icon: Grid2x2 },
