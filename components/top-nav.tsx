@@ -33,9 +33,9 @@ const MENUS: { id: string; label: string; icon: React.ComponentType<{ className?
     icon: ClipboardCheck,
     items: [
       { href: "/nova-monitoria", label: "Nova Monitoria", icon: ClipboardCheck },
-      { href: "/resultado-monitor", label: "Resultado Monitor", icon: UserCheck },
       { href: "/checklists", label: "Editor de Checklist", icon: ListChecks },
       { href: "/feedback", label: "Feedback", icon: MessageSquareReply },
+      { href: "/resultado-monitor", label: "Resultado Monitor", icon: UserCheck },
     ],
   },
   {
