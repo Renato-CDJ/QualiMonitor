@@ -15,6 +15,9 @@ import {
   Wallet,
   UserCheck,
   LineChart,
+  History,
+  FileSpreadsheet,
+  FileDown,
   ChevronDown,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -48,7 +51,14 @@ const MENUS: { id: string; label: string; icon: React.ComponentType<{ className?
       { href: "/analise-notas", label: "Análise de Notas", icon: GanttChartSquare },
       { href: "/insights", label: "Insights", icon: Lightbulb },
       { href: "/quadrante", label: "Quadrante", icon: Grid2x2 },
+      { href: "/historico-operador", label: "Histórico do Operador", icon: History },
     ],
+  },
+  {
+    id: "relatorios",
+    label: "Relatórios",
+    icon: FileSpreadsheet,
+    items: [{ href: "/exportar-relatorio", label: "Exportar Relatório", icon: FileDown }],
   },
 ]
 
