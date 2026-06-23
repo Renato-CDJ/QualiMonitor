@@ -78,13 +78,19 @@ function isItemActive(href: string, pathname: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href)
 }
 
+// Menus que o perfil visitante NÃO pode acessar (somente leitura/filtros).
+const MENUS_RESTRITOS = ["monitoria", "relatorios"]
+
 export function TopNav() {
   const pathname = usePathname()
-  const { user, carteira, limparCarteira, logout } = useAuth()
+  const { user, carteira, isVisitante, limparCarteira, logout } = useAuth()
+
+  // Visitante só enxerga os menus liberados (sem Monitoria e Relatórios).
+  const menus = isVisitante ? MENUS.filter((menu) => !MENUS_RESTRITOS.includes(menu.id)) : MENUS
 
   // Determine which menu owns the current route.
   const menuForPath =
-    MENUS.find((menu) => menu.items.some((item) => isItemActive(item.href, pathname)))?.id ?? MENUS[0].id
+    menus.find((menu) => menu.items.some((item) => isItemActive(item.href, pathname)))?.id ?? menus[0].id
 
   const [openMenu, setOpenMenu] = useState<string>(menuForPath)
 
@@ -93,7 +99,7 @@ export function TopNav() {
     setOpenMenu(menuForPath)
   }, [menuForPath])
 
-  const activeMenu = MENUS.find((menu) => menu.id === openMenu) ?? MENUS[0]
+  const activeMenu = menus.find((menu) => menu.id === openMenu) ?? menus[0]
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background shadow-sm">
@@ -108,7 +114,7 @@ export function TopNav() {
           </Link>
 
           <nav className="flex items-center gap-1">
-            {MENUS.map((menu) => {
+            {menus.map((menu) => {
               const Icon = menu.icon
               const isOpen = menu.id === openMenu
               return (

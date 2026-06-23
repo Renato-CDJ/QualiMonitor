@@ -59,6 +59,7 @@ import {
 } from "@/components/dashboard-charts"
 import { CardTitleHint } from "@/components/card-title-hint"
 import { AnaliseCategoria } from "@/components/analise-categoria"
+import { MinhasMonitorias } from "@/components/minhas-monitorias"
 import { cn } from "@/lib/utils"
 
 function formatBr(iso: string) {
@@ -460,6 +461,9 @@ export function ResultadoMonitor() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Minhas monitorias: busca + exclusão */}
+      <MinhasMonitorias />
 
       {/* Insights de desempenho por carteira */}
       {insights && (
