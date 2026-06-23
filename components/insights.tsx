@@ -9,7 +9,8 @@ import {
   TrendingUp,
   ListChecks,
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { CardTitleHint } from "@/components/card-title-hint"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -293,10 +294,10 @@ export function Insights() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Conformidade Geral</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Distribuição de Conforme · Inconforme · Não se aplica
-            </p>
+            <CardTitleHint
+              title="Conformidade Geral"
+              description="Distribuição de Conforme · Inconforme · Não se aplica"
+            />
           </CardHeader>
           <CardContent>
             <ConformidadePieChart data={pieData} />
@@ -305,11 +306,11 @@ export function Insights() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <TrendingUp className="size-4 text-chart-5" />
-              Maior Aderência
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">Itens mais conformes</p>
+            <CardTitleHint
+              icon={<TrendingUp className="size-4 text-chart-5" />}
+              title="Maior Aderência"
+              description="Itens mais conformes"
+            />
           </CardHeader>
           <CardContent className="flex flex-col gap-2.5">
             {topAderencia.slice(0, 5).map((it) => (
@@ -327,11 +328,11 @@ export function Insights() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <XCircle className="size-4 text-destructive" />
-              Oportunidades
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">Itens mais inconformes</p>
+            <CardTitleHint
+              icon={<XCircle className="size-4 text-destructive" />}
+              title="Oportunidades"
+              description="Itens mais inconformes"
+            />
           </CardHeader>
           <CardContent className="flex flex-col gap-2.5">
             {topOportunidade.slice(0, 5).map((it) => (
@@ -352,14 +353,14 @@ export function Insights() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
           <div>
-            <CardTitle className="text-base">
-              {visao === "aderencia" ? "Top Aderência por Item" : "Top Oportunidades por Item"}
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">
-              {visao === "aderencia"
-                ? "% de conformidade por item do checklist"
-                : "% de inconformidade por item do checklist"}
-            </p>
+            <CardTitleHint
+              title={visao === "aderencia" ? "Top Aderência por Item" : "Top Oportunidades por Item"}
+              description={
+                visao === "aderencia"
+                  ? "% de conformidade por item do checklist"
+                  : "% de inconformidade por item do checklist"
+              }
+            />
           </div>
           <Tabs value={visao} onValueChange={(v) => setVisao(v as typeof visao)}>
             <TabsList>
@@ -382,11 +383,15 @@ export function Insights() {
       {/* Tabela detalhada */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Detalhamento por Item</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Conforme, Inconforme e Não se aplica com percentuais. Ordenado por{" "}
-            {visao === "aderencia" ? "maior aderência" : "maior oportunidade"}.
-          </p>
+          <CardTitleHint
+            title="Detalhamento por Item"
+            description={
+              <>
+                Conforme, Inconforme e Não se aplica com percentuais. Ordenado por{" "}
+                {visao === "aderencia" ? "maior aderência" : "maior oportunidade"}.
+              </>
+            }
+          />
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -454,13 +459,11 @@ export function Insights() {
       {/* Itens com mais "Não se aplica" */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <MinusCircle className="size-4 text-muted-foreground" />
-            Itens mais marcados como &quot;Não se aplica&quot;
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Itens frequentemente não avaliados podem indicar revisão do checklist
-          </p>
+          <CardTitleHint
+            icon={<MinusCircle className="size-4 text-muted-foreground" />}
+            title={'Itens mais marcados como "Não se aplica"'}
+            description="Itens frequentemente não avaliados podem indicar revisão do checklist"
+          />
         </CardHeader>
         <CardContent>
           <div className="grid gap-2.5 sm:grid-cols-2">

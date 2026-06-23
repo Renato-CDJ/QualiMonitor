@@ -12,7 +12,8 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { CardTitleHint } from "@/components/card-title-hint"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -310,8 +311,10 @@ export function Dashboard() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Evolução da Nota Média</CardTitle>
-            <p className="text-xs text-muted-foreground capitalize">Agrupado por {periodo}</p>
+            <CardTitleHint
+              title="Evolução da Nota Média"
+              description={<span className="capitalize">Agrupado por {periodo}</span>}
+            />
           </CardHeader>
           <CardContent>
             <TendenciaChart data={serie} />
@@ -319,8 +322,10 @@ export function Dashboard() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Volume vs Nota</CardTitle>
-            <p className="text-xs text-muted-foreground">Monitorias realizadas e nota média</p>
+            <CardTitleHint
+              title="Volume vs Nota"
+              description="Monitorias realizadas e nota média"
+            />
           </CardHeader>
           <CardContent>
             <VolumeNotaChart data={serie} />
@@ -332,8 +337,10 @@ export function Dashboard() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Distribuição por Faixa</CardTitle>
-            <p className="text-xs text-muted-foreground">Gráfico de pizza</p>
+            <CardTitleHint
+              title="Distribuição por Faixa"
+              description="Gráfico de pizza"
+            />
           </CardHeader>
           <CardContent>
             <FaixasPieChart data={faixaData} />
@@ -341,8 +348,10 @@ export function Dashboard() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Monitorias por Tabulação</CardTitle>
-            <p className="text-xs text-muted-foreground">Gráfico de pizza</p>
+            <CardTitleHint
+              title="Monitorias por Tabulação"
+              description="Gráfico de pizza"
+            />
           </CardHeader>
           <CardContent>
             <TabulacaoPieChart data={tabData} />
@@ -353,10 +362,10 @@ export function Dashboard() {
       {/* Pareto */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Pareto de Inconformidades</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Itens mais reprovados e % acumulado
-          </p>
+          <CardTitleHint
+            title="Pareto de Inconformidades"
+            description="Itens mais reprovados e % acumulado"
+          />
         </CardHeader>
         <CardContent>
           {pareto.length ? (

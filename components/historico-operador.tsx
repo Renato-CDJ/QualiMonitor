@@ -20,7 +20,8 @@ import {
   Download,
   Search,
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { CardTitleHint } from "@/components/card-title-hint"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -416,10 +417,10 @@ export function HistoricoOperador() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
               <div>
-                <CardTitle className="text-base">Evolução da Nota</CardTitle>
-                <p className="text-xs text-muted-foreground">
-                  Tendência da nota média do operador ao longo do tempo
-                </p>
+                <CardTitleHint
+                  title="Evolução da Nota"
+                  description="Tendência da nota média do operador ao longo do tempo"
+                />
               </div>
               <div className="flex gap-1 rounded-md bg-secondary p-0.5">
                 {PERIODICIDADES.map((p) => (
@@ -448,10 +449,10 @@ export function HistoricoOperador() {
           <div className="grid gap-4 lg:grid-cols-3">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Faixas de Desempenho</CardTitle>
-                <p className="text-xs text-muted-foreground">
-                  Distribuição das notas por faixa
-                </p>
+                <CardTitleHint
+                  title="Faixas de Desempenho"
+                  description="Distribuição das notas por faixa"
+                />
               </CardHeader>
               <CardContent>
                 {dados.faixasPie.length ? (
@@ -466,10 +467,10 @@ export function HistoricoOperador() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Conformidade Geral</CardTitle>
-                <p className="text-xs text-muted-foreground">
-                  Conforme · Inconforme · Não se aplica
-                </p>
+                <CardTitleHint
+                  title="Conformidade Geral"
+                  description="Conforme · Inconforme · Não se aplica"
+                />
               </CardHeader>
               <CardContent>
                 {dados.confPie.length ? (
@@ -484,10 +485,10 @@ export function HistoricoOperador() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Tabulações</CardTitle>
-                <p className="text-xs text-muted-foreground">
-                  Distribuição das ligações monitoradas
-                </p>
+                <CardTitleHint
+                  title="Tabulações"
+                  description="Distribuição das ligações monitoradas"
+                />
               </CardHeader>
               <CardContent>
                 {dados.tabs.length ? (
@@ -505,13 +506,11 @@ export function HistoricoOperador() {
           <div className="grid gap-4 lg:grid-cols-3">
             <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <XCircle className="size-4 text-destructive" />
-                  Principais Oportunidades de Melhoria
-                </CardTitle>
-                <p className="text-xs text-muted-foreground">
-                  Itens do checklist com maior % de inconformidade do operador
-                </p>
+                <CardTitleHint
+                  icon={<XCircle className="size-4 text-destructive" />}
+                  title="Principais Oportunidades de Melhoria"
+                  description="Itens do checklist com maior % de inconformidade do operador"
+                />
               </CardHeader>
               <CardContent>
                 {dados.oportunidades.length ? (
@@ -540,13 +539,11 @@ export function HistoricoOperador() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Grid2x2 className="size-4 text-muted-foreground" />
-                  Quadrante
-                </CardTitle>
-                <p className="text-xs text-muted-foreground">
-                  Performance x Qualidade
-                </p>
+                <CardTitleHint
+                  icon={<Grid2x2 className="size-4 text-muted-foreground" />}
+                  title="Quadrante"
+                  description="Performance x Qualidade"
+                />
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
                 {dados.quadranteInfo ? (
@@ -585,15 +582,18 @@ export function HistoricoOperador() {
           {dados.meusFeedbacks.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <MessageSquareReply className="size-4 text-muted-foreground" />
-                  Feedbacks (Monitoria Invertida)
-                </CardTitle>
-                <p className="text-xs text-muted-foreground">
-                  {dados.feedbacksConcluidos.length} concluído(s) de{" "}
-                  {dados.meusFeedbacks.length}
-                  {dados.gapMedio !== null && ` · gap médio de auto-avaliação ${dados.gapMedio} pts`}
-                </p>
+                <CardTitleHint
+                  icon={<MessageSquareReply className="size-4 text-muted-foreground" />}
+                  title="Feedbacks (Monitoria Invertida)"
+                  description={
+                    <>
+                      {dados.feedbacksConcluidos.length} concluído(s) de{" "}
+                      {dados.meusFeedbacks.length}
+                      {dados.gapMedio !== null &&
+                        ` · gap médio de auto-avaliação ${dados.gapMedio} pts`}
+                    </>
+                  }
+                />
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
@@ -652,14 +652,16 @@ export function HistoricoOperador() {
           {/* Histórico completo de monitorias */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <ClipboardList className="size-4 text-muted-foreground" />
-                Histórico Completo de Monitorias
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Todas as {dados.minhas.length} monitorias do operador, da mais recente à
-                primeira analisada
-              </p>
+              <CardTitleHint
+                icon={<ClipboardList className="size-4 text-muted-foreground" />}
+                title="Histórico Completo de Monitorias"
+                description={
+                  <>
+                    Todas as {dados.minhas.length} monitorias do operador, da mais recente à
+                    primeira analisada
+                  </>
+                }
+              />
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">

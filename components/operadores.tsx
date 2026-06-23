@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react"
 import { ArrowUpDown, ArrowDown, ArrowUp } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { CardTitleHint } from "@/components/card-title-hint"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -199,10 +200,10 @@ export function Operadores() {
       {/* Ranking de operadores */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Ranking de Operadores</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Clique no cabeçalho de uma coluna para ordenar
-          </p>
+          <CardTitleHint
+            title="Ranking de Operadores"
+            description="Clique no cabeçalho de uma coluna para ordenar"
+          />
         </CardHeader>
         <CardContent>
           <Table>

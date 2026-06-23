@@ -125,7 +125,7 @@ function ToggleNotasButton({
       variant="outline"
       size="icon"
       onClick={onToggle}
-      className="absolute right-0 -top-16 z-10 size-8"
+      className="absolute right-0 -top-11 z-10 size-8"
       title={mostrar ? "Ocultar notas" : "Exibir notas"}
       aria-label={mostrar ? "Ocultar notas" : "Exibir notas"}
     >
