@@ -2,14 +2,14 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { ArrowRight, User, ShieldCheck } from "lucide-react"
+import { ArrowRight, User, ShieldCheck, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/lib/auth"
 
 export function LoginScreen() {
-  const { login } = useAuth()
+  const { login, loginVisitante } = useAuth()
   const [usuario, setUsuario] = useState("")
   const [erro, setErro] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(false)
@@ -29,7 +29,7 @@ export function LoginScreen() {
   }
 
   return (
-    <main className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-background px-4 py-10">
+    <main className="relative flex min-h-svh flex-col items-center justify-start overflow-hidden bg-background px-4 pb-10 pt-[18vh]">
       {/* Fundo decorativo com animação leve (apenas opacidade/transform suave) */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-24 -top-24 size-80 animate-pulse rounded-full bg-primary/10 blur-3xl [animation-duration:6s]" />
@@ -45,12 +45,12 @@ export function LoginScreen() {
       </div>
 
       {/* Título da marca fora da caixa, centralizado na tela, com efeito neon animado nas cores do site */}
-      <h1 className="neon-title mb-12 w-full select-none text-balance text-center text-6xl font-extrabold tracking-tight duration-500 animate-in fade-in slide-in-from-top-4 sm:text-7xl md:text-8xl">
+      <h1 className="neon-title mb-20 w-full select-none text-balance text-center text-6xl font-extrabold tracking-tight duration-500 animate-in fade-in slide-in-from-top-4 sm:text-7xl md:text-8xl">
         QualiMonitor
       </h1>
 
-      <div className="relative w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
-        <div className="rounded-2xl border border-border bg-card/80 p-8 shadow-xl backdrop-blur-sm">
+      <div className="relative w-full max-w-sm animate-in fade-in zoom-in-95 duration-500">
+        <div className="rounded-2xl border border-border bg-card/80 p-6 shadow-xl backdrop-blur-sm">
           {/* Marca */}
           <div className="flex flex-col items-center gap-3 text-center">
             <span className="relative flex size-24 items-center justify-center transition-transform duration-300 hover:scale-105">
@@ -116,9 +116,29 @@ export function LoginScreen() {
             </Button>
           </form>
 
-          <div className="mt-6 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-            <ShieldCheck className="size-3.5" />
-            Acesso somente com nome de usuário
+          {/* Divisor */}
+          <div className="my-5 flex items-center gap-3">
+            <span className="h-px flex-1 bg-border" />
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">ou</span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          {/* Acesso como visitante (somente leitura) */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={loginVisitante}
+            disabled={carregando}
+            className="group w-full gap-2"
+          >
+            <Eye className="size-4" />
+            Acessar como Visitante
+            <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+          </Button>
+
+          <div className="mt-6 flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
+            <ShieldCheck className="size-3.5 shrink-0" />
+            Visitante tem acesso somente para visualizar e filtrar
           </div>
         </div>
       </div>

@@ -2,15 +2,25 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react"
 
+export type Perfil = "admin" | "visitante"
+
 export interface Usuario {
   usuario: string
   nome: string
+  perfil: Perfil
 }
 
 /* Usuários locais (sem senha) */
 const USUARIOS_LOCAIS: Usuario[] = [
-  { usuario: "Renjesus", nome: "Renato C Jesus" },
+  { usuario: "Renjesus", nome: "Renato C Jesus", perfil: "admin" },
 ]
+
+/* Usuário visitante: apenas leitura e filtros */
+const USUARIO_VISITANTE: Usuario = {
+  usuario: "visitante",
+  nome: "Visitante",
+  perfil: "visitante",
+}
 
 const KEY_USER = "qm.auth.user.v1"
 const KEY_CARTEIRA = "qm.auth.carteira.v1"
@@ -19,7 +29,9 @@ interface AuthContextValue {
   ready: boolean
   user: Usuario | null
   carteira: string | null
+  isVisitante: boolean
   login: (usuario: string) => { ok: boolean; erro?: string }
+  loginVisitante: () => void
   logout: () => void
   selecionarCarteira: (carteira: string) => void
   limparCarteira: () => void
@@ -56,6 +68,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { ok: true }
   }, [])
 
+  const loginVisitante = useCallback(() => {
+    setUser(USUARIO_VISITANTE)
+    localStorage.setItem(KEY_USER, JSON.stringify(USUARIO_VISITANTE))
+  }, [])
+
   const logout = useCallback(() => {
     setUser(null)
     setCarteira(null)
@@ -75,7 +92,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ ready, user, carteira, login, logout, selecionarCarteira, limparCarteira }}
+      value={{
+        ready,
+        user,
+        carteira,
+        isVisitante: user?.perfil === "visitante",
+        login,
+        loginVisitante,
+        logout,
+        selecionarCarteira,
+        limparCarteira,
+      }}
     >
       {children}
     </AuthContext.Provider>

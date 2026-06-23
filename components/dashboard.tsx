@@ -105,7 +105,7 @@ function Kpi({
 
 export function Dashboard() {
   const { monitorias, checklists, ready } = useQualityData()
-  const { carteira: carteiraSelecionada } = useAuth()
+  const { carteira: carteiraSelecionada, isVisitante } = useAuth()
   const { mostrarTodas, setMostrarTodas } = useNotasGlobais()
   const periodo: Periodicidade = "diario"
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>(carteiraSelecionada ?? "todas")
@@ -193,31 +193,33 @@ export function Dashboard() {
             {mostrarTodas ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             {mostrarTodas ? "Ocultar notas" : "Exibir notas"}
           </Button>
-          <Dialog>
-            <DialogTrigger
-              className={buttonVariants({
-                variant: "ghost",
-                size: "sm",
-                className: "gap-2 text-muted-foreground",
-              })}
-            >
-              <RotateCcw className="size-4" /> Resetar dados
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Resetar dados de demonstração?</DialogTitle>
-              </DialogHeader>
-              <p className="text-sm text-muted-foreground">
-                Isso apaga todas as monitorias e checklists do localStorage e recria os
-                dados de exemplo.
-              </p>
-              <DialogFooter>
-                <Button variant="destructive" onClick={() => store.resetAll()}>
-                  Resetar agora
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          {!isVisitante && (
+            <Dialog>
+              <DialogTrigger
+                className={buttonVariants({
+                  variant: "ghost",
+                  size: "sm",
+                  className: "gap-2 text-muted-foreground",
+                })}
+              >
+                <RotateCcw className="size-4" /> Resetar dados
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Resetar dados de demonstração?</DialogTitle>
+                </DialogHeader>
+                <p className="text-sm text-muted-foreground">
+                  Isso apaga todas as monitorias e checklists do localStorage e recria os
+                  dados de exemplo.
+                </p>
+                <DialogFooter>
+                  <Button variant="destructive" onClick={() => store.resetAll()}>
+                    Resetar agora
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
           </div>
         </div>
 
