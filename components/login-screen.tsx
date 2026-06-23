@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { BarChart3, ArrowRight, User, ShieldCheck } from "lucide-react"
+import { Headset, ArrowRight, User, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -45,7 +45,7 @@ export function LoginScreen() {
 
       <div className="relative w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
         {/* Título da marca fora da caixa, com efeito neon animado nas cores do site */}
-        <h1 className="neon-title mb-8 select-none text-center text-5xl font-extrabold tracking-tight sm:text-6xl">
+        <h1 className="neon-title mb-8 select-none text-balance text-center text-6xl font-extrabold tracking-tight sm:text-7xl md:text-8xl">
           QualiMonitor
         </h1>
 
@@ -53,7 +53,7 @@ export function LoginScreen() {
           {/* Marca */}
           <div className="flex flex-col items-center gap-3 text-center">
             <span className="flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-transform duration-300 hover:scale-105">
-              <BarChart3 className="size-6" />
+              <Headset className="size-6" />
             </span>
             <div className="space-y-1">
               <p className="text-pretty text-sm text-muted-foreground">
