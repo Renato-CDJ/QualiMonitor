@@ -198,7 +198,7 @@ export function Quadrante() {
     }
     store.setRecebimentoOperador(operadorSel, nivelSel)
     toast.success(
-      `Recebimento ${nivelSel === "alto" ? "Alto" : "Baixo"} definido para ${operadorSel}`,
+      `Performance ${nivelSel === "alto" ? "Alta" : "Baixa"} definida para ${operadorSel}`,
     )
     setDialogAberto(false)
   }
@@ -209,12 +209,12 @@ export function Quadrante() {
       Carteira: o.carteira,
       Monitorias: o.volume,
       "Nota Média": o.nota,
-      Qualidade: o.qualidade === "alta" ? "Alta" : "Baixa",
-      Recebimento: o.recebimento
+      Performance: o.recebimento
         ? o.recebimento === "alto"
-          ? "Alto"
-          : "Baixo"
+          ? "Alta"
+          : "Baixa"
         : "Pendente",
+      Qualidade: o.qualidade === "alta" ? "Alta" : "Baixa",
       Sigla: o.sigla ?? "—",
       Quadrante: o.info?.quadrante ?? "—",
       Classificação: o.info?.nome ?? "Pendente",
@@ -343,10 +343,11 @@ export function Quadrante() {
             />
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Definir Recebimento do Operador</DialogTitle>
+                <DialogTitle>Definir Performance do Operador</DialogTitle>
                 <DialogDescription>
-                  O recebimento é definido manualmente. Combinado com a qualidade
-                  (calculada pelas notas), gera o quadrante do operador.
+                  A performance (recebimento) é definida manualmente. Combinada
+                  com a qualidade (calculada pelas notas), gera o quadrante do
+                  operador.
                 </DialogDescription>
               </DialogHeader>
               <div className="flex flex-col gap-4 py-1">
@@ -367,7 +368,7 @@ export function Quadrante() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-xs text-muted-foreground">
-                    Posição do Recebimento
+                    Nível de Performance
                   </Label>
                   <Select
                     value={nivelSel}
@@ -377,8 +378,8 @@ export function Quadrante() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="alto">Alto Recebimento (A)</SelectItem>
-                      <SelectItem value="baixo">Baixo Recebimento (B)</SelectItem>
+                      <SelectItem value="alto">Alta Performance (A)</SelectItem>
+                      <SelectItem value="baixo">Baixa Performance (B)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -399,11 +400,11 @@ export function Quadrante() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Grid2x2 className="size-4 text-muted-foreground" />
-            Matriz de Quadrante · Qualidade x Recebimento
+            Matriz de Quadrante · Performance x Qualidade
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Eixo vertical = Qualidade (nota média, meta {META_QUALIDADE}) · Eixo
-            horizontal = Recebimento (definido manualmente)
+            Eixo horizontal = Performance (Recebimento, definido manualmente) ·
+            Eixo vertical = Qualidade (nota média, meta {META_QUALIDADE})
           </p>
         </CardHeader>
         <CardContent>
@@ -416,21 +417,21 @@ export function Quadrante() {
             </div>
             <div className="flex-1">
               <div className="grid grid-cols-2 gap-3">
-                {/* Linha superior: Alta Qualidade → AA, AB */}
+                {/* Linha superior: Alta Qualidade → (Alta Perf) AA, (Baixa Perf) BA */}
                 <QuadranteCelula
                   sigla="AA"
                   operadores={porQuadrante.AA}
                   visao={visao}
                 />
                 <QuadranteCelula
-                  sigla="AB"
-                  operadores={porQuadrante.AB}
-                  visao={visao}
-                />
-                {/* Linha inferior: Baixa Qualidade → BA, BB */}
-                <QuadranteCelula
                   sigla="BA"
                   operadores={porQuadrante.BA}
+                  visao={visao}
+                />
+                {/* Linha inferior: Baixa Qualidade → (Alta Perf) AB, (Baixa Perf) BB */}
+                <QuadranteCelula
+                  sigla="AB"
+                  operadores={porQuadrante.AB}
                   visao={visao}
                 />
                 <QuadranteCelula
@@ -441,11 +442,11 @@ export function Quadrante() {
               </div>
               {/* Eixo X */}
               <div className="mt-2 grid grid-cols-2 text-center text-xs font-medium text-muted-foreground">
-                <span>Alto Recebimento</span>
-                <span>Baixo Recebimento</span>
+                <span>Alta Performance</span>
+                <span>Baixa Performance</span>
               </div>
               <p className="mt-1 text-center text-xs font-medium text-muted-foreground">
-                Recebimento
+                Performance
               </p>
             </div>
           </div>
@@ -457,8 +458,8 @@ export function Quadrante() {
         <CardHeader>
           <CardTitle className="text-base">Resultado por Operador</CardTitle>
           <p className="text-xs text-muted-foreground">
-            Clique no cabeçalho para ordenar · Qualidade calculada pelas notas ·
-            Recebimento definido manualmente · Visão:{" "}
+            Clique no cabeçalho para ordenar · Performance (recebimento) definida
+            manualmente · Qualidade calculada pelas notas · Visão:{" "}
             {visao === "sigla" ? "Siglas (AA, AB, BA, BB)" : "Nome completo"}
           </p>
         </CardHeader>
@@ -497,16 +498,16 @@ export function Quadrante() {
                   onSort={toggleSort}
                 />
                 <SortHeader
-                  label="Qualidade"
-                  sortKey="qualidade"
+                  label="Performance"
+                  sortKey="recebimento"
                   align="center"
                   activeKey={sortKey}
                   dir={sortDir}
                   onSort={toggleSort}
                 />
                 <SortHeader
-                  label="Recebimento"
-                  sortKey="recebimento"
+                  label="Qualidade"
+                  sortKey="qualidade"
                   align="center"
                   activeKey={sortKey}
                   dir={sortDir}
@@ -533,6 +534,22 @@ export function Quadrante() {
                     {o.nota}
                   </TableCell>
                   <TableCell className="text-center">
+                    {o.recebimento ? (
+                      <Badge
+                        variant="outline"
+                        className={
+                          o.recebimento === "alto"
+                            ? "bg-chart-5/15 text-chart-5 border-chart-5/30"
+                            : "bg-destructive/15 text-destructive border-destructive/30"
+                        }
+                      >
+                        {o.recebimento === "alto" ? "Alta" : "Baixa"}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Pendente</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
                     <Badge
                       variant="outline"
                       className={
@@ -543,22 +560,6 @@ export function Quadrante() {
                     >
                       {o.qualidade === "alta" ? "Alta" : "Baixa"}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {o.recebimento ? (
-                      <Badge
-                        variant="outline"
-                        className={
-                          o.recebimento === "alto"
-                            ? "bg-chart-5/15 text-chart-5 border-chart-5/30"
-                            : "bg-destructive/15 text-destructive border-destructive/30"
-                        }
-                      >
-                        {o.recebimento === "alto" ? "Alto" : "Baixo"}
-                      </Badge>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Pendente</span>
-                    )}
                   </TableCell>
                   <TableCell className="text-center">
                     {o.sigla ? (

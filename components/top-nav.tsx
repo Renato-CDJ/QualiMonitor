@@ -19,9 +19,20 @@ import {
   FileSpreadsheet,
   FileDown,
   ChevronDown,
+  LogOut,
+  RefreshCw,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useAuth } from "@/lib/auth"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 type NavItem = {
   href: string
@@ -68,6 +79,7 @@ function isItemActive(href: string, pathname: string) {
 
 export function TopNav() {
   const pathname = usePathname()
+  const { user, carteira, limparCarteira, logout } = useAuth()
 
   // Determine which menu owns the current route.
   const menuForPath =
@@ -122,10 +134,44 @@ export function TopNav() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
-            <span className="hidden rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground md:inline">
-              Dados locais (localStorage)
-            </span>
+            {carteira && (
+              <span className="hidden items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs text-foreground md:inline-flex">
+                <Wallet className="size-3.5 text-primary" />
+                {carteira === "todas" ? "Todas as carteiras" : carteira}
+              </span>
+            )}
             <ThemeToggle />
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={cn(
+                    "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium transition-colors",
+                    "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                  )}
+                >
+                  <span className="flex size-6 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                    {user.nome.charAt(0)}
+                  </span>
+                  <span className="hidden max-w-32 truncate sm:inline">{user.nome}</span>
+                  <ChevronDown className="size-3.5" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <p className="text-sm font-medium">{user.nome}</p>
+                    <p className="text-xs font-normal text-muted-foreground">@{user.usuario}</p>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={limparCarteira} className="gap-2">
+                    <RefreshCw className="size-4" />
+                    Trocar carteira
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout} className="gap-2 text-destructive focus:text-destructive">
+                    <LogOut className="size-4" />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
 

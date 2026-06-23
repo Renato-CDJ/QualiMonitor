@@ -168,14 +168,15 @@ export function HistoricoOperador() {
       critico: notas.filter((n) => n < 60).length,
     }
 
-    // Quadrante (Qualidade x Recebimento)
+    // Quadrante (Performance x Qualidade)
     const rec = recebimentos.find((r) => r.operadorNome === operadorSelecionado.nome)?.nivel ?? null
     const qualidade: "alta" | "baixa" = notaMedia >= 75 ? "alta" : "baixa"
     let siglaQuadrante: SiglaQuadrante | null = null
     if (rec) {
+      // 1ª letra = Performance (Recebimento), 2ª letra = Qualidade
+      const p = rec === "alto" ? "A" : "B"
       const q = qualidade === "alta" ? "A" : "B"
-      const r = rec === "alto" ? "A" : "B"
-      siglaQuadrante = `${q}${r}` as SiglaQuadrante
+      siglaQuadrante = `${p}${q}` as SiglaQuadrante
     }
     const quadranteInfo = siglaQuadrante ? QUADRANTE_MAPA[siglaQuadrante] : null
 
@@ -544,7 +545,7 @@ export function HistoricoOperador() {
                   Quadrante
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
-                  Qualidade x Recebimento
+                  Performance x Qualidade
                 </p>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">

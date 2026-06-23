@@ -2,8 +2,10 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Toaster } from '@/components/ui/sonner'
-import { TopNav } from '@/components/top-nav'
 import { ThemeProvider } from '@/components/theme-provider'
+import { AuthProvider } from '@/lib/auth'
+import { NotasProvider } from '@/lib/notas-context'
+import { AuthGate } from '@/components/auth-gate'
 import './globals.css'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -54,8 +56,11 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <TopNav />
-          {children}
+          <AuthProvider>
+            <NotasProvider>
+              <AuthGate>{children}</AuthGate>
+            </NotasProvider>
+          </AuthProvider>
           <Toaster />
           {process.env.NODE_ENV === 'production' && <Analytics />}
         </ThemeProvider>

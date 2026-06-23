@@ -421,36 +421,37 @@ export interface QuadranteInfo {
 }
 
 /**
- * Mapa do Quadrante. A combinação Qualidade(A/B) + Recebimento(A/B) gera a sigla.
- * - AA → Q1 · Alta Qualidade + Alto Recebimento
- * - AB → Q2 · Alta Qualidade + Baixo Recebimento
- * - BA → Q3 · Baixa Qualidade + Alto Recebimento
- * - BB → Q4 · Baixa Qualidade + Baixo Recebimento
+ * Mapa do Quadrante. A combinação Performance(A/B) + Qualidade(A/B) gera a sigla.
+ * A 1ª letra é a Performance (Recebimento) e a 2ª letra é a Qualidade.
+ * - AA → Q1 · Alta Performance + Alta Qualidade
+ * - AB → Q2 · Alta Performance + Baixa Qualidade
+ * - BA → Q3 · Baixa Performance + Alta Qualidade
+ * - BB → Q4 · Baixa Performance + Baixa Qualidade
  */
 export const QUADRANTE_MAPA: Record<SiglaQuadrante, QuadranteInfo> = {
   AA: {
     sigla: "AA",
     quadrante: "Q1",
-    nome: "Alta Qualidade · Alto Recebimento",
-    descricao: "Destaque: entrega qualidade e volume de recebimento.",
+    nome: "Alta Performance · Alta Qualidade",
+    descricao: "Destaque: entrega alta performance de recebimento e qualidade.",
   },
   AB: {
     sigla: "AB",
     quadrante: "Q2",
-    nome: "Alta Qualidade · Baixo Recebimento",
-    descricao: "Qualidade alta, mas recebimento abaixo do esperado.",
+    nome: "Alta Performance · Baixa Qualidade",
+    descricao: "Performance alta, mas a qualidade precisa melhorar.",
   },
   BA: {
     sigla: "BA",
     quadrante: "Q3",
-    nome: "Baixa Qualidade · Alto Recebimento",
-    descricao: "Recebimento alto, porém qualidade precisa melhorar.",
+    nome: "Baixa Performance · Alta Qualidade",
+    descricao: "Qualidade alta, porém a performance de recebimento está abaixo.",
   },
   BB: {
     sigla: "BB",
     quadrante: "Q4",
-    nome: "Baixa Qualidade · Baixo Recebimento",
-    descricao: "Atenção: qualidade e recebimento abaixo do esperado.",
+    nome: "Baixa Performance · Baixa Qualidade",
+    descricao: "Atenção: performance e qualidade abaixo do esperado.",
   },
 }
 
@@ -491,9 +492,10 @@ export function quadranteOperadores(
       const rec = recMap.get(operador) ?? null
       let sigla: SiglaQuadrante | null = null
       if (rec) {
+        // 1ª letra = Performance (Recebimento), 2ª letra = Qualidade
+        const p = rec === "alto" ? "A" : "B"
         const q = qualidade === "alta" ? "A" : "B"
-        const r = rec === "alto" ? "A" : "B"
-        sigla = `${q}${r}` as SiglaQuadrante
+        sigla = `${p}${q}` as SiglaQuadrante
       }
       return {
         operador,
