@@ -242,9 +242,6 @@ export function ResultadoMonitor() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Minhas monitorias: busca + exclusão */}
-      <MinhasMonitorias />
-
       {/* Filtros */}
       <div className="rounded-xl border border-border bg-card">
         <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-medium">
@@ -464,6 +461,9 @@ export function ResultadoMonitor() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Minhas monitorias: busca + exclusão */}
+      <MinhasMonitorias />
 
       {/* Insights de desempenho por carteira */}
       {insights && (
