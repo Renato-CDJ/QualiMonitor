@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Headset, ArrowRight, User, ShieldCheck } from "lucide-react"
+import Image from "next/image"
+import { ArrowRight, User, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -52,9 +53,16 @@ export function LoginScreen() {
         <div className="rounded-2xl border border-border bg-card/80 p-8 shadow-xl backdrop-blur-sm">
           {/* Marca */}
           <div className="flex flex-col items-center gap-3 text-center">
-            <span className="relative flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-inset ring-primary-foreground/20 transition-transform duration-300 hover:scale-105">
-              <span aria-hidden className="absolute inset-0 rounded-2xl bg-primary/40 blur-md" />
-              <Headset className="relative size-7" strokeWidth={2.25} />
+            <span className="relative flex size-24 items-center justify-center transition-transform duration-300 hover:scale-105">
+              <span aria-hidden className="absolute inset-2 rounded-full bg-primary/25 blur-xl" />
+              <Image
+                src="/images/headphone-icon.png"
+                alt="Fone de ouvido QualiMonitor"
+                width={96}
+                height={96}
+                priority
+                className="relative size-24 object-contain drop-shadow-[0_4px_12px_oklch(0_0_0/0.35)]"
+              />
             </span>
             <div className="space-y-1">
               <p className="text-pretty text-sm text-muted-foreground">
