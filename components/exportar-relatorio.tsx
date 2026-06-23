@@ -348,7 +348,7 @@ const GRUPOS: GrupoExport[] = [
     itens: [
       {
         id: "quadrante-operadores",
-        nome: "Quadrante · Qualidade x Recebimento",
+        nome: "Quadrante · Performance x Qualidade",
         descricao: "Classificação dos operadores na matriz de quadrante",
         build: ({ monitorias, recebimentos }) => [
           {
@@ -359,12 +359,12 @@ const GRUPOS: GrupoExport[] = [
                 Carteira: o.carteira,
                 Monitorias: o.volume,
                 "Nota Média": o.nota,
-                Qualidade: o.qualidade === "alta" ? "Alta" : "Baixa",
-                Recebimento: o.recebimento
+                Performance: o.recebimento
                   ? o.recebimento === "alto"
-                    ? "Alto"
-                    : "Baixo"
+                    ? "Alta"
+                    : "Baixa"
                   : "Pendente",
+                Qualidade: o.qualidade === "alta" ? "Alta" : "Baixa",
                 Sigla: o.sigla ?? "—",
                 Quadrante: o.info?.quadrante ?? "—",
                 Classificação: o.info?.nome ?? "Pendente",
