@@ -13,7 +13,8 @@ import {
   ArrowUp,
   Download,
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { CardTitleHint } from "@/components/card-title-hint"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -373,14 +374,10 @@ export function AnaliseNotas() {
       {/* Dispersão de notas por operador — destaque principal */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">
-            Dispersão das Notas por Operador
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Os operadores são distribuídos em quatro quadrantes conforme a faixa de
-            desempenho da nota média. O tamanho do ponto indica o volume de
-            monitorias.
-          </p>
+          <CardTitleHint
+            title="Dispersão das Notas por Operador"
+            description="Os operadores são distribuídos em quatro quadrantes conforme a faixa de desempenho da nota média. O tamanho do ponto indica o volume de monitorias."
+          />
         </CardHeader>
         <CardContent>
           <DispersaoOperadoresChart monitorias={filtradas} altura={420} />
@@ -410,14 +407,16 @@ export function AnaliseNotas() {
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <CardTitle className="text-base flex items-center gap-2">
-                <BarChart3 className="size-4 text-muted-foreground" />
-                Estatísticas Detalhadas por Operador
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Clique no cabeçalho para ordenar · Q1 Excelente (90+) · Q2 Bom
-                (75-89) · Q3 Regular (60-74) · Q4 Crítico (&lt;60)
-              </p>
+              <CardTitleHint
+                icon={<BarChart3 className="size-4 text-muted-foreground" />}
+                title="Estatísticas Detalhadas por Operador"
+                description={
+                  <>
+                    Clique no cabeçalho para ordenar · Q1 Excelente (90+) · Q2 Bom (75-89) · Q3
+                    Regular (60-74) · Q4 Crítico (&lt;60)
+                  </>
+                }
+              />
             </div>
             <Button
               variant="outline"

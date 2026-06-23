@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react"
 import { Wallet, TrendingUp, CheckCircle2, AlertOctagon, ChevronDown, Trophy } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { CardTitleHint } from "@/components/card-title-hint"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -229,10 +230,10 @@ export function NotasCarteira() {
       {/* Gráfico de notas por carteira */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Nota Média por Carteira</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Comparativo das notas das carteiras selecionadas
-          </p>
+          <CardTitleHint
+            title="Nota Média por Carteira"
+            description="Comparativo das notas das carteiras selecionadas"
+          />
         </CardHeader>
         <CardContent>
           {rankNotas.length ? (
@@ -248,10 +249,10 @@ export function NotasCarteira() {
       {/* Tabela ranking de carteiras */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Ranking de Carteiras por Nota</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Classificação da maior para a menor nota média
-          </p>
+          <CardTitleHint
+            title="Ranking de Carteiras por Nota"
+            description="Classificação da maior para a menor nota média"
+          />
         </CardHeader>
         <CardContent>
           <Table>
@@ -308,10 +309,10 @@ export function NotasCarteira() {
       {/* Gráfico de conformidade x inconformidade */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Conformidade x Inconformidade por Carteira</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Percentual de itens conformes e inconformes (exclui N.A.)
-          </p>
+          <CardTitleHint
+            title="Conformidade x Inconformidade por Carteira"
+            description="Percentual de itens conformes e inconformes (exclui N.A.)"
+          />
         </CardHeader>
         <CardContent>
           {conformidade.length ? (
@@ -328,8 +329,10 @@ export function NotasCarteira() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Ranking por Conformidade</CardTitle>
-            <p className="text-xs text-muted-foreground">Maior % de itens conformes</p>
+            <CardTitleHint
+              title="Ranking por Conformidade"
+              description="Maior % de itens conformes"
+            />
           </CardHeader>
           <CardContent>
             <Table>
@@ -367,8 +370,10 @@ export function NotasCarteira() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Ranking por Inconformidade</CardTitle>
-            <p className="text-xs text-muted-foreground">Maior % de itens inconformes</p>
+            <CardTitleHint
+              title="Ranking por Inconformidade"
+              description="Maior % de itens inconformes"
+            />
           </CardHeader>
           <CardContent>
             <Table>
