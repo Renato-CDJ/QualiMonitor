@@ -364,6 +364,116 @@ export function conformidadePorCarteira(monitorias: Monitoria[]): ConformidadeCa
     .sort((a, b) => b.pctConforme - a.pctConforme)
 }
 
+export interface ItemCategoria {
+  itemId: string
+  texto: string
+  critico: boolean
+  conforme: number
+  inconforme: number
+  na: number
+  qtd: number // avaliados (conforme + inconforme)
+  pctConforme: number
+  pctInconforme: number
+}
+
+export interface BlocoCategoria {
+  bloco: string
+  conforme: number
+  inconforme: number
+  na: number
+  qtd: number // soma de avaliados do bloco
+  pctConforme: number
+  pctInconforme: number
+  itens: ItemCategoria[]
+}
+
+const SEM_BLOCO = "Sem bloco"
+
+/**
+ * Análise por Categoria do Checklist: agrupa os apontamentos por bloco/categoria
+ * e, dentro de cada bloco, por item. Para cada nível calcula a quantidade de
+ * avaliações (conforme + inconforme, exclui N.A.) e os percentuais de conformidade.
+ * Opcionalmente filtra por carteira.
+ */
+export function analiseCategoria(
+  monitorias: Monitoria[],
+  checklists: Checklist[],
+  carteira?: string,
+): BlocoCategoria[] {
+  // meta: itemId -> { texto, bloco, critico, carteira }
+  const meta = new Map<
+    string,
+    { texto: string; bloco: string; critico: boolean; carteira: string }
+  >()
+  for (const c of checklists) {
+    for (const it of c.itens) {
+      if (!meta.has(it.id)) {
+        meta.set(it.id, {
+          texto: it.texto,
+          bloco: it.bloco?.trim() || SEM_BLOCO,
+          critico: !!it.critico,
+          carteira: c.carteira,
+        })
+      }
+    }
+  }
+
+  const contagem = new Map<string, { conforme: number; inconforme: number; na: number }>()
+  for (const m of monitorias) {
+    if (carteira && carteira !== "todas" && m.carteira !== carteira) continue
+    for (const ap of m.apontamentos) {
+      const atual = contagem.get(ap.itemId) ?? { conforme: 0, inconforme: 0, na: 0 }
+      if (ap.status === "conforme") atual.conforme++
+      else if (ap.status === "inconforme") atual.inconforme++
+      else atual.na++
+      contagem.set(ap.itemId, atual)
+    }
+  }
+
+  const round1 = (n: number) => Math.round(n * 10) / 10
+
+  // agrupa por bloco
+  const blocos = new Map<string, ItemCategoria[]>()
+  for (const [itemId, c] of contagem.entries()) {
+    const info = meta.get(itemId)
+    if (carteira && carteira !== "todas" && info && info.carteira !== carteira) continue
+    const bloco = info?.bloco ?? SEM_BLOCO
+    const qtd = c.conforme + c.inconforme
+    const item: ItemCategoria = {
+      itemId,
+      texto: info?.texto ?? itemId,
+      critico: info?.critico ?? false,
+      conforme: c.conforme,
+      inconforme: c.inconforme,
+      na: c.na,
+      qtd,
+      pctConforme: qtd ? round1((c.conforme / qtd) * 100) : 0,
+      pctInconforme: qtd ? round1((c.inconforme / qtd) * 100) : 0,
+    }
+    if (!blocos.has(bloco)) blocos.set(bloco, [])
+    blocos.get(bloco)!.push(item)
+  }
+
+  return Array.from(blocos.entries())
+    .map(([bloco, itens]) => {
+      const conforme = itens.reduce((s, i) => s + i.conforme, 0)
+      const inconforme = itens.reduce((s, i) => s + i.inconforme, 0)
+      const na = itens.reduce((s, i) => s + i.na, 0)
+      const qtd = conforme + inconforme
+      return {
+        bloco,
+        conforme,
+        inconforme,
+        na,
+        qtd,
+        pctConforme: qtd ? round1((conforme / qtd) * 100) : 0,
+        pctInconforme: qtd ? round1((inconforme / qtd) * 100) : 0,
+        itens: itens.sort((a, b) => a.texto.localeCompare(b.texto, "pt-BR")),
+      }
+    })
+    .sort((a, b) => a.bloco.localeCompare(b.bloco, "pt-BR"))
+}
+
 /** Totais consolidados de conforme/inconforme/N.A. para todos os apontamentos */
 export function resumoConformidade(monitorias: Monitoria[]) {
   let conforme = 0

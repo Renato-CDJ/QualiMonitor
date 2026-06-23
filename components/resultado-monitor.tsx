@@ -57,6 +57,8 @@ import {
   CarteiraBarChart,
   ConformidadeCarteiraChart,
 } from "@/components/dashboard-charts"
+import { CardTitleHint } from "@/components/card-title-hint"
+import { AnaliseCategoria } from "@/components/analise-categoria"
 import { cn } from "@/lib/utils"
 
 function formatBr(iso: string) {
@@ -109,7 +111,7 @@ function Kpi({
 }
 
 export function ResultadoMonitor() {
-  const { monitorias, ready } = useQualityData()
+  const { monitorias, checklists, ready } = useQualityData()
 
   const monitores = useMemo(
     () => Array.from(new Set(monitorias.map((m) => m.monitor))).sort(),
@@ -611,6 +613,13 @@ export function ResultadoMonitor() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Análise por categoria do checklist */}
+      <AnaliseCategoria
+        monitorias={filtradas}
+        checklists={checklists}
+        carteira={selecionadas.size === 1 ? Array.from(selecionadas)[0] : "todas"}
+      />
     </div>
   )
 }

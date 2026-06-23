@@ -3,6 +3,7 @@ export type ItemTipo = "checklist"
 export interface ChecklistItem {
   id: string
   texto: string
+  bloco?: string // bloco/categoria do item (ex: "Abertura", "Procedimento")
   peso: number // pontos descontados quando "Inconforme"
   critico?: boolean // item crítico (zera a nota se inconforme)
 }

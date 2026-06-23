@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   GripVertical,
   FolderPlus,
+  Layers,
 } from "lucide-react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -56,6 +57,30 @@ export function ChecklistEditor() {
     [rascunho],
   )
 
+  const SEM_BLOCO = "Sem bloco"
+
+  // Agrupa os itens por bloco preservando a ordem de aparição
+  const grupos = useMemo(() => {
+    if (!rascunho) return [] as { bloco: string; itens: ChecklistItem[] }[]
+    const ordem: string[] = []
+    const mapa = new Map<string, ChecklistItem[]>()
+    for (const it of rascunho.itens) {
+      const b = it.bloco?.trim() || SEM_BLOCO
+      if (!mapa.has(b)) {
+        mapa.set(b, [])
+        ordem.push(b)
+      }
+      mapa.get(b)!.push(it)
+    }
+    return ordem.map((bloco) => ({ bloco, itens: mapa.get(bloco)! }))
+  }, [rascunho])
+
+  // Lista de blocos existentes (para o datalist de reatribuição)
+  const blocosExistentes = useMemo(
+    () => grupos.map((g) => g.bloco).filter((b) => b !== SEM_BLOCO),
+    [grupos],
+  )
+
   function atualizarItem(id: string, patch: Partial<ChecklistItem>) {
     setRascunho((prev) =>
       prev
@@ -70,15 +95,60 @@ export function ChecklistEditor() {
     )
   }
 
-  function adicionarItem() {
+  function adicionarItem(bloco: string) {
     setRascunho((prev) =>
       prev
         ? {
             ...prev,
             itens: [
               ...prev.itens,
-              { id: store.uid(), texto: "Novo item de checklist", peso: 5, critico: false },
+              {
+                id: store.uid(),
+                texto: "Novo item de checklist",
+                bloco: bloco === SEM_BLOCO ? undefined : bloco,
+                peso: 5,
+                critico: false,
+              },
             ],
+          }
+        : prev,
+    )
+  }
+
+  function adicionarBloco() {
+    setRascunho((prev) => {
+      if (!prev) return prev
+      // gera um nome único para o novo bloco
+      const base = "Novo bloco"
+      const usados = new Set(prev.itens.map((i) => i.bloco?.trim() || SEM_BLOCO))
+      let nome = base
+      let n = 2
+      while (usados.has(nome)) {
+        nome = `${base} ${n}`
+        n++
+      }
+      return {
+        ...prev,
+        itens: [
+          ...prev.itens,
+          { id: store.uid(), texto: "Novo item de checklist", bloco: nome, peso: 5, critico: false },
+        ],
+      }
+    })
+  }
+
+  // Renomeia um bloco em todos os itens que pertencem a ele
+  function renomearBloco(antigo: string, novo: string) {
+    const nomeNovo = novo.trim()
+    setRascunho((prev) =>
+      prev
+        ? {
+            ...prev,
+            itens: prev.itens.map((i) =>
+              (i.bloco?.trim() || SEM_BLOCO) === antigo
+                ? { ...i, bloco: nomeNovo || undefined }
+                : i,
+            ),
           }
         : prev,
     )
@@ -232,59 +302,110 @@ export function ChecklistEditor() {
                 Peso total: {pesoTotal} pts
               </Badge>
             </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              {rascunho.itens.map((it, idx) => (
+            <CardContent className="flex flex-col gap-5">
+              <datalist id="blocos-existentes">
+                {blocosExistentes.map((b) => (
+                  <option key={b} value={b} />
+                ))}
+              </datalist>
+
+              {grupos.map((g) => (
                 <div
-                  key={it.id}
-                  className="flex flex-col gap-3 rounded-lg border border-border bg-secondary/30 p-3 md:flex-row md:items-center"
+                  key={g.bloco}
+                  className="rounded-lg border border-border bg-secondary/20"
                 >
-                  <span className="hidden text-muted-foreground md:block">
-                    <GripVertical className="size-4" />
-                  </span>
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-secondary text-xs text-muted-foreground">
-                    {idx + 1}
-                  </span>
-                  <Input
-                    value={it.texto}
-                    onChange={(e) => atualizarItem(it.id, { texto: e.target.value })}
-                    className="flex-1"
-                  />
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <Label className="text-xs text-muted-foreground">Peso</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={it.peso}
-                        onChange={(e) =>
-                          atualizarItem(it.id, { peso: Number(e.target.value) || 0 })
-                        }
-                        className="w-20"
-                      />
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Switch
-                        checked={!!it.critico}
-                        onCheckedChange={(v) => atualizarItem(it.id, { critico: v })}
-                      />
-                      <Label className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <AlertTriangle className="size-3" /> Crítico
-                      </Label>
-                    </div>
+                  {/* Cabeçalho do bloco (nome editável) */}
+                  <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2.5">
+                    <Layers className="size-4 shrink-0 text-primary" />
+                    <Label className="text-xs text-muted-foreground">Bloco</Label>
+                    <Input
+                      value={g.bloco === SEM_BLOCO ? "" : g.bloco}
+                      placeholder={SEM_BLOCO}
+                      onChange={(e) => renomearBloco(g.bloco, e.target.value)}
+                      className="h-8 w-56 font-medium"
+                    />
+                    <Badge variant="outline" className="ml-auto">
+                      {g.itens.length} {g.itens.length === 1 ? "item" : "itens"}
+                    </Badge>
+                  </div>
+
+                  {/* Itens do bloco */}
+                  <div className="flex flex-col gap-2 p-3">
+                    {g.itens.map((it) => (
+                      <div
+                        key={it.id}
+                        className="flex flex-col gap-3 rounded-lg border border-border bg-background p-3 md:flex-row md:items-center"
+                      >
+                        <span className="hidden text-muted-foreground md:block">
+                          <GripVertical className="size-4" />
+                        </span>
+                        <Input
+                          value={it.texto}
+                          onChange={(e) => atualizarItem(it.id, { texto: e.target.value })}
+                          className="flex-1"
+                        />
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="flex items-center gap-1.5">
+                            <Label className="text-xs text-muted-foreground">Bloco</Label>
+                            <Input
+                              list="blocos-existentes"
+                              value={it.bloco ?? ""}
+                              placeholder={SEM_BLOCO}
+                              onChange={(e) =>
+                                atualizarItem(it.id, {
+                                  bloco: e.target.value.trim() || undefined,
+                                })
+                              }
+                              className="w-36"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Label className="text-xs text-muted-foreground">Peso</Label>
+                            <Input
+                              type="number"
+                              min={0}
+                              max={100}
+                              value={it.peso}
+                              onChange={(e) =>
+                                atualizarItem(it.id, { peso: Number(e.target.value) || 0 })
+                              }
+                              className="w-20"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Switch
+                              checked={!!it.critico}
+                              onCheckedChange={(v) => atualizarItem(it.id, { critico: v })}
+                            />
+                            <Label className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <AlertTriangle className="size-3" /> Crítico
+                            </Label>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removerItem(it.id)}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                     <Button
                       variant="ghost"
-                      size="icon"
-                      onClick={() => removerItem(it.id)}
-                      className="text-muted-foreground hover:text-destructive"
+                      size="sm"
+                      onClick={() => adicionarItem(g.bloco)}
+                      className="mt-1 gap-2 self-start text-muted-foreground"
                     >
-                      <Trash2 className="size-4" />
+                      <Plus className="size-4" /> Adicionar item neste bloco
                     </Button>
                   </div>
                 </div>
               ))}
-              <Button variant="outline" onClick={adicionarItem} className="mt-2 gap-2">
-                <Plus className="size-4" /> Adicionar item
+
+              <Button variant="outline" onClick={adicionarBloco} className="gap-2 self-start">
+                <FolderPlus className="size-4" /> Adicionar bloco
               </Button>
             </CardContent>
           </Card>
