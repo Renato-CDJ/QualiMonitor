@@ -51,6 +51,7 @@ import {
   TabulacaoPieChart,
   ParetoChart,
 } from "@/components/dashboard-charts"
+import { OperadoresResumoDialog } from "@/components/operadores-resumo-dialog"
 import { cn } from "@/lib/utils"
 
 function formatBr(iso: string) {
@@ -64,17 +65,24 @@ function Kpi({
   value,
   sub,
   tone = "default",
+  interactive = false,
 }: {
   icon: React.ElementType
   label: string
   value: string
   sub?: string
   tone?: "default" | "good" | "bad"
+  interactive?: boolean
 }) {
   return (
-    <Card>
+    <Card
+      className={cn(
+        "h-full",
+        interactive && "transition-colors group-hover/kpi:border-primary/50 group-hover/kpi:bg-accent/40",
+      )}
+    >
       <CardContent className="flex items-start justify-between gap-3 p-4">
-        <div className="min-w-0">
+        <div className="min-w-0 text-left">
           <p className="text-xs text-muted-foreground">{label}</p>
           <p
             className={cn(
@@ -282,7 +290,9 @@ export function Dashboard() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <Kpi icon={ClipboardList} label="Monitorias" value={String(k.total)} sub={periodoLabel} />
+        <OperadoresResumoDialog monitorias={filtradas} variante="monitorias" periodoLabel={periodoLabel}>
+          <Kpi icon={ClipboardList} label="Monitorias" value={String(k.total)} sub={periodoLabel} interactive />
+        </OperadoresResumoDialog>
         <Kpi
           icon={TrendingUp}
           label="Nota média"
@@ -297,14 +307,19 @@ export function Dashboard() {
           sub="nota > 85"
           tone={k.aprovacao >= 75 ? "good" : "default"}
         />
-        <Kpi
-          icon={AlertOctagon}
-          label="Notas críticas"
-          value={String(k.criticos)}
-          sub="abaixo de 60"
-          tone={k.criticos > 0 ? "bad" : "good"}
-        />
-        <Kpi icon={Activity} label="Inconformidades" value={String(k.totalInconf)} sub="total de apontamentos" />
+        <OperadoresResumoDialog monitorias={filtradas} variante="criticas" periodoLabel={periodoLabel}>
+          <Kpi
+            icon={AlertOctagon}
+            label="Notas críticas"
+            value={String(k.criticos)}
+            sub="abaixo de 60"
+            tone={k.criticos > 0 ? "bad" : "good"}
+            interactive
+          />
+        </OperadoresResumoDialog>
+        <OperadoresResumoDialog monitorias={filtradas} variante="inconformidades" periodoLabel={periodoLabel}>
+          <Kpi icon={Activity} label="Inconformidades" value={String(k.totalInconf)} sub="total de apontamentos" interactive />
+        </OperadoresResumoDialog>
       </div>
 
       {/* Tendência + comparativo */}

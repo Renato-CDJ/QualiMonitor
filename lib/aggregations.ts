@@ -85,6 +85,72 @@ export function porOperador(monitorias: Monitoria[]) {
     .sort((a, b) => b.nota - a.nota)
 }
 
+export interface ResumoOperador {
+  operador: string
+  carteira: string
+  volume: number // qtd de monitorias
+  nota: number // nota média
+  conforme: number
+  inconforme: number
+  na: number
+  avaliados: number // conforme + inconforme
+  pctConforme: number
+  pctInconforme: number
+  criticos: number // qtd de monitorias com nota < 60
+}
+
+/**
+ * Resumo consolidado por operador a partir das monitorias já filtradas.
+ * Inclui nota média, volume, apontamentos conformes/inconformes/N.A. e
+ * quantidade de notas críticas (abaixo de 60). % calculados sobre os
+ * itens avaliados (exclui N.A.).
+ */
+export function resumoOperadores(monitorias: Monitoria[]): ResumoOperador[] {
+  const grupos = new Map<
+    string,
+    { notas: number[]; carteira: string; conforme: number; inconforme: number; na: number; criticos: number }
+  >()
+  for (const m of monitorias) {
+    if (!grupos.has(m.operadorNome)) {
+      grupos.set(m.operadorNome, {
+        notas: [],
+        carteira: m.carteira,
+        conforme: 0,
+        inconforme: 0,
+        na: 0,
+        criticos: 0,
+      })
+    }
+    const g = grupos.get(m.operadorNome)!
+    g.notas.push(m.nota)
+    if (m.nota < 60) g.criticos++
+    for (const ap of m.apontamentos) {
+      if (ap.status === "conforme") g.conforme++
+      else if (ap.status === "inconforme") g.inconforme++
+      else g.na++
+    }
+  }
+  const round1 = (n: number) => Math.round(n * 10) / 10
+  return Array.from(grupos.entries())
+    .map(([operador, g]) => {
+      const avaliados = g.conforme + g.inconforme
+      return {
+        operador,
+        carteira: g.carteira,
+        volume: g.notas.length,
+        nota: round1(media(g.notas)),
+        conforme: g.conforme,
+        inconforme: g.inconforme,
+        na: g.na,
+        avaliados,
+        pctConforme: avaliados ? round1((g.conforme / avaliados) * 100) : 0,
+        pctInconforme: avaliados ? round1((g.inconforme / avaliados) * 100) : 0,
+        criticos: g.criticos,
+      }
+    })
+    .sort((a, b) => b.nota - a.nota)
+}
+
 export function porMonitor(monitorias: Monitoria[]) {
   const grupos = new Map<string, number[]>()
   for (const m of monitorias) {

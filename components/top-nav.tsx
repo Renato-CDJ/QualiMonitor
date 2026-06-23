@@ -28,6 +28,7 @@ import { useAuth } from "@/lib/auth"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -156,10 +157,12 @@ export function TopNav() {
                   <ChevronDown className="size-3.5" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
-                    <p className="text-sm font-medium">{user.nome}</p>
-                    <p className="text-xs font-normal text-muted-foreground">@{user.usuario}</p>
-                  </DropdownMenuLabel>
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>
+                      <p className="text-sm font-medium">{user.nome}</p>
+                      <p className="text-xs font-normal text-muted-foreground">@{user.usuario}</p>
+                    </DropdownMenuLabel>
+                  </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={limparCarteira} className="gap-2">
                     <RefreshCw className="size-4" />

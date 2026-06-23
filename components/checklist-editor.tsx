@@ -157,12 +157,9 @@ export function ChecklistEditor() {
     )
   }
 
-  // Cor (token chart) de acordo com o peso / criticidade — usada nos cards da árvore
-  function corDoPeso(peso: number, critico?: boolean): string {
-    if (critico) return "var(--chart-4)" // vermelho
-    if (peso >= 12) return "var(--chart-5)" // verde
-    if (peso >= 8) return "var(--chart-3)" // âmbar
-    return "var(--chart-1)" // azul
+  // Cor de destaque apenas para itens/blocos críticos. Caso contrário, usa o tema.
+  function corCritico(critico?: boolean): string | null {
+    return critico ? "var(--destructive)" : null
   }
 
   function salvar() {
@@ -315,9 +312,10 @@ export function ChecklistEditor() {
             </CardHeader>
             <CardContent className="flex flex-col gap-6">
               <p className="text-xs text-muted-foreground">
-                O número colorido representa o peso. Edite o nome direto no card, use o{" "}
+                O número representa o peso. Edite o nome direto no card, use o{" "}
                 <AlertTriangle className="inline size-3 align-text-bottom" /> para marcar como
-                crítico e o seletor para mover o item entre blocos.
+                crítico (itens críticos ficam destacados em vermelho) e o seletor para mover o
+                item entre blocos.
               </p>
 
               {/* Diagrama em árvore: blocos à esquerda conectados aos itens à direita */}
@@ -326,23 +324,31 @@ export function ChecklistEditor() {
                   {grupos.map((g) => {
                     const blocoTotal = g.itens.reduce((s, i) => s + (i.peso || 0), 0)
                     const blocoCritico = g.itens.some((i) => i.critico)
-                    const blocoCor = corDoPeso(
-                      g.itens.length ? Math.round(blocoTotal / g.itens.length) : 0,
-                      blocoCritico,
-                    )
+                    const blocoCor = corCritico(blocoCritico)
                     return (
                       <div key={g.bloco} className="flex items-center">
                         {/* Card do bloco */}
                         <div
-                          className="flex w-60 shrink-0 items-center gap-3 rounded-lg border p-3"
-                          style={{
-                            backgroundColor: `color-mix(in oklch, ${blocoCor} 16%, var(--card))`,
-                            borderColor: `color-mix(in oklch, ${blocoCor} 45%, transparent)`,
-                          }}
+                          className="flex w-60 shrink-0 items-center gap-3 rounded-lg border bg-card p-3"
+                          style={
+                            blocoCor
+                              ? {
+                                  backgroundColor: `color-mix(in oklch, ${blocoCor} 16%, var(--card))`,
+                                  borderColor: `color-mix(in oklch, ${blocoCor} 45%, transparent)`,
+                                }
+                              : undefined
+                          }
                         >
                           <span
-                            className="flex size-11 shrink-0 items-center justify-center rounded-md text-sm font-bold"
-                            style={{ backgroundColor: blocoCor, color: "oklch(0.99 0 0)" }}
+                            className={cn(
+                              "flex size-11 shrink-0 items-center justify-center rounded-md text-sm font-bold",
+                              !blocoCor && "bg-secondary text-secondary-foreground",
+                            )}
+                            style={
+                              blocoCor
+                                ? { backgroundColor: blocoCor, color: "var(--destructive-foreground)" }
+                                : undefined
+                            }
                           >
                             {blocoTotal}
                           </span>
@@ -391,17 +397,21 @@ export function ChecklistEditor() {
                           )}
                           <div className="flex flex-col gap-3">
                             {g.itens.map((it) => {
-                              const cor = corDoPeso(it.peso, it.critico)
+                              const cor = corCritico(it.critico)
                               return (
                                 <div key={it.id} className="relative flex items-center pl-8">
                                   {/* ramificação horizontal */}
                                   <span className="absolute left-0 top-1/2 h-px w-8 bg-foreground/20" />
                                   <div
-                                    className="flex h-11 flex-1 items-center gap-2 overflow-hidden rounded-md border pr-2"
-                                    style={{
-                                      backgroundColor: `color-mix(in oklch, ${cor} 13%, var(--card))`,
-                                      borderColor: `color-mix(in oklch, ${cor} 40%, transparent)`,
-                                    }}
+                                    className="flex h-11 flex-1 items-center gap-2 overflow-hidden rounded-md border bg-card pr-2"
+                                    style={
+                                      cor
+                                        ? {
+                                            backgroundColor: `color-mix(in oklch, ${cor} 13%, var(--card))`,
+                                            borderColor: `color-mix(in oklch, ${cor} 40%, transparent)`,
+                                          }
+                                        : undefined
+                                    }
                                   >
                                     {/* peso */}
                                     <input
@@ -415,8 +425,15 @@ export function ChecklistEditor() {
                                         })
                                       }
                                       aria-label="Peso do item"
-                                      className="h-full w-11 shrink-0 border-0 text-center text-sm font-bold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                                      style={{ backgroundColor: cor, color: "oklch(0.99 0 0)" }}
+                                      className={cn(
+                                        "h-full w-11 shrink-0 border-0 text-center text-sm font-bold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+                                        !cor && "bg-secondary text-secondary-foreground",
+                                      )}
+                                      style={
+                                        cor
+                                          ? { backgroundColor: cor, color: "var(--destructive-foreground)" }
+                                          : undefined
+                                      }
                                     />
                                     {/* texto do item */}
                                     <input
