@@ -28,7 +28,7 @@ export function LoginScreen() {
   }
 
   return (
-    <main className="relative flex min-h-svh items-center justify-center overflow-hidden bg-background px-4 py-10">
+    <main className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-background px-4 py-10">
       {/* Fundo decorativo com animação leve (apenas opacidade/transform suave) */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-24 -top-24 size-80 animate-pulse rounded-full bg-primary/10 blur-3xl [animation-duration:6s]" />
@@ -43,17 +43,18 @@ export function LoginScreen() {
         />
       </div>
 
-      <div className="relative w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
-        {/* Título da marca fora da caixa, com efeito neon animado nas cores do site */}
-        <h1 className="neon-title mb-8 select-none text-balance text-center text-6xl font-extrabold tracking-tight sm:text-7xl md:text-8xl">
-          QualiMonitor
-        </h1>
+      {/* Título da marca fora da caixa, centralizado na tela, com efeito neon animado nas cores do site */}
+      <h1 className="neon-title mb-12 w-full select-none text-balance text-center text-6xl font-extrabold tracking-tight duration-500 animate-in fade-in slide-in-from-top-4 sm:text-7xl md:text-8xl">
+        QualiMonitor
+      </h1>
 
+      <div className="relative w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
         <div className="rounded-2xl border border-border bg-card/80 p-8 shadow-xl backdrop-blur-sm">
           {/* Marca */}
           <div className="flex flex-col items-center gap-3 text-center">
-            <span className="flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-transform duration-300 hover:scale-105">
-              <Headset className="size-6" />
+            <span className="relative flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-inset ring-primary-foreground/20 transition-transform duration-300 hover:scale-105">
+              <span aria-hidden className="absolute inset-0 rounded-2xl bg-primary/40 blur-md" />
+              <Headset className="relative size-7" strokeWidth={2.25} />
             </span>
             <div className="space-y-1">
               <p className="text-pretty text-sm text-muted-foreground">
