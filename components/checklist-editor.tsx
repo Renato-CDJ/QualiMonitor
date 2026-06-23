@@ -2,19 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
-import {
-  Plus,
-  Trash2,
-  Save,
-  AlertTriangle,
-  GripVertical,
-  FolderPlus,
-  Layers,
-} from "lucide-react"
+import { Plus, Trash2, Save, AlertTriangle, FolderPlus } from "lucide-react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -152,6 +143,26 @@ export function ChecklistEditor() {
           }
         : prev,
     )
+  }
+
+  // Remove todos os itens de um bloco
+  function removerBloco(bloco: string) {
+    setRascunho((prev) =>
+      prev
+        ? {
+            ...prev,
+            itens: prev.itens.filter((i) => (i.bloco?.trim() || SEM_BLOCO) !== bloco),
+          }
+        : prev,
+    )
+  }
+
+  // Cor (token chart) de acordo com o peso / criticidade — usada nos cards da árvore
+  function corDoPeso(peso: number, critico?: boolean): string {
+    if (critico) return "var(--chart-4)" // vermelho
+    if (peso >= 12) return "var(--chart-5)" // verde
+    if (peso >= 8) return "var(--chart-3)" // âmbar
+    return "var(--chart-1)" // azul
   }
 
   function salvar() {
@@ -302,107 +313,179 @@ export function ChecklistEditor() {
                 Peso total: {pesoTotal} pts
               </Badge>
             </CardHeader>
-            <CardContent className="flex flex-col gap-5">
-              <datalist id="blocos-existentes">
-                {blocosExistentes.map((b) => (
-                  <option key={b} value={b} />
-                ))}
-              </datalist>
+            <CardContent className="flex flex-col gap-6">
+              <p className="text-xs text-muted-foreground">
+                O número colorido representa o peso. Edite o nome direto no card, use o{" "}
+                <AlertTriangle className="inline size-3 align-text-bottom" /> para marcar como
+                crítico e o seletor para mover o item entre blocos.
+              </p>
 
-              {grupos.map((g) => (
-                <div
-                  key={g.bloco}
-                  className="rounded-lg border border-border bg-secondary/20"
-                >
-                  {/* Cabeçalho do bloco (nome editável) */}
-                  <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2.5">
-                    <Layers className="size-4 shrink-0 text-primary" />
-                    <Label className="text-xs text-muted-foreground">Bloco</Label>
-                    <Input
-                      value={g.bloco === SEM_BLOCO ? "" : g.bloco}
-                      placeholder={SEM_BLOCO}
-                      onChange={(e) => renomearBloco(g.bloco, e.target.value)}
-                      className="h-8 w-56 font-medium"
-                    />
-                    <Badge variant="outline" className="ml-auto">
-                      {g.itens.length} {g.itens.length === 1 ? "item" : "itens"}
-                    </Badge>
-                  </div>
-
-                  {/* Itens do bloco */}
-                  <div className="flex flex-col gap-2 p-3">
-                    {g.itens.map((it) => (
-                      <div
-                        key={it.id}
-                        className="flex flex-col gap-3 rounded-lg border border-border bg-background p-3 md:flex-row md:items-center"
-                      >
-                        <span className="hidden text-muted-foreground md:block">
-                          <GripVertical className="size-4" />
-                        </span>
-                        <Input
-                          value={it.texto}
-                          onChange={(e) => atualizarItem(it.id, { texto: e.target.value })}
-                          className="flex-1"
-                        />
-                        <div className="flex flex-wrap items-center gap-3">
-                          <div className="flex items-center gap-1.5">
-                            <Label className="text-xs text-muted-foreground">Bloco</Label>
-                            <Input
-                              list="blocos-existentes"
-                              value={it.bloco ?? ""}
-                              placeholder={SEM_BLOCO}
-                              onChange={(e) =>
-                                atualizarItem(it.id, {
-                                  bloco: e.target.value.trim() || undefined,
-                                })
-                              }
-                              className="w-36"
-                            />
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Label className="text-xs text-muted-foreground">Peso</Label>
-                            <Input
-                              type="number"
-                              min={0}
-                              max={100}
-                              value={it.peso}
-                              onChange={(e) =>
-                                atualizarItem(it.id, { peso: Number(e.target.value) || 0 })
-                              }
-                              className="w-20"
-                            />
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Switch
-                              checked={!!it.critico}
-                              onCheckedChange={(v) => atualizarItem(it.id, { critico: v })}
-                            />
-                            <Label className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <AlertTriangle className="size-3" /> Crítico
-                            </Label>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removerItem(it.id)}
-                            className="text-muted-foreground hover:text-destructive"
+              {/* Diagrama em árvore: blocos à esquerda conectados aos itens à direita */}
+              <div className="overflow-x-auto pb-2">
+                <div className="flex min-w-[680px] flex-col gap-7">
+                  {grupos.map((g) => {
+                    const blocoTotal = g.itens.reduce((s, i) => s + (i.peso || 0), 0)
+                    const blocoCritico = g.itens.some((i) => i.critico)
+                    const blocoCor = corDoPeso(
+                      g.itens.length ? Math.round(blocoTotal / g.itens.length) : 0,
+                      blocoCritico,
+                    )
+                    return (
+                      <div key={g.bloco} className="flex items-center">
+                        {/* Card do bloco */}
+                        <div
+                          className="flex w-60 shrink-0 items-center gap-3 rounded-lg border p-3"
+                          style={{
+                            backgroundColor: `color-mix(in oklch, ${blocoCor} 16%, var(--card))`,
+                            borderColor: `color-mix(in oklch, ${blocoCor} 45%, transparent)`,
+                          }}
+                        >
+                          <span
+                            className="flex size-11 shrink-0 items-center justify-center rounded-md text-sm font-bold"
+                            style={{ backgroundColor: blocoCor, color: "oklch(0.99 0 0)" }}
                           >
-                            <Trash2 className="size-4" />
-                          </Button>
+                            {blocoTotal}
+                          </span>
+                          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                            <input
+                              value={g.bloco === SEM_BLOCO ? "" : g.bloco}
+                              placeholder={SEM_BLOCO}
+                              onChange={(e) => renomearBloco(g.bloco, e.target.value)}
+                              aria-label="Nome do bloco"
+                              className="w-full border-0 bg-transparent text-sm font-semibold outline-none placeholder:text-muted-foreground"
+                            />
+                            <span className="text-[11px] text-muted-foreground">
+                              {g.itens.length} {g.itens.length === 1 ? "item" : "itens"} ·{" "}
+                              {blocoTotal} pts
+                            </span>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <button
+                              type="button"
+                              onClick={() => adicionarItem(g.bloco)}
+                              title="Adicionar item neste bloco"
+                              className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                            >
+                              <Plus className="size-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removerBloco(g.bloco)}
+                              title="Excluir bloco"
+                              className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Conector do bloco até a barra vertical */}
+                        <div className="relative w-8 shrink-0 self-stretch">
+                          <span className="absolute left-0 top-1/2 h-px w-full bg-foreground/20" />
+                        </div>
+
+                        {/* Itens do bloco (com barra vertical e ramificações) */}
+                        <div className="relative flex-1">
+                          {g.itens.length > 1 && (
+                            <span className="absolute left-0 top-[22px] bottom-[22px] w-px bg-foreground/20" />
+                          )}
+                          <div className="flex flex-col gap-3">
+                            {g.itens.map((it) => {
+                              const cor = corDoPeso(it.peso, it.critico)
+                              return (
+                                <div key={it.id} className="relative flex items-center pl-8">
+                                  {/* ramificação horizontal */}
+                                  <span className="absolute left-0 top-1/2 h-px w-8 bg-foreground/20" />
+                                  <div
+                                    className="flex h-11 flex-1 items-center gap-2 overflow-hidden rounded-md border pr-2"
+                                    style={{
+                                      backgroundColor: `color-mix(in oklch, ${cor} 13%, var(--card))`,
+                                      borderColor: `color-mix(in oklch, ${cor} 40%, transparent)`,
+                                    }}
+                                  >
+                                    {/* peso */}
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      max={100}
+                                      value={it.peso}
+                                      onChange={(e) =>
+                                        atualizarItem(it.id, {
+                                          peso: Number(e.target.value) || 0,
+                                        })
+                                      }
+                                      aria-label="Peso do item"
+                                      className="h-full w-11 shrink-0 border-0 text-center text-sm font-bold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                      style={{ backgroundColor: cor, color: "oklch(0.99 0 0)" }}
+                                    />
+                                    {/* texto do item */}
+                                    <input
+                                      value={it.texto}
+                                      onChange={(e) =>
+                                        atualizarItem(it.id, { texto: e.target.value })
+                                      }
+                                      aria-label="Texto do item"
+                                      className="min-w-0 flex-1 border-0 bg-transparent text-sm outline-none"
+                                    />
+                                    {/* mover para outro bloco */}
+                                    <select
+                                      value={g.bloco}
+                                      onChange={(e) =>
+                                        atualizarItem(it.id, {
+                                          bloco:
+                                            e.target.value === SEM_BLOCO
+                                              ? undefined
+                                              : e.target.value,
+                                        })
+                                      }
+                                      aria-label="Mover item para bloco"
+                                      className="h-7 max-w-[110px] shrink-0 rounded-md border border-border bg-transparent px-1 text-xs text-muted-foreground outline-none"
+                                    >
+                                      {[...new Set([...blocosExistentes, g.bloco, SEM_BLOCO])].map(
+                                        (b) => (
+                                          <option key={b} value={b}>
+                                            {b}
+                                          </option>
+                                        ),
+                                      )}
+                                    </select>
+                                    {/* crítico */}
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        atualizarItem(it.id, { critico: !it.critico })
+                                      }
+                                      title={it.critico ? "Item crítico" : "Marcar como crítico"}
+                                      aria-pressed={!!it.critico}
+                                      className={cn(
+                                        "flex size-7 shrink-0 items-center justify-center rounded-md transition-colors",
+                                        it.critico
+                                          ? "text-[var(--chart-4)]"
+                                          : "text-muted-foreground hover:text-foreground",
+                                      )}
+                                    >
+                                      <AlertTriangle className="size-4" />
+                                    </button>
+                                    {/* excluir */}
+                                    <button
+                                      type="button"
+                                      onClick={() => removerItem(it.id)}
+                                      title="Excluir item"
+                                      className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive"
+                                    >
+                                      <Trash2 className="size-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
                         </div>
                       </div>
-                    ))}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => adicionarItem(g.bloco)}
-                      className="mt-1 gap-2 self-start text-muted-foreground"
-                    >
-                      <Plus className="size-4" /> Adicionar item neste bloco
-                    </Button>
-                  </div>
+                    )
+                  })}
                 </div>
-              ))}
+              </div>
 
               <Button variant="outline" onClick={adicionarBloco} className="gap-2 self-start">
                 <FolderPlus className="size-4" /> Adicionar bloco
