@@ -129,3 +129,26 @@
     @apply font-sans;
   }
 }
+
+@keyframes neon-pulse {
+  0%,
+  100% {
+    text-shadow:
+      0 0 8px color-mix(in oklch, var(--primary) 70%, transparent),
+      0 0 20px color-mix(in oklch, var(--primary) 55%, transparent),
+      0 0 40px color-mix(in oklch, var(--primary) 40%, transparent),
+      0 0 70px color-mix(in oklch, var(--primary) 25%, transparent);
+  }
+  50% {
+    text-shadow:
+      0 0 12px color-mix(in oklch, var(--primary) 90%, transparent),
+      0 0 32px color-mix(in oklch, var(--primary) 75%, transparent),
+      0 0 64px color-mix(in oklch, var(--primary) 55%, transparent),
+      0 0 110px color-mix(in oklch, var(--primary) 40%, transparent);
+  }
+}
+
+.neon-title {
+  color: var(--primary);
+  animation: neon-pulse 2.8s ease-in-out infinite;
+}

@@ -44,6 +44,11 @@ export function LoginScreen() {
       </div>
 
       <div className="relative w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
+        {/* Título da marca fora da caixa, com efeito neon animado nas cores do site */}
+        <h1 className="neon-title mb-8 select-none text-center text-5xl font-extrabold tracking-tight sm:text-6xl">
+          QualiMonitor
+        </h1>
+
         <div className="rounded-2xl border border-border bg-card/80 p-8 shadow-xl backdrop-blur-sm">
           {/* Marca */}
           <div className="flex flex-col items-center gap-3 text-center">
@@ -51,7 +56,6 @@ export function LoginScreen() {
               <BarChart3 className="size-6" />
             </span>
             <div className="space-y-1">
-              <h1 className="text-xl font-semibold tracking-tight">QualiMonitor</h1>
               <p className="text-pretty text-sm text-muted-foreground">
                 Acesse a plataforma de monitoria de qualidade
               </p>
