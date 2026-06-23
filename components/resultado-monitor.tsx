@@ -59,6 +59,7 @@ import {
 } from "@/components/dashboard-charts"
 import { CardTitleHint } from "@/components/card-title-hint"
 import { AnaliseCategoria } from "@/components/analise-categoria"
+import { MinhasMonitorias } from "@/components/minhas-monitorias"
 import { cn } from "@/lib/utils"
 
 function formatBr(iso: string) {
@@ -241,6 +242,9 @@ export function ResultadoMonitor() {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Minhas monitorias: busca + exclusão */}
+      <MinhasMonitorias />
+
       {/* Filtros */}
       <div className="rounded-xl border border-border bg-card">
         <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-medium">

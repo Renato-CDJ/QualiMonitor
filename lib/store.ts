@@ -189,6 +189,13 @@ export const store = {
     const all = read<Monitoria[]>(KEYS.monitorias, [])
     write(KEYS.monitorias, [m, ...all])
   },
+  removeMonitoria: (id: string) => {
+    const all = read<Monitoria[]>(KEYS.monitorias, [])
+    write(
+      KEYS.monitorias,
+      all.filter((m) => m.id !== id),
+    )
+  },
   getFeedbacks: () => read<FeedbackInvertido[]>(KEYS.feedbacks, []),
   setFeedbacks: (v: FeedbackInvertido[]) => write(KEYS.feedbacks, v),
   addFeedback: (f: FeedbackInvertido) => {
