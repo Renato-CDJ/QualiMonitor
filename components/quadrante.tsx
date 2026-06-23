@@ -43,6 +43,7 @@ import * as XLSX from "xlsx"
 import { toast } from "sonner"
 
 type Visao = "sigla" | "nome"
+type Exibicao = "quantidade" | "porcentagem" | "ambas"
 
 type SortKey =
   | "operador"
@@ -92,6 +93,7 @@ export function Quadrante() {
   const [dataInicio, setDataInicio] = useState<string>(inicioDoMes)
   const [dataFim, setDataFim] = useState<string>(hojeISO)
   const [visao, setVisao] = useState<Visao>("sigla")
+  const [exibicao, setExibicao] = useState<Exibicao>("quantidade")
   const [sortKey, setSortKey] = useState<SortKey>("nota")
   const [sortDir, setSortDir] = useState<SortDir>("desc")
 
@@ -183,6 +185,16 @@ export function Quadrante() {
   }, [dados])
 
   const pendentes = useMemo(() => dados.filter((d) => !d.sigla), [dados])
+
+  // total de operadores já classificados no quadrante (base para o percentual)
+  const totalClassificados = useMemo(
+    () =>
+      porQuadrante.AA.length +
+      porQuadrante.AB.length +
+      porQuadrante.BA.length +
+      porQuadrante.BB.length,
+    [porQuadrante],
+  )
 
   function abrirDialog(operador?: string) {
     setOperadorSel(operador ?? "")
@@ -398,14 +410,34 @@ export function Quadrante() {
       {/* Matriz 2x2 do quadrante */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Grid2x2 className="size-4 text-muted-foreground" />
-            Matriz de Quadrante · Performance x Qualidade
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Eixo horizontal = Performance (Recebimento, definido manualmente) ·
-            Eixo vertical = Qualidade (nota média, meta {META_QUALIDADE})
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex flex-col gap-1">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Grid2x2 className="size-4 text-muted-foreground" />
+                Matriz de Quadrante · Performance x Qualidade
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Eixo horizontal = Performance (Recebimento, definido manualmente) ·
+                Eixo vertical = Qualidade (nota média, meta {META_QUALIDADE})
+              </p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs text-muted-foreground">Exibir números</Label>
+              <Select
+                value={exibicao}
+                onValueChange={(v) => setExibicao(v as Exibicao)}
+              >
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="quantidade">Quantidade</SelectItem>
+                  <SelectItem value="porcentagem">Porcentagem</SelectItem>
+                  <SelectItem value="ambas">Ambas informações</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex gap-3">
@@ -422,22 +454,30 @@ export function Quadrante() {
                   sigla="AA"
                   operadores={porQuadrante.AA}
                   visao={visao}
+                  exibicao={exibicao}
+                  total={totalClassificados}
                 />
                 <QuadranteCelula
                   sigla="BA"
                   operadores={porQuadrante.BA}
                   visao={visao}
+                  exibicao={exibicao}
+                  total={totalClassificados}
                 />
                 {/* Linha inferior: Baixa Qualidade → (Alta Perf) AB, (Baixa Perf) BB */}
                 <QuadranteCelula
                   sigla="AB"
                   operadores={porQuadrante.AB}
                   visao={visao}
+                  exibicao={exibicao}
+                  total={totalClassificados}
                 />
                 <QuadranteCelula
                   sigla="BB"
                   operadores={porQuadrante.BB}
                   visao={visao}
+                  exibicao={exibicao}
+                  total={totalClassificados}
                 />
               </div>
               {/* Eixo X */}
@@ -642,12 +682,24 @@ function QuadranteCelula({
   sigla,
   operadores,
   visao,
+  exibicao,
+  total,
 }: {
   sigla: SiglaQuadrante
   operadores: OperadorQuadrante[]
   visao: Visao
+  exibicao: Exibicao
+  total: number
 }) {
   const info = QUADRANTE_MAPA[sigla]
+  const qtd = operadores.length
+  const pct = total ? Math.round((qtd / total) * 1000) / 10 : 0
+  const rotuloNumero =
+    exibicao === "porcentagem"
+      ? `${pct}%`
+      : exibicao === "ambas"
+        ? `${qtd} · ${pct}%`
+        : `${qtd}`
   return (
     <div className={cn("rounded-lg border p-4", siglaClass(sigla))}>
       <div className="flex items-center justify-between gap-2">
@@ -655,7 +707,7 @@ function QuadranteCelula({
           {visao === "sigla" ? `${sigla} · ${info.quadrante}` : info.quadrante}
         </span>
         <span className="rounded-full bg-background/40 px-2 py-0.5 text-xs font-medium tabular-nums">
-          {operadores.length}
+          {rotuloNumero}
         </span>
       </div>
       <p className="mt-0.5 text-xs opacity-80">
