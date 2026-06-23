@@ -32,6 +32,7 @@ import { resumoQuartis } from "@/lib/analytics"
 import { porOperador } from "@/lib/aggregations"
 import { Button } from "@/components/ui/button"
 import { Eye, EyeOff } from "lucide-react"
+import { useNotasGlobais } from "@/lib/notas-context"
 
 const PIE_COLORS = [
   "var(--chart-1)",
@@ -142,7 +143,9 @@ export function TendenciaChart({
   const config = {
     nota: { label: "Nota média", color: "var(--chart-1)" },
   } satisfies ChartConfig
-  const [mostrarNotas, setMostrarNotas] = useState(false)
+  const { mostrarTodas } = useNotasGlobais()
+  const [mostrarLocal, setMostrarNotas] = useState(false)
+  const mostrarNotas = mostrarTodas || mostrarLocal
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
@@ -192,7 +195,9 @@ export function VolumeNotaChart({
     volume: { label: "Monitorias", color: "var(--chart-2)" },
     nota: { label: "Nota média", color: "var(--chart-1)" },
   } satisfies ChartConfig
-  const [mostrarNotas, setMostrarNotas] = useState(false)
+  const { mostrarTodas } = useNotasGlobais()
+  const [mostrarLocal, setMostrarNotas] = useState(false)
+  const mostrarNotas = mostrarTodas || mostrarLocal
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
@@ -247,7 +252,9 @@ export function FaixasPieChart({
     acc[d.faixa] = { label: d.faixa, color: corFaixa(d.faixa, PIE_COLORS[i % PIE_COLORS.length]) }
     return acc
   }, {} as ChartConfig)
-  const [mostrarNotas, setMostrarNotas] = useState(false)
+  const { mostrarTodas } = useNotasGlobais()
+  const [mostrarLocal, setMostrarNotas] = useState(false)
+  const mostrarNotas = mostrarTodas || mostrarLocal
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
@@ -284,7 +291,9 @@ export function TabulacaoPieChart({
     acc[d.tabulacao] = { label: d.tabulacao, color: PIE_COLORS[i % PIE_COLORS.length] }
     return acc
   }, {} as ChartConfig)
-  const [mostrarNotas, setMostrarNotas] = useState(false)
+  const { mostrarTodas } = useNotasGlobais()
+  const [mostrarLocal, setMostrarNotas] = useState(false)
+  const mostrarNotas = mostrarTodas || mostrarLocal
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
@@ -318,7 +327,9 @@ export function CarteiraBarChart({
   const config = {
     nota: { label: "Nota média", color: "var(--chart-1)" },
   } satisfies ChartConfig
-  const [mostrarNotas, setMostrarNotas] = useState(false)
+  const { mostrarTodas } = useNotasGlobais()
+  const [mostrarLocal, setMostrarNotas] = useState(false)
+  const mostrarNotas = mostrarTodas || mostrarLocal
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
@@ -363,7 +374,9 @@ export function ConformidadeCarteiraChart({
     pctConforme: { label: "% Conforme", color: "var(--chart-5)" },
     pctInconforme: { label: "% Inconforme", color: "var(--destructive)" },
   } satisfies ChartConfig
-  const [mostrarNotas, setMostrarNotas] = useState(false)
+  const { mostrarTodas } = useNotasGlobais()
+  const [mostrarLocal, setMostrarNotas] = useState(false)
+  const mostrarNotas = mostrarTodas || mostrarLocal
   const altura = Math.max(260, data.length * 56)
   return (
     <div className="relative">
@@ -406,7 +419,9 @@ export function MonitorBarChart({
   const config = {
     nota: { label: "Nota média", color: "var(--chart-1)" },
   } satisfies ChartConfig
-  const [mostrarNotas, setMostrarNotas] = useState(false)
+  const { mostrarTodas } = useNotasGlobais()
+  const [mostrarLocal, setMostrarNotas] = useState(false)
+  const mostrarNotas = mostrarTodas || mostrarLocal
   const altura = Math.max(260, data.length * 48)
   return (
     <div className="relative">
@@ -452,7 +467,9 @@ export function MonitorVolumePieChart({
     acc[d.monitor] = { label: d.monitor, color: PIE_COLORS[i % PIE_COLORS.length] }
     return acc
   }, {} as ChartConfig)
-  const [mostrarNotas, setMostrarNotas] = useState(false)
+  const { mostrarTodas } = useNotasGlobais()
+  const [mostrarLocal, setMostrarNotas] = useState(false)
+  const mostrarNotas = mostrarTodas || mostrarLocal
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
@@ -489,7 +506,9 @@ export function MonitorConformidadeChart({
     pctConforme: { label: "% Conforme", color: "var(--chart-5)" },
     pctInconforme: { label: "% Inconforme", color: "var(--destructive)" },
   } satisfies ChartConfig
-  const [mostrarNotas, setMostrarNotas] = useState(false)
+  const { mostrarTodas } = useNotasGlobais()
+  const [mostrarLocal, setMostrarNotas] = useState(false)
+  const mostrarNotas = mostrarTodas || mostrarLocal
   const altura = Math.max(260, data.length * 56)
   return (
     <div className="relative">
@@ -533,7 +552,9 @@ export function MonitorContagemChart({
     conforme: { label: "Conformidades", color: "var(--chart-5)" },
     inconforme: { label: "Inconformidades", color: "var(--destructive)" },
   } satisfies ChartConfig
-  const [mostrarNotas, setMostrarNotas] = useState(false)
+  const { mostrarTodas } = useNotasGlobais()
+  const [mostrarLocal, setMostrarNotas] = useState(false)
+  const mostrarNotas = mostrarTodas || mostrarLocal
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
@@ -569,7 +590,9 @@ export function ParetoChart({
     qtd: { label: "Inconformidades", color: "var(--chart-4)" },
     acumulado: { label: "% acumulado", color: "var(--chart-3)" },
   } satisfies ChartConfig
-  const [mostrarNotas, setMostrarNotas] = useState(false)
+  const { mostrarTodas } = useNotasGlobais()
+  const [mostrarLocal, setMostrarNotas] = useState(false)
+  const mostrarNotas = mostrarTodas || mostrarLocal
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
@@ -977,7 +1000,9 @@ export function ConformidadePieChart({
     acc[d.tipo] = { label: d.tipo, color: d.cor }
     return acc
   }, {} as ChartConfig)
-  const [mostrarNotas, setMostrarNotas] = useState(true)
+  const { mostrarTodas } = useNotasGlobais()
+  const [mostrarLocal, setMostrarNotas] = useState(true)
+  const mostrarNotas = mostrarTodas || mostrarLocal
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />

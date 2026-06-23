@@ -9,6 +9,8 @@ import {
   TrendingUp,
   RotateCcw,
   CalendarDays,
+  Eye,
+  EyeOff,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -31,6 +33,8 @@ import {
 } from "@/components/ui/dialog"
 import { useQualityData } from "@/lib/use-quality-data"
 import { store } from "@/lib/store"
+import { useAuth } from "@/lib/auth"
+import { useNotasGlobais } from "@/lib/notas-context"
 import {
   serieTemporal,
   porTabulacao,
@@ -92,8 +96,10 @@ function Kpi({
 
 export function Dashboard() {
   const { monitorias, checklists, ready } = useQualityData()
+  const { carteira: carteiraSelecionada } = useAuth()
+  const { mostrarTodas, setMostrarTodas } = useNotasGlobais()
   const periodo: Periodicidade = "diario"
-  const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
+  const [carteiraFiltro, setCarteiraFiltro] = useState<string>(carteiraSelecionada ?? "todas")
   const [dataInicio, setDataInicio] = useState<string>(() => {
     const hoje = new Date()
     return new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10)
@@ -168,6 +174,16 @@ export function Dashboard() {
             <CalendarDays className="size-4 text-primary" />
             Filtros
           </div>
+          <div className="flex items-center gap-2">
+          <Button
+            variant={mostrarTodas ? "default" : "outline"}
+            size="sm"
+            onClick={() => setMostrarTodas(!mostrarTodas)}
+            className="gap-2"
+          >
+            {mostrarTodas ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            {mostrarTodas ? "Ocultar notas" : "Exibir notas"}
+          </Button>
           <Dialog>
             <DialogTrigger
               className={buttonVariants({
@@ -193,6 +209,7 @@ export function Dashboard() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Linha de controles */}
