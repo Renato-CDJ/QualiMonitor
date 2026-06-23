@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Grid2x2, Plus, Tag, Type, Download, Inbox, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
+import { Grid2x2, Plus, Tag, Type, Download, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Hash } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -421,22 +421,23 @@ export function Quadrante() {
                 Eixo vertical = Qualidade (nota média, meta {META_QUALIDADE})
               </p>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-xs text-muted-foreground">Exibir números</Label>
-              <Select
-                value={exibicao}
-                onValueChange={(v) => setExibicao(v as Exibicao)}
+            <Select
+              value={exibicao}
+              onValueChange={(v) => setExibicao(v as Exibicao)}
+            >
+              <SelectTrigger
+                aria-label="Exibir números"
+                title="Exibir números"
+                className="size-9 shrink-0 justify-center p-0 [&>svg:last-child]:hidden"
               >
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="quantidade">Quantidade</SelectItem>
-                  <SelectItem value="porcentagem">Porcentagem</SelectItem>
-                  <SelectItem value="ambas">Ambas informações</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <Hash className="size-4 text-muted-foreground" />
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectItem value="quantidade">Quantidade</SelectItem>
+                <SelectItem value="porcentagem">Porcentagem</SelectItem>
+                <SelectItem value="ambas">Ambas informações</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent>
