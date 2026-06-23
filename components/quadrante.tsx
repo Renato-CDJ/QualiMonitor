@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react"
 import { Grid2x2, Plus, Tag, Type, Download, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Hash } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { CardTitleHint } from "@/components/card-title-hint"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -412,14 +413,16 @@ export function Quadrante() {
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex flex-col gap-1">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Grid2x2 className="size-4 text-muted-foreground" />
-                Matriz de Quadrante · Performance x Qualidade
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Eixo horizontal = Performance (Recebimento, definido manualmente) ·
-                Eixo vertical = Qualidade (nota média, meta {META_QUALIDADE})
-              </p>
+              <CardTitleHint
+                icon={<Grid2x2 className="size-4 text-muted-foreground" />}
+                title="Matriz de Quadrante · Performance x Qualidade"
+                description={
+                  <>
+                    Eixo horizontal = Performance (Recebimento, definido manualmente) · Eixo vertical
+                    = Qualidade (nota média, meta {META_QUALIDADE})
+                  </>
+                }
+              />
             </div>
             <Select
               value={exibicao}
@@ -497,12 +500,16 @@ export function Quadrante() {
       {/* Tabela detalhada */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Resultado por Operador</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Clique no cabeçalho para ordenar · Performance (recebimento) definida
-            manualmente · Qualidade calculada pelas notas · Visão:{" "}
-            {visao === "sigla" ? "Siglas (AA, AB, BA, BB)" : "Nome completo"}
-          </p>
+          <CardTitleHint
+            title="Resultado por Operador"
+            description={
+              <>
+                Clique no cabeçalho para ordenar · Performance (recebimento) definida manualmente ·
+                Qualidade calculada pelas notas · Visão:{" "}
+                {visao === "sigla" ? "Siglas (AA, AB, BA, BB)" : "Nome completo"}
+              </>
+            }
+          />
         </CardHeader>
         <CardContent>
           <Table>

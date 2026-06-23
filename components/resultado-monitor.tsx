@@ -405,10 +405,10 @@ export function ResultadoMonitor() {
       {/* Quantidade de monitorias por monitor */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Quantidade de Monitorias por Monitor</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Distribuição do volume de monitorias realizadas por cada monitor
-          </p>
+          <CardTitleHint
+            title="Quantidade de Monitorias por Monitor"
+            description="Distribuição do volume de monitorias realizadas por cada monitor"
+          />
         </CardHeader>
         <CardContent>
           {rankMonitores.length ? (
@@ -425,10 +425,10 @@ export function ResultadoMonitor() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Conformidade x Inconformidade por Monitor</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Percentual de itens conformes e inconformes (exclui N.A.)
-            </p>
+            <CardTitleHint
+              title="Conformidade x Inconformidade por Monitor"
+              description="Percentual de itens conformes e inconformes (exclui N.A.)"
+            />
           </CardHeader>
           <CardContent>
             {confMonitores.length ? (
@@ -442,10 +442,10 @@ export function ResultadoMonitor() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Quantidade de Apontamentos por Monitor</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Conformidades e inconformidades pontuadas (contagem)
-            </p>
+            <CardTitleHint
+              title="Quantidade de Apontamentos por Monitor"
+              description="Conformidades e inconformidades pontuadas (contagem)"
+            />
           </CardHeader>
           <CardContent>
             {contagemMonitores.length ? (
@@ -463,15 +463,15 @@ export function ResultadoMonitor() {
       {insights && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Lightbulb className="size-4 text-chart-3" />
-              Insights de Desempenho por Carteira
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">
-              {monitorFiltro === "todos"
-                ? "Visão geral das carteiras no recorte atual"
-                : `Carteiras avaliadas por ${monitorFiltro} no recorte atual`}
-            </p>
+            <CardTitleHint
+              icon={<Lightbulb className="size-4 text-chart-3" />}
+              title="Insights de Desempenho por Carteira"
+              description={
+                monitorFiltro === "todos"
+                  ? "Visão geral das carteiras no recorte atual"
+                  : `Carteiras avaliadas por ${monitorFiltro} no recorte atual`
+              }
+            />
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-lg border border-border p-3">
@@ -510,8 +510,10 @@ export function ResultadoMonitor() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Nota Média por Carteira</CardTitle>
-            <p className="text-xs text-muted-foreground">Recorte do(s) monitor(es) filtrado(s)</p>
+            <CardTitleHint
+              title="Nota Média por Carteira"
+              description="Recorte do(s) monitor(es) filtrado(s)"
+            />
           </CardHeader>
           <CardContent>
             {rankCarteiras.length ? (
@@ -525,8 +527,10 @@ export function ResultadoMonitor() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Conformidade x Inconformidade por Carteira</CardTitle>
-            <p className="text-xs text-muted-foreground">Percentual por carteira (exclui N.A.)</p>
+            <CardTitleHint
+              title="Conformidade x Inconformidade por Carteira"
+              description="Percentual por carteira (exclui N.A.)"
+            />
           </CardHeader>
           <CardContent>
             {confCarteiras.length ? (
@@ -543,10 +547,10 @@ export function ResultadoMonitor() {
       {/* Ranking de monitores */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Ranking de Monitores</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Desempenho consolidado por monitor no recorte atual
-          </p>
+          <CardTitleHint
+            title="Ranking de Monitores"
+            description="Desempenho consolidado por monitor no recorte atual"
+          />
         </CardHeader>
         <CardContent>
           <Table>
