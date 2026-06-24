@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Wallet, TrendingUp, CheckCircle2, AlertOctagon, ChevronDown, Trophy } from "lucide-react"
+import { Wallet, TrendingUp, CheckCircle2, AlertOctagon, ChevronDown, Trophy, ClipboardList } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { CardTitleHint } from "@/components/card-title-hint"
 import { Button } from "@/components/ui/button"
@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/table"
 import { useQualityData } from "@/lib/use-quality-data"
 import { porCarteira, conformidadePorCarteira } from "@/lib/aggregations"
-import { CarteiraBarChart, ConformidadeCarteiraChart } from "@/components/dashboard-charts"
+import { ConformidadeCarteiraChart } from "@/components/dashboard-charts"
 import { cn } from "@/lib/utils"
 
 function Kpi({
@@ -227,17 +227,49 @@ export function NotasCarteira() {
         />
       </div>
 
-      {/* Gráfico de notas por carteira */}
+      {/* Notas por carteira em cards */}
       <Card>
         <CardHeader>
           <CardTitleHint
             title="Nota Média por Carteira"
-            description="Comparativo das notas das carteiras selecionadas"
+            description="Nota e volume de monitorias de cada carteira selecionada"
           />
         </CardHeader>
         <CardContent>
           {rankNotas.length ? (
-            <CarteiraBarChart data={rankNotas} />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {rankNotas.map((r) => (
+                <div
+                  key={r.carteira}
+                  className={cn(
+                    "group flex flex-col gap-3 rounded-xl border border-border bg-card p-5",
+                    "shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md",
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="flex size-10 items-center justify-center rounded-lg bg-secondary text-foreground">
+                      <Wallet className="size-5" />
+                    </span>
+                    <span className={cn("text-3xl font-semibold tabular-nums", notaTone(r.nota))}>
+                      {r.nota}
+                    </span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="font-medium">{r.carteira}</p>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1">
+                        <ClipboardList className="size-3.5" />
+                        {r.volume} monitorias
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <TrendingUp className="size-3.5" />
+                        Nota {r.nota}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
             <p className="py-16 text-center text-sm text-muted-foreground">
               Sem dados para as carteiras selecionadas.
