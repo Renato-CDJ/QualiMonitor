@@ -51,15 +51,6 @@ export function LoginScreen() {
 
       <div className="relative w-full max-w-sm animate-in fade-in zoom-in-95 duration-500">
         <div className="rounded-2xl border border-border bg-card/80 p-6 shadow-xl backdrop-blur-sm">
-          {/* Marca */}
-          <div className="flex flex-col items-center gap-3 text-center">
-            <div className="space-y-1">
-              <p className="text-pretty text-sm text-muted-foreground">
-                Acesse a plataforma de monitoria de qualidade
-              </p>
-            </div>
-          </div>
-
           {/* Formulário */}
           <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
