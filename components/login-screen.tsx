@@ -122,6 +122,16 @@ export function LoginScreen() {
           </div>
         </div>
       </div>
+
+      {/* Crédito animado no canto inferior direito */}
+      <div className="fixed bottom-3 right-4 z-10 select-none animate-in fade-in slide-in-from-bottom-2 duration-700">
+        <span className="flex items-center gap-1.5 rounded-full border border-border bg-card/70 px-3 py-1.5 text-[11px] text-muted-foreground shadow-sm backdrop-blur-sm">
+          Desenvolvido por:
+          <span className="bg-gradient-to-r from-primary via-chart-2 to-primary bg-[length:200%_auto] bg-clip-text font-medium text-transparent [animation:shimmer_3s_linear_infinite]">
+            Renato Calixto de Jesus
+          </span>
+        </span>
+      </div>
     </main>
   )
 }
