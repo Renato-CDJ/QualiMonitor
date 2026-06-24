@@ -96,22 +96,19 @@ export function NeonTitle({ text = "QualiMonitor" }: { text?: string }) {
         </text>
       </g>
 
-      {/* Ícone de headset elevado, logo após o "r" final (texto termina em x ~773) */}
+      {/* Imagem real do headset (a mesma da caixa de login), elevada e deslocada para o lado direito */}
       <g
         filter="url(#qm-headsetGlow)"
-        style={{ animation: "qm-headsetFloat 3s ease-in-out 0s infinite", transformOrigin: "808px 8px" }}
+        style={{ animation: "qm-headsetFloat 3s ease-in-out 0s infinite", transformOrigin: "865px 5px" }}
       >
-        {/* path do headset escalado a partir de um ícone 24x24, posicionado e elevado */}
-        <g transform="translate(782, -18) scale(2.1)">
-          <path
-            d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"
-            fill="none"
-            stroke="#38bdf8"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </g>
+        <image
+          href="/images/headphone-icon.png"
+          x="805"
+          y="-55"
+          width="120"
+          height="120"
+          preserveAspectRatio="xMidYMid meet"
+        />
       </g>
 
       {/* Barra inferior animada */}
