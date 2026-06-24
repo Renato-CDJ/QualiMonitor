@@ -424,9 +424,17 @@ export function ChecklistEditor() {
                                           peso: Number(e.target.value) || 0,
                                         })
                                       }
+                                      readOnly={it.critico}
+                                      disabled={it.critico}
                                       aria-label="Peso do item"
+                                      title={
+                                        it.critico
+                                          ? "Item crítico zera o operador (peso fixo em 100)"
+                                          : "Peso do item"
+                                      }
                                       className={cn(
                                         "h-full w-11 shrink-0 border-0 text-center text-sm font-bold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+                                        it.critico && "cursor-not-allowed",
                                         !cor && "bg-secondary text-secondary-foreground",
                                       )}
                                       style={
@@ -469,9 +477,14 @@ export function ChecklistEditor() {
                                     {/* crítico */}
                                     <button
                                       type="button"
-                                      onClick={() =>
-                                        atualizarItem(it.id, { critico: !it.critico })
-                                      }
+                                      onClick={() => {
+                                        const novoCritico = !it.critico
+                                        atualizarItem(it.id, {
+                                          critico: novoCritico,
+                                          // Item crítico zera o operador: peso vai a 100 e fica travado
+                                          ...(novoCritico ? { peso: 100 } : {}),
+                                        })
+                                      }}
                                       title={it.critico ? "Item crítico" : "Marcar como crítico"}
                                       aria-pressed={!!it.critico}
                                       className={cn(
