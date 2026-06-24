@@ -25,7 +25,7 @@ import { Badge } from "@/components/ui/badge"
 import { OperadorSearch } from "@/components/operador-search"
 import { useQualityData } from "@/lib/use-quality-data"
 import { useAuth } from "@/lib/auth"
-import { TABULACOES, type ApontamentoItem, type StatusItem, type Monitoria } from "@/lib/types"
+import { type ApontamentoItem, type StatusItem, type Monitoria } from "@/lib/types"
 import { store } from "@/lib/store"
 import { notaColorClass, faixaNota } from "@/lib/analytics"
 import { cn } from "@/lib/utils"
@@ -34,7 +34,7 @@ const HOJE = new Date().toISOString().slice(0, 10)
 const AGORA = new Date().toTimeString().slice(0, 5)
 
 export function MonitoriaForm() {
-  const { checklists, operadores, vinculos, ready } = useQualityData()
+  const { checklists, operadores, vinculos, tabulacoes, ready } = useQualityData()
   const { user } = useAuth()
   const responsavel = user?.nome ?? "Responsável"
 
@@ -64,8 +64,8 @@ export function MonitoriaForm() {
     if (vinculosCarteira.length > 0) {
       return Array.from(new Set(vinculosCarteira.map((v) => v.tabulacao)))
     }
-    return [...TABULACOES]
-  }, [vinculosCarteira])
+    return tabulacoes
+  }, [vinculosCarteira, tabulacoes])
 
   // Checklist carregado: prioriza o vínculo (carteira + tabulação). Sem vínculo,
   // faz fallback para o primeiro checklist da carteira.

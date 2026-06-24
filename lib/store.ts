@@ -8,6 +8,7 @@ import type {
   NivelRecebimento,
   VinculoTabulacao,
 } from "./types"
+import { TABULACOES } from "./types"
 
 const KEYS = {
   checklists: "qm.checklists.v1",
@@ -16,6 +17,7 @@ const KEYS = {
   feedbacks: "qm.feedbacks.v1",
   recebimentos: "qm.recebimentos.v1",
   vinculos: "qm.vinculos.v1",
+  tabulacoes: "qm.tabulacoes.v1",
   seeded: "qm.seeded.v1",
 }
 
@@ -189,6 +191,7 @@ export function ensureSeed() {
   write(KEYS.checklists, SEED_CHECKLISTS)
   write(KEYS.operadores, SEED_OPERADORES)
   write(KEYS.vinculos, SEED_VINCULOS)
+  write(KEYS.tabulacoes, [...TABULACOES])
   write(KEYS.monitorias, gerarMonitoriasSeed())
   localStorage.setItem(KEYS.seeded, "1")
 }
@@ -249,6 +252,48 @@ export const store = {
       all.filter((v) => v.id !== id),
     )
   },
+  getTabulacoes: () => read<string[]>(KEYS.tabulacoes, [...TABULACOES]),
+  setTabulacoes: (v: string[]) => write(KEYS.tabulacoes, v),
+  addTabulacao: (nome: string) => {
+    const all = read<string[]>(KEYS.tabulacoes, [...TABULACOES])
+    if (all.some((t) => t.toLowerCase() === nome.toLowerCase())) return false
+    write(KEYS.tabulacoes, [...all, nome])
+    return true
+  },
+  // Renomeia uma tabulação e propaga o novo nome para vínculos e monitorias.
+  renameTabulacao: (antigo: string, novo: string) => {
+    const all = read<string[]>(KEYS.tabulacoes, [...TABULACOES])
+    if (all.some((t) => t.toLowerCase() === novo.toLowerCase() && t.toLowerCase() !== antigo.toLowerCase())) {
+      return false
+    }
+    write(
+      KEYS.tabulacoes,
+      all.map((t) => (t === antigo ? novo : t)),
+    )
+    const vincs = read<VinculoTabulacao[]>(KEYS.vinculos, [])
+    write(
+      KEYS.vinculos,
+      vincs.map((v) => (v.tabulacao === antigo ? { ...v, tabulacao: novo } : v)),
+    )
+    const mons = read<Monitoria[]>(KEYS.monitorias, [])
+    write(
+      KEYS.monitorias,
+      mons.map((m) => (m.tabulacao === antigo ? { ...m, tabulacao: novo } : m)),
+    )
+    return true
+  },
+  // Quantos vínculos usam esta tabulação (para bloquear exclusão em uso).
+  countVinculosPorTabulacao: (nome: string) => {
+    const vincs = read<VinculoTabulacao[]>(KEYS.vinculos, [])
+    return vincs.filter((v) => v.tabulacao === nome).length
+  },
+  removeTabulacao: (nome: string) => {
+    const all = read<string[]>(KEYS.tabulacoes, [...TABULACOES])
+    write(
+      KEYS.tabulacoes,
+      all.filter((t) => t !== nome),
+    )
+  },
   getRecebimentos: () => read<RecebimentoOperador[]>(KEYS.recebimentos, []),
   setRecebimentos: (v: RecebimentoOperador[]) => write(KEYS.recebimentos, v),
   setRecebimentoOperador: (operadorNome: string, nivel: NivelRecebimento) => {
@@ -278,6 +323,7 @@ export const store = {
     localStorage.removeItem(KEYS.feedbacks)
     localStorage.removeItem(KEYS.recebimentos)
     localStorage.removeItem(KEYS.vinculos)
+    localStorage.removeItem(KEYS.tabulacoes)
     ensureSeed()
   },
 }
