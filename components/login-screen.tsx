@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import Image from "next/image"
 import { ArrowRight, User, ShieldCheck, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -54,17 +53,6 @@ export function LoginScreen() {
         <div className="rounded-2xl border border-border bg-card/80 p-6 shadow-xl backdrop-blur-sm">
           {/* Marca */}
           <div className="flex flex-col items-center gap-3 text-center">
-            <span className="relative flex size-24 items-center justify-center transition-transform duration-300 hover:scale-105">
-              <span aria-hidden className="absolute inset-2 rounded-full bg-primary/25 blur-xl" />
-              <Image
-                src="/images/headphone-icon.png"
-                alt="Fone de ouvido QualiMonitor"
-                width={96}
-                height={96}
-                priority
-                className="relative size-24 object-contain drop-shadow-[0_4px_12px_oklch(0_0_0/0.35)]"
-              />
-            </span>
             <div className="space-y-1">
               <p className="text-pretty text-sm text-muted-foreground">
                 Acesse a plataforma de monitoria de qualidade
@@ -84,7 +72,7 @@ export function LoginScreen() {
                   id="usuario"
                   autoFocus
                   autoComplete="off"
-                  placeholder="Ex.: Renjesus"
+                  placeholder="Digite seu nome de usuário"
                   value={usuario}
                   onChange={(e) => {
                     setUsuario(e.target.value)
