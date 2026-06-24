@@ -6,6 +6,7 @@ import type {
   FeedbackInvertido,
   RecebimentoOperador,
   NivelRecebimento,
+  VinculoTabulacao,
 } from "./types"
 
 const KEYS = {
@@ -14,6 +15,7 @@ const KEYS = {
   monitorias: "qm.monitorias.v1",
   feedbacks: "qm.feedbacks.v1",
   recebimentos: "qm.recebimentos.v1",
+  vinculos: "qm.vinculos.v1",
   seeded: "qm.seeded.v1",
 }
 
@@ -74,6 +76,17 @@ const SEED_CHECKLISTS: Checklist[] = [
   },
 ]
 
+// Vínculos iniciais: associam cada carteira ao seu checklist e às tabulações
+// que aquele checklist atende. A mesma carteira pode ter mais de uma tabulação.
+const SEED_VINCULOS: VinculoTabulacao[] = [
+  { id: "vinc-x-venda", carteira: "Carteira X", checklistId: "chk-carteira-x", tabulacao: "Venda", criadoEm: new Date().toISOString() },
+  { id: "vinc-x-naovenda", carteira: "Carteira X", checklistId: "chk-carteira-x", tabulacao: "Não Venda", criadoEm: new Date().toISOString() },
+  { id: "vinc-y-retencao", carteira: "Carteira Y", checklistId: "chk-carteira-y", tabulacao: "Retenção", criadoEm: new Date().toISOString() },
+  { id: "vinc-y-cancelamento", carteira: "Carteira Y", checklistId: "chk-carteira-y", tabulacao: "Cancelamento", criadoEm: new Date().toISOString() },
+  { id: "vinc-z-cobranca", carteira: "Carteira Z", checklistId: "chk-carteira-z", tabulacao: "Cobrança", criadoEm: new Date().toISOString() },
+  { id: "vinc-z-agendamento", carteira: "Carteira Z", checklistId: "chk-carteira-z", tabulacao: "Agendamento", criadoEm: new Date().toISOString() },
+]
+
 const NOMES = [
   "Ana Souza", "Bruno Lima", "Carla Mendes", "Diego Rocha", "Eduarda Alves",
   "Felipe Castro", "Gabriela Dias", "Henrique Nunes", "Isabela Cruz", "João Pereira",
@@ -118,6 +131,12 @@ function gerarMonitoriasSeed(): Monitoria[] {
     for (let k = 0; k < qtd; k++) {
       const op = SEED_OPERADORES[Math.floor(Math.random() * SEED_OPERADORES.length)]
       const checklist = SEED_CHECKLISTS.find((c) => c.carteira === op.carteira)!
+      // tabulações válidas para a carteira (a partir dos vínculos)
+      const tabsCarteira = SEED_VINCULOS.filter((v) => v.carteira === op.carteira).map((v) => v.tabulacao)
+      const tabulacaoSeed =
+        tabsCarteira.length > 0
+          ? tabsCarteira[Math.floor(Math.random() * tabsCarteira.length)]
+          : TABS[Math.floor(Math.random() * TABS.length)]
       const apontamentos: ApontamentoItem[] = checklist.itens.map((it) => {
         const r = Math.random()
         let status: ApontamentoItem["status"] = "conforme"
@@ -134,7 +153,7 @@ function gerarMonitoriasSeed(): Monitoria[] {
         ecCallId: `EC${Math.floor(100000 + Math.random() * 899999)}`,
         operadorId: op.id,
         operadorNome: op.nome,
-        tabulacao: TABS[Math.floor(Math.random() * TABS.length)],
+        tabulacao: tabulacaoSeed,
         apontamentos,
         nota,
         observacao: "",
@@ -169,6 +188,7 @@ export function ensureSeed() {
   if (localStorage.getItem(KEYS.seeded)) return
   write(KEYS.checklists, SEED_CHECKLISTS)
   write(KEYS.operadores, SEED_OPERADORES)
+  write(KEYS.vinculos, SEED_VINCULOS)
   write(KEYS.monitorias, gerarMonitoriasSeed())
   localStorage.setItem(KEYS.seeded, "1")
 }
@@ -216,6 +236,19 @@ export const store = {
       all.filter((f) => f.id !== id),
     )
   },
+  getVinculos: () => read<VinculoTabulacao[]>(KEYS.vinculos, []),
+  setVinculos: (v: VinculoTabulacao[]) => write(KEYS.vinculos, v),
+  addVinculo: (v: VinculoTabulacao) => {
+    const all = read<VinculoTabulacao[]>(KEYS.vinculos, [])
+    write(KEYS.vinculos, [v, ...all])
+  },
+  removeVinculo: (id: string) => {
+    const all = read<VinculoTabulacao[]>(KEYS.vinculos, [])
+    write(
+      KEYS.vinculos,
+      all.filter((v) => v.id !== id),
+    )
+  },
   getRecebimentos: () => read<RecebimentoOperador[]>(KEYS.recebimentos, []),
   setRecebimentos: (v: RecebimentoOperador[]) => write(KEYS.recebimentos, v),
   setRecebimentoOperador: (operadorNome: string, nivel: NivelRecebimento) => {
@@ -244,6 +277,7 @@ export const store = {
     localStorage.removeItem(KEYS.monitorias)
     localStorage.removeItem(KEYS.feedbacks)
     localStorage.removeItem(KEYS.recebimentos)
+    localStorage.removeItem(KEYS.vinculos)
     ensureSeed()
   },
 }
