@@ -1,34 +1,40 @@
 "use client"
 
 /**
- * Título animado em SVG com efeito "neon" laranja:
- * - glow (feDropShadow) nas cores quentes
+ * Título animado em SVG com efeito "neon" azul:
+ * - glow (feDropShadow) em tons de azul
  * - brilho deslizante (sweep) cruzando o texto
  * - barra inferior com gradiente que "respira" (barStretch)
+ * - ícone de headset elevado após a letra "r" final, com glow azul pulsante
  *
  * Inspirado no título animado de scriptv2.vercel.app, adaptado para "QualiMonitor".
  */
 export function NeonTitle({ text = "QualiMonitor" }: { text?: string }) {
   return (
     <svg
-      viewBox="0 -30 920 200"
+      viewBox="0 -40 920 210"
       className="h-auto w-full max-w-[680px] overflow-visible"
       role="img"
       aria-label={text}
     >
       <defs>
-        <filter id="qm-orangeFX" x="-15%" y="-30%" width="130%" height="160%">
-          <feDropShadow dx="0" dy="6" stdDeviation="10" floodColor="rgba(255,87,34,0.5)" />
-          <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="rgba(255,140,0,0.3)" />
+        <filter id="qm-blueFX" x="-15%" y="-30%" width="130%" height="160%">
+          <feDropShadow dx="0" dy="6" stdDeviation="10" floodColor="rgba(14,165,233,0.5)" />
+          <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="rgba(56,189,248,0.35)" />
+        </filter>
+
+        <filter id="qm-headsetGlow" x="-80%" y="-80%" width="260%" height="260%">
+          <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="rgba(56,189,248,0.9)" />
+          <feDropShadow dx="0" dy="0" stdDeviation="9" floodColor="rgba(14,165,233,0.6)" />
         </filter>
 
         <mask id="qm-shineMask">
-          <rect x="0" y="-30" width="920" height="200" fill="white" />
+          <rect x="0" y="-40" width="920" height="210" fill="white" />
           <rect
             x="-220"
-            y="-30"
+            y="-40"
             width="180"
-            height="200"
+            height="210"
             fill="url(#qm-shineHighlight)"
             style={{ animation: "qm-sweep 4.5s linear 0s infinite" }}
           />
@@ -42,11 +48,11 @@ export function NeonTitle({ text = "QualiMonitor" }: { text?: string }) {
         </linearGradient>
 
         <linearGradient id="qm-barLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#ff6600" stopOpacity="0" />
-          <stop offset="25%" stopColor="#ff6600" stopOpacity="1" />
-          <stop offset="50%" stopColor="#ffcc88" stopOpacity="1" />
-          <stop offset="75%" stopColor="#ff6600" stopOpacity="1" />
-          <stop offset="100%" stopColor="#ff6600" stopOpacity="0" />
+          <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0" />
+          <stop offset="25%" stopColor="#0ea5e9" stopOpacity="1" />
+          <stop offset="50%" stopColor="#bae6fd" stopOpacity="1" />
+          <stop offset="75%" stopColor="#0ea5e9" stopOpacity="1" />
+          <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
         </linearGradient>
 
         <filter id="qm-barGlow" x="-20%" y="-200%" width="140%" height="500%">
@@ -73,7 +79,7 @@ export function NeonTitle({ text = "QualiMonitor" }: { text?: string }) {
         {text}
       </text>
 
-      {/* Texto laranja com glow + máscara de brilho deslizante */}
+      {/* Texto azul com glow + máscara de brilho deslizante */}
       <g mask="url(#qm-shineMask)">
         <text
           x="460"
@@ -83,11 +89,29 @@ export function NeonTitle({ text = "QualiMonitor" }: { text?: string }) {
           fontWeight="800"
           fontFamily="'Arial Black', 'Helvetica Neue', sans-serif"
           letterSpacing="-2"
-          fill="#ff6600"
-          filter="url(#qm-orangeFX)"
+          fill="#0ea5e9"
+          filter="url(#qm-blueFX)"
         >
           {text}
         </text>
+      </g>
+
+      {/* Ícone de headset elevado, logo após o "r" final (texto termina em x ~773) */}
+      <g
+        filter="url(#qm-headsetGlow)"
+        style={{ animation: "qm-headsetFloat 3s ease-in-out 0s infinite", transformOrigin: "808px 8px" }}
+      >
+        {/* path do headset escalado a partir de um ícone 24x24, posicionado e elevado */}
+        <g transform="translate(782, -18) scale(2.1)">
+          <path
+            d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"
+            fill="none"
+            stroke="#38bdf8"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </g>
       </g>
 
       {/* Barra inferior animada */}
@@ -96,7 +120,7 @@ export function NeonTitle({ text = "QualiMonitor" }: { text?: string }) {
         style={{ animation: "qm-barStretch 2.8s ease-in-out 0s infinite", transformOrigin: "460px 125px" }}
       >
         <line x1="120" y1="125" x2="800" y2="125" stroke="url(#qm-barLineGrad)" strokeWidth="2.5" strokeLinecap="round" />
-        <ellipse cx="460" cy="125" rx="110" ry="1.5" fill="#ffcc88" opacity="0.9" />
+        <ellipse cx="460" cy="125" rx="110" ry="1.5" fill="#bae6fd" opacity="0.9" />
       </g>
 
       <style>{`
@@ -108,6 +132,11 @@ export function NeonTitle({ text = "QualiMonitor" }: { text?: string }) {
           0%   { transform: scaleX(0.45); opacity: 0.6; }
           50%  { transform: scaleX(1);    opacity: 1;   }
           100% { transform: scaleX(0.45); opacity: 0.6; }
+        }
+        @keyframes qm-headsetFloat {
+          0%   { transform: translateY(0) scale(1);     opacity: 0.85; }
+          50%  { transform: translateY(-6px) scale(1.05); opacity: 1;  }
+          100% { transform: translateY(0) scale(1);     opacity: 0.85; }
         }
       `}</style>
     </svg>
