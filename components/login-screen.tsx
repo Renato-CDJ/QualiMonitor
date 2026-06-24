@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/lib/auth"
+import { NeonTitle } from "@/components/neon-title"
 
 export function LoginScreen() {
   const { login, loginVisitante } = useAuth()
@@ -44,10 +45,10 @@ export function LoginScreen() {
         />
       </div>
 
-      {/* Título da marca fora da caixa, centralizado na tela, com efeito neon animado nas cores do site */}
-      <h1 className="neon-title mb-20 w-full select-none text-balance text-center text-6xl font-extrabold tracking-tight duration-500 animate-in fade-in slide-in-from-top-4 sm:text-7xl md:text-8xl">
-        QualiMonitor
-      </h1>
+      {/* Título da marca fora da caixa, centralizado na tela, com efeito neon animado (SVG) */}
+      <div className="mb-16 flex w-full select-none justify-center px-4 duration-500 animate-in fade-in slide-in-from-top-4">
+        <NeonTitle text="QualiMonitor" />
+      </div>
 
       <div className="relative w-full max-w-sm animate-in fade-in zoom-in-95 duration-500">
         <div className="rounded-2xl border border-border bg-card/80 p-6 shadow-xl backdrop-blur-sm">
