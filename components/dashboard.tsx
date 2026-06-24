@@ -4,7 +4,6 @@ import { useMemo, useState } from "react"
 import {
   Activity,
   AlertOctagon,
-  CheckCircle2,
   ClipboardList,
   TrendingUp,
   RotateCcw,
@@ -291,7 +290,7 @@ export function Dashboard() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <OperadoresResumoDialog monitorias={filtradas} variante="monitorias" periodoLabel={periodoLabel}>
           <Kpi icon={ClipboardList} label="Monitorias" value={String(k.total)} sub={periodoLabel} interactive />
         </OperadoresResumoDialog>
@@ -301,13 +300,6 @@ export function Dashboard() {
           value={String(k.notaMedia)}
           sub={`mediana ${k.mediana}`}
           tone={k.notaMedia >= 75 ? "good" : "bad"}
-        />
-        <Kpi
-          icon={CheckCircle2}
-          label="Taxa de aprovação"
-          value={`${k.aprovacao}%`}
-          sub="nota > 85"
-          tone={k.aprovacao >= 75 ? "good" : "default"}
         />
         <OperadoresResumoDialog monitorias={filtradas} variante="criticas" periodoLabel={periodoLabel}>
           <Kpi
