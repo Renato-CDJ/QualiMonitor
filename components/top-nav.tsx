@@ -65,12 +65,12 @@ const MENUS: { id: string; label: string; icon: React.ComponentType<{ className?
     icon: LineChart,
     items: [
       { href: "/", label: "Dashboard", icon: LayoutDashboard },
-      { href: "/notas-carteira", label: "Notas Carteira", icon: Wallet },
       { href: "/analise-notas", label: "Análise de Notas", icon: GanttChartSquare },
       { href: "/analise-categoria", label: "Análise por Categoria", icon: Layers },
       { href: "/insights", label: "Insights", icon: Lightbulb },
       { href: "/quadrante", label: "Quadrante", icon: Grid2x2 },
       { href: "/historico-operador", label: "Histórico do Operador", icon: History },
+      { href: "/notas-carteira", label: "Notas Carteira", icon: Wallet },
     ],
   },
   {

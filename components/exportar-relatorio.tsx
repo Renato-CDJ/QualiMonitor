@@ -7,6 +7,7 @@ import {
   GanttChartSquare,
   Lightbulb,
   Grid2x2,
+  Layers,
   ClipboardCheck,
   CalendarDays,
   Download,
@@ -46,6 +47,7 @@ import {
   quadranteOperadores,
   porMonitor,
   conformidadePorMonitor,
+  analiseCategoria,
 } from "@/lib/aggregations"
 import { faixaNota } from "@/lib/analytics"
 import * as XLSX from "xlsx"
@@ -289,6 +291,46 @@ const GRUPOS: GrupoExport[] = [
             })),
           },
         ],
+      },
+    ],
+  },
+  {
+    id: "analise-categoria",
+    titulo: "Análise por Categoria",
+    origem: "Analítico · Análise por Categoria",
+    icon: Layers,
+    itens: [
+      {
+        id: "analise-categoria-checklist",
+        nome: "Análise por Categoria do Checklist",
+        descricao: "Conformidade agrupada por bloco do checklist e seus itens",
+        build: ({ monitorias, checklists }) => {
+          const blocos = analiseCategoria(monitorias, checklists)
+          const linhas: Linha[] = []
+          for (const b of blocos) {
+            linhas.push({
+              Tipo: "Tópico",
+              Tópico: b.bloco,
+              Item: "",
+              Crítico: "",
+              "Qtd Itens": b.qtd,
+              "% Conforme": b.pctConforme,
+              "% Inconforme": b.pctInconforme,
+            })
+            for (const it of b.itens) {
+              linhas.push({
+                Tipo: "Item",
+                Tópico: b.bloco,
+                Item: it.texto,
+                Crítico: it.critico ? "Sim" : "Não",
+                "Qtd Itens": it.qtd,
+                "% Conforme": it.pctConforme,
+                "% Inconforme": it.pctInconforme,
+              })
+            }
+          }
+          return [{ aba: "Análise por Categoria", linhas }]
+        },
       },
     ],
   },

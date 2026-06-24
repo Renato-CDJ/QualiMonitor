@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ChevronRight, AlertTriangle, Layers } from "lucide-react"
+import { ChevronRight, AlertTriangle, Layers, FileSpreadsheet } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { CardTitleHint } from "@/components/card-title-hint"
 import { Badge } from "@/components/ui/badge"
@@ -9,6 +9,17 @@ import { Button } from "@/components/ui/button"
 import { analiseCategoria } from "@/lib/aggregations"
 import type { Checklist, Monitoria } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import * as XLSX from "xlsx"
+import { toast } from "sonner"
+
+function slug(s: string) {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+}
 
 function pctTone(pct: number) {
   if (pct >= 90) return "text-chart-5"
@@ -48,6 +59,44 @@ export function AnaliseCategoria({
     setAbertos(todosAbertos ? new Set() : new Set(blocos.map((b) => b.bloco)))
   }
 
+  function exportarExcel() {
+    if (!blocos.length) {
+      toast.warning("Sem dados para exportar no recorte atual")
+      return
+    }
+
+    const linhas: Record<string, string | number>[] = []
+    for (const b of blocos) {
+      linhas.push({
+        Tipo: "Tópico",
+        Tópico: b.bloco,
+        Item: "",
+        Crítico: "",
+        "Qtd Itens": b.qtd,
+        "% Conforme": b.pctConforme,
+        "% Inconforme": b.pctInconforme,
+      })
+      for (const it of b.itens) {
+        linhas.push({
+          Tipo: "Item",
+          Tópico: b.bloco,
+          Item: it.texto,
+          Crítico: it.critico ? "Sim" : "Não",
+          "Qtd Itens": it.qtd,
+          "% Conforme": it.pctConforme,
+          "% Inconforme": it.pctInconforme,
+        })
+      }
+    }
+
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.json_to_sheet(linhas)
+    XLSX.utils.book_append_sheet(wb, ws, "Análise por Categoria")
+    const sufixo = carteira && carteira !== "todas" ? slug(carteira) : "todas-carteiras"
+    XLSX.writeFile(wb, `analise-por-categoria_${sufixo}.xlsx`)
+    toast.success("Análise por Categoria exportada")
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -58,9 +107,15 @@ export function AnaliseCategoria({
             description="Conformidade agrupada por bloco do checklist. Clique em um bloco para abrir e ver os itens que o compõem."
           />
           {blocos.length > 0 && (
-            <Button variant="outline" size="sm" onClick={toggleTodos}>
-              {todosAbertos ? "Recolher tudo" : "Expandir tudo"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={toggleTodos}>
+                {todosAbertos ? "Recolher tudo" : "Expandir tudo"}
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={exportarExcel}>
+                <FileSpreadsheet className="size-4" />
+                Exportar Excel
+              </Button>
+            </div>
           )}
         </div>
       </CardHeader>
