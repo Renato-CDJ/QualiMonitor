@@ -20,14 +20,23 @@ function rotaRestrita(pathname: string) {
   return ROTAS_RESTRITAS.some((rota) => pathname === rota || pathname.startsWith(`${rota}/`))
 }
 
+function rotaAdmin(pathname: string) {
+  return pathname === "/admin" || pathname.startsWith("/admin/")
+}
+
 export function AuthGate({ children }: { children: React.ReactNode }) {
-  const { ready, user, carteira, isVisitante } = useAuth()
+  const { ready, user, carteira, isVisitante, isAdmin } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
 
-  const bloqueado = isVisitante && rotaRestrita(pathname)
+  // Só avalia bloqueios após o carregamento da sessão, evitando redirecionar
+  // antes de saber o perfil do usuário (que vem do localStorage).
+  const sessaoCarregada = ready && !!user
+  // Área de administração: somente admin. Demais perfis são barrados.
+  const bloqueadoAdmin = sessaoCarregada && rotaAdmin(pathname) && !isAdmin
+  const bloqueado = sessaoCarregada && ((isVisitante && rotaRestrita(pathname)) || bloqueadoAdmin)
 
-  // Visitante que acessa rota restrita diretamente é redirecionado ao dashboard.
+  // Quem acessa rota restrita diretamente é redirecionado ao dashboard.
   useEffect(() => {
     if (bloqueado) router.replace("/")
   }, [bloqueado, router])

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowRight, User, ShieldCheck, Eye } from "lucide-react"
+import { ArrowRight, User, ShieldCheck, Eye, Lock, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,10 +10,15 @@ import { NeonTitle } from "@/components/neon-title"
 import { TypewriterCredit } from "@/components/typewriter-credit"
 
 export function LoginScreen() {
-  const { login, loginVisitante } = useAuth()
+  const { login, loginVisitante, exigeSenha } = useAuth()
   const [usuario, setUsuario] = useState("")
+  const [senha, setSenha] = useState("")
+  const [mostrarSenha, setMostrarSenha] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(false)
+
+  // Campo de senha aparece apenas quando o usuário digitado for um administrador.
+  const precisaSenha = exigeSenha(usuario)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -21,7 +26,7 @@ export function LoginScreen() {
     setCarregando(true)
     // pequena espera para a animação do botão, sem travar a UI
     setTimeout(() => {
-      const res = login(usuario)
+      const res = login(usuario, senha)
       if (!res.ok) {
         setErro(res.erro ?? "Não foi possível entrar.")
         setCarregando(false)
@@ -81,6 +86,39 @@ export function LoginScreen() {
                 </p>
               )}
             </div>
+
+            {/* Campo de senha: visível somente para usuários administradores */}
+            {precisaSenha && (
+              <div className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top-1 duration-300">
+                <Label htmlFor="senha" className="text-sm">
+                  Senha de administrador
+                </Label>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="senha"
+                    type={mostrarSenha ? "text" : "password"}
+                    autoComplete="current-password"
+                    placeholder="Digite sua senha"
+                    value={senha}
+                    onChange={(e) => {
+                      setSenha(e.target.value)
+                      if (erro) setErro(null)
+                    }}
+                    className="px-9"
+                    aria-invalid={!!erro}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMostrarSenha((v) => !v)}
+                    aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {mostrarSenha ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+              </div>
+            )}
 
             <Button type="submit" disabled={carregando} className="group mt-1 gap-2">
               {carregando ? (

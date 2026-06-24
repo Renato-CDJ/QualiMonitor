@@ -23,6 +23,9 @@ import {
   ChevronDown,
   LogOut,
   RefreshCw,
+  ShieldCheck,
+  Users,
+  Headset,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -78,6 +81,17 @@ const MENUS: { id: string; label: string; icon: React.ComponentType<{ className?
   },
 ]
 
+// Menu exclusivo do administrador.
+const MENU_ADMIN = {
+  id: "admin",
+  label: "Administração",
+  icon: ShieldCheck,
+  items: [
+    { href: "/admin/usuarios", label: "Usuários", icon: Users },
+    { href: "/admin/operadores", label: "Operadores", icon: Headset },
+  ],
+} satisfies { id: string; label: string; icon: React.ComponentType<{ className?: string }>; items: NavItem[] }
+
 function isItemActive(href: string, pathname: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href)
 }
@@ -87,10 +101,15 @@ const MENUS_RESTRITOS = ["monitoria", "relatorios"]
 
 export function TopNav() {
   const pathname = usePathname()
-  const { user, carteira, isVisitante, limparCarteira, logout } = useAuth()
+  const { user, carteira, isVisitante, isAdmin, limparCarteira, logout } = useAuth()
 
   // Visitante só enxerga os menus liberados (sem Monitoria e Relatórios).
-  const menus = isVisitante ? MENUS.filter((menu) => !MENUS_RESTRITOS.includes(menu.id)) : MENUS
+  // Admin enxerga todos os menus + a área de Administração.
+  const menus = isVisitante
+    ? MENUS.filter((menu) => !MENUS_RESTRITOS.includes(menu.id))
+    : isAdmin
+      ? [...MENUS, MENU_ADMIN]
+      : MENUS
 
   // Determine which menu owns the current route.
   const menuForPath =
