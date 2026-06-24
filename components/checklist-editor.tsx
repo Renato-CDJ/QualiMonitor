@@ -44,7 +44,8 @@ export function ChecklistEditor() {
   }, [selecionadoId, checklists])
 
   const pesoTotal = useMemo(
-    () => rascunho?.itens.reduce((s, i) => s + (i.peso || 0), 0) ?? 0,
+    // Itens críticos zeram o operador e não somam no peso total do checklist
+    () => rascunho?.itens.reduce((s, i) => s + (i.critico ? 0 : i.peso || 0), 0) ?? 0,
     [rascunho],
   )
 
@@ -322,7 +323,10 @@ export function ChecklistEditor() {
               <div className="overflow-x-auto pb-2">
                 <div className="flex min-w-[680px] flex-col gap-7">
                   {grupos.map((g) => {
-                    const blocoTotal = g.itens.reduce((s, i) => s + (i.peso || 0), 0)
+                    const blocoTotal = g.itens.reduce(
+                      (s, i) => s + (i.critico ? 0 : i.peso || 0),
+                      0,
+                    )
                     const blocoCritico = g.itens.some((i) => i.critico)
                     const blocoCor = corCritico(blocoCritico)
                     return (
