@@ -44,7 +44,8 @@ export function ChecklistEditor() {
   }, [selecionadoId, checklists])
 
   const pesoTotal = useMemo(
-    () => rascunho?.itens.reduce((s, i) => s + (i.peso || 0), 0) ?? 0,
+    // Itens críticos zeram o operador e não somam no peso total do checklist
+    () => rascunho?.itens.reduce((s, i) => s + (i.critico ? 0 : i.peso || 0), 0) ?? 0,
     [rascunho],
   )
 
@@ -322,7 +323,10 @@ export function ChecklistEditor() {
               <div className="overflow-x-auto pb-2">
                 <div className="flex min-w-[680px] flex-col gap-7">
                   {grupos.map((g) => {
-                    const blocoTotal = g.itens.reduce((s, i) => s + (i.peso || 0), 0)
+                    const blocoTotal = g.itens.reduce(
+                      (s, i) => s + (i.critico ? 0 : i.peso || 0),
+                      0,
+                    )
                     const blocoCritico = g.itens.some((i) => i.critico)
                     const blocoCor = corCritico(blocoCritico)
                     return (
@@ -353,12 +357,10 @@ export function ChecklistEditor() {
                             {blocoTotal}
                           </span>
                           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                            <input
+                            <BlocoNomeInput
                               value={g.bloco === SEM_BLOCO ? "" : g.bloco}
                               placeholder={SEM_BLOCO}
-                              onChange={(e) => renomearBloco(g.bloco, e.target.value)}
-                              aria-label="Nome do bloco"
-                              className="w-full border-0 bg-transparent text-sm font-semibold outline-none placeholder:text-muted-foreground"
+                              onCommit={(novo) => renomearBloco(g.bloco, novo)}
                             />
                             <span className="text-[11px] text-muted-foreground">
                               {g.itens.length} {g.itens.length === 1 ? "item" : "itens"} ·{" "}
@@ -424,9 +426,17 @@ export function ChecklistEditor() {
                                           peso: Number(e.target.value) || 0,
                                         })
                                       }
+                                      readOnly={it.critico}
+                                      disabled={it.critico}
                                       aria-label="Peso do item"
+                                      title={
+                                        it.critico
+                                          ? "Item crítico zera o operador (peso fixo em 100)"
+                                          : "Peso do item"
+                                      }
                                       className={cn(
                                         "h-full w-11 shrink-0 border-0 text-center text-sm font-bold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+                                        it.critico && "cursor-not-allowed",
                                         !cor && "bg-secondary text-secondary-foreground",
                                       )}
                                       style={
@@ -469,9 +479,14 @@ export function ChecklistEditor() {
                                     {/* crítico */}
                                     <button
                                       type="button"
-                                      onClick={() =>
-                                        atualizarItem(it.id, { critico: !it.critico })
-                                      }
+                                      onClick={() => {
+                                        const novoCritico = !it.critico
+                                        atualizarItem(it.id, {
+                                          critico: novoCritico,
+                                          // Item crítico zera o operador: peso vai a 100 e fica travado
+                                          ...(novoCritico ? { peso: 100 } : {}),
+                                        })
+                                      }}
                                       title={it.critico ? "Item crítico" : "Marcar como crítico"}
                                       aria-pressed={!!it.critico}
                                       className={cn(
@@ -534,5 +549,47 @@ export function ChecklistEditor() {
         </Card>
       )}
     </div>
+  )
+}
+
+// Input do nome do bloco com buffer local: enquanto o usuário digita o valor
+// fica em estado próprio e só é gravado (commit) ao sair do campo ou pressionar
+// Enter. Isso evita que renomear o bloco a cada tecla remonte o elemento e faça
+// o input perder o foco.
+function BlocoNomeInput({
+  value,
+  placeholder,
+  onCommit,
+}: {
+  value: string
+  placeholder?: string
+  onCommit: (novo: string) => void
+}) {
+  const [local, setLocal] = useState(value)
+
+  // Sincroniza quando o valor externo muda (ex.: troca de checklist)
+  useEffect(() => {
+    setLocal(value)
+  }, [value])
+
+  function commit() {
+    if (local !== value) onCommit(local)
+  }
+
+  return (
+    <input
+      value={local}
+      placeholder={placeholder}
+      onChange={(e) => setLocal(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault()
+          e.currentTarget.blur()
+        }
+      }}
+      aria-label="Nome do bloco"
+      className="w-full border-0 bg-transparent text-sm font-semibold outline-none placeholder:text-muted-foreground"
+    />
   )
 }
