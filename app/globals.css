@@ -152,3 +152,9 @@
   color: var(--primary);
   animation: neon-pulse 2.8s ease-in-out infinite;
 }
+
+@keyframes shimmer {
+  to {
+    background-position: 200% center;
+  }
+}
