@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Wallet, ArrowRight, LayoutGrid, LogOut, ClipboardList, TrendingUp } from "lucide-react"
+import { Wallet, ArrowRight, LayoutGrid, LogOut, ClipboardList } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth"
 import { useQualityData } from "@/lib/use-quality-data"
@@ -66,58 +66,85 @@ export function CarteiraSelect() {
               type="button"
               onClick={() => escolher("todas")}
               className={cn(
-                "group flex flex-col gap-3 rounded-xl border border-border bg-card p-5 text-left",
-                "shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md",
+                "group relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-primary/30 bg-card p-5 text-left",
+                "shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:shadow-lg hover:shadow-primary/10",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               )}
             >
-              <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <LayoutGrid className="size-5" />
-              </span>
-              <div className="space-y-0.5">
-                <p className="font-medium">Todas as carteiras</p>
-                <p className="text-xs text-muted-foreground">Visão consolidada geral</p>
+              {/* brilho de destaque no hover */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-primary/20 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
+              />
+              <div className="flex items-start justify-between">
+                <span className="relative flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-primary/30 ring-4 ring-primary/15 transition-transform duration-300 group-hover:scale-105">
+                  <LayoutGrid className="size-5" />
+                </span>
+                <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
+                  Geral
+                </span>
               </div>
-              <span className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-primary">
+              <div className="space-y-1">
+                <p className="text-base font-semibold leading-tight">Todas as carteiras</p>
+                <p className="text-xs text-muted-foreground">Visão consolidada de todas as carteiras</p>
+              </div>
+              <span className="mt-auto flex items-center justify-between border-t border-border/60 pt-3 text-sm font-medium text-primary">
                 Acessar
-                <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                <span className="flex size-7 items-center justify-center rounded-full bg-primary/10 transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
+                  <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+                </span>
               </span>
             </button>
 
-            {carteiras.map((c, i) => (
-              <button
-                key={c.nome}
-                type="button"
-                onClick={() => escolher(c.nome)}
-                style={{ animationDelay: `${(i + 1) * 60}ms` }}
-                className={cn(
-                  "group flex animate-in fade-in flex-col gap-3 rounded-xl border border-border bg-card p-5 text-left fill-mode-both",
-                  "shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                )}
-              >
-                <span className="flex size-10 items-center justify-center rounded-lg bg-secondary text-foreground">
-                  <Wallet className="size-5" />
-                </span>
-                <div className="space-y-0.5">
-                  <p className="font-medium">{c.nome}</p>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="inline-flex items-center gap-1">
-                      <ClipboardList className="size-3.5" />
-                      {c.total} monitorias
+            {carteiras.map((c, i) => {
+              const tom =
+                c.media >= 80
+                  ? { texto: "text-chart-2", fundo: "bg-chart-2/10", ponto: "bg-chart-2" }
+                  : c.media >= 60
+                    ? { texto: "text-primary", fundo: "bg-primary/10", ponto: "bg-primary" }
+                    : { texto: "text-destructive", fundo: "bg-destructive/10", ponto: "bg-destructive" }
+              return (
+                <button
+                  key={c.nome}
+                  type="button"
+                  onClick={() => escolher(c.nome)}
+                  style={{ animationDelay: `${(i + 1) * 60}ms` }}
+                  className={cn(
+                    "group relative flex animate-in fade-in flex-col gap-4 overflow-hidden rounded-2xl border border-border bg-card p-5 text-left fill-mode-both",
+                    "shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  )}
+                >
+                  {/* brilho de destaque no hover */}
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-primary/15 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
+                  />
+                  <div className="flex items-start justify-between">
+                    <span className="flex size-12 items-center justify-center rounded-xl bg-secondary text-foreground ring-4 ring-secondary/40 transition-transform duration-300 group-hover:scale-105">
+                      <Wallet className="size-5" />
                     </span>
-                    <span className="inline-flex items-center gap-1">
-                      <TrendingUp className="size-3.5" />
-                      {c.media}
+                    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold", tom.fundo, tom.texto)}>
+                      <span className={cn("size-1.5 rounded-full", tom.ponto)} />
+                      Média {c.media}
                     </span>
                   </div>
-                </div>
-                <span className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-primary">
-                  Acessar
-                  <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-                </span>
-              </button>
-            ))}
+                  <div className="space-y-1">
+                    <p className="text-base font-semibold leading-tight">{c.nome}</p>
+                    <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <ClipboardList className="size-3.5" />
+                      {c.total} monitorias registradas
+                    </p>
+                  </div>
+                  <span className="mt-auto flex items-center justify-between border-t border-border/60 pt-3 text-sm font-medium text-primary">
+                    Acessar
+                    <span className="flex size-7 items-center justify-center rounded-full bg-primary/10 transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
+                      <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+                    </span>
+                  </span>
+                </button>
+              )
+            })}
           </div>
         )}
 

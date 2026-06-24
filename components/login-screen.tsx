@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import Image from "next/image"
 import { ArrowRight, User, ShieldCheck, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/lib/auth"
+import { NeonTitle } from "@/components/neon-title"
 
 export function LoginScreen() {
   const { login, loginVisitante } = useAuth()
@@ -44,26 +44,15 @@ export function LoginScreen() {
         />
       </div>
 
-      {/* Título da marca fora da caixa, centralizado na tela, com efeito neon animado nas cores do site */}
-      <h1 className="neon-title mb-20 w-full select-none text-balance text-center text-6xl font-extrabold tracking-tight duration-500 animate-in fade-in slide-in-from-top-4 sm:text-7xl md:text-8xl">
-        QualiMonitor
-      </h1>
+      {/* Título da marca fora da caixa, centralizado na tela, com efeito neon animado (SVG) */}
+      <div className="mb-16 flex w-full select-none justify-center px-4 duration-500 animate-in fade-in slide-in-from-top-4">
+        <NeonTitle text="QualiMonitor" />
+      </div>
 
       <div className="relative w-full max-w-sm animate-in fade-in zoom-in-95 duration-500">
         <div className="rounded-2xl border border-border bg-card/80 p-6 shadow-xl backdrop-blur-sm">
           {/* Marca */}
           <div className="flex flex-col items-center gap-3 text-center">
-            <span className="relative flex size-24 items-center justify-center transition-transform duration-300 hover:scale-105">
-              <span aria-hidden className="absolute inset-2 rounded-full bg-primary/25 blur-xl" />
-              <Image
-                src="/images/headphone-icon.png"
-                alt="Fone de ouvido QualiMonitor"
-                width={96}
-                height={96}
-                priority
-                className="relative size-24 object-contain drop-shadow-[0_4px_12px_oklch(0_0_0/0.35)]"
-              />
-            </span>
             <div className="space-y-1">
               <p className="text-pretty text-sm text-muted-foreground">
                 Acesse a plataforma de monitoria de qualidade
@@ -83,7 +72,7 @@ export function LoginScreen() {
                   id="usuario"
                   autoFocus
                   autoComplete="off"
-                  placeholder="Ex.: Renjesus"
+                  placeholder="Digite seu nome de usuário"
                   value={usuario}
                   onChange={(e) => {
                     setUsuario(e.target.value)

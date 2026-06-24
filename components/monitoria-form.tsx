@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { OperadorSearch } from "@/components/operador-search"
 import { useQualityData } from "@/lib/use-quality-data"
+import { useAuth } from "@/lib/auth"
 import { TABULACOES, type ApontamentoItem, type StatusItem, type Monitoria } from "@/lib/types"
 import { store } from "@/lib/store"
 import { notaColorClass, faixaNota } from "@/lib/analytics"
@@ -34,6 +35,8 @@ const AGORA = new Date().toTimeString().slice(0, 5)
 
 export function MonitoriaForm() {
   const { checklists, operadores, ready } = useQualityData()
+  const { user } = useAuth()
+  const responsavel = user?.nome ?? "Responsável"
 
   const [carteira, setCarteira] = useState<string>("")
   const [data, setData] = useState<string>(HOJE)
@@ -42,7 +45,6 @@ export function MonitoriaForm() {
   const [operadorId, setOperadorId] = useState<string | null>(null)
   const [tabulacao, setTabulacao] = useState<string>("")
   const [observacao, setObservacao] = useState("")
-  const [monitor, setMonitor] = useState("")
   const [statusMap, setStatusMap] = useState<Record<string, StatusItem>>({})
 
   const carteiras = useMemo(
@@ -127,7 +129,7 @@ export function MonitoriaForm() {
       apontamentos,
       nota,
       observacao: observacao.trim(),
-      monitor: monitor.trim() || "Monitor",
+      monitor: responsavel,
       criadoEm: new Date().toISOString(),
     }
     store.addMonitoria(m)
@@ -201,11 +203,13 @@ export function MonitoriaForm() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label>Monitor de qualidade</Label>
+              <Label>Responsável</Label>
               <Input
-                value={monitor}
-                onChange={(e) => setMonitor(e.target.value)}
-                placeholder="Seu nome"
+                value={responsavel}
+                readOnly
+                aria-readonly="true"
+                className="cursor-not-allowed bg-muted/50 text-muted-foreground"
+                title="Preenchido automaticamente com o usuário conectado"
               />
             </div>
 
