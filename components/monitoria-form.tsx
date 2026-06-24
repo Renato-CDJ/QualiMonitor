@@ -25,7 +25,7 @@ import { Badge } from "@/components/ui/badge"
 import { OperadorSearch } from "@/components/operador-search"
 import { useQualityData } from "@/lib/use-quality-data"
 import { useAuth } from "@/lib/auth"
-import { TABULACOES, type ApontamentoItem, type StatusItem, type Monitoria } from "@/lib/types"
+import { type ApontamentoItem, type StatusItem, type Monitoria } from "@/lib/types"
 import { store } from "@/lib/store"
 import { notaColorClass, faixaNota } from "@/lib/analytics"
 import { cn } from "@/lib/utils"
@@ -34,7 +34,7 @@ const HOJE = new Date().toISOString().slice(0, 10)
 const AGORA = new Date().toTimeString().slice(0, 5)
 
 export function MonitoriaForm() {
-  const { checklists, operadores, ready } = useQualityData()
+  const { checklists, operadores, vinculos, tabulacoes, ready } = useQualityData()
   const { user } = useAuth()
   const responsavel = user?.nome ?? "Responsável"
 
@@ -52,10 +52,30 @@ export function MonitoriaForm() {
     [checklists],
   )
 
-  const checklist = useMemo(
-    () => checklists.find((c) => c.carteira === carteira) || null,
-    [checklists, carteira],
+  // Vínculos da carteira selecionada
+  const vinculosCarteira = useMemo(
+    () => vinculos.filter((v) => v.carteira === carteira),
+    [vinculos, carteira],
   )
+
+  // Tabulações disponíveis para a carteira. Se a carteira tiver vínculos,
+  // usamos somente as tabulações vinculadas; caso contrário, lista completa.
+  const tabulacoesDisponiveis = useMemo(() => {
+    if (vinculosCarteira.length > 0) {
+      return Array.from(new Set(vinculosCarteira.map((v) => v.tabulacao)))
+    }
+    return tabulacoes
+  }, [vinculosCarteira, tabulacoes])
+
+  // Checklist carregado: prioriza o vínculo (carteira + tabulação). Sem vínculo,
+  // faz fallback para o primeiro checklist da carteira.
+  const checklist = useMemo(() => {
+    const vinc = vinculosCarteira.find((v) => v.tabulacao === tabulacao)
+    if (vinc) {
+      return checklists.find((c) => c.id === vinc.checklistId) || null
+    }
+    return checklists.find((c) => c.carteira === carteira) || null
+  }, [checklists, vinculosCarteira, carteira, tabulacao])
 
   // mostra o checklist apenas após selecionar a tabulação
   const checklistVisivel = Boolean(checklist && tabulacao)
@@ -157,6 +177,7 @@ export function MonitoriaForm() {
                 onValueChange={(v) => {
                   setCarteira(v)
                   setOperadorId(null)
+                  setTabulacao("")
                   setStatusMap({})
                 }}
               >
@@ -225,7 +246,15 @@ export function MonitoriaForm() {
 
             <div className="flex flex-col gap-1.5 sm:col-span-2">
               <Label>Tabulação</Label>
-              <Select value={tabulacao} onValueChange={setTabulacao} disabled={!carteira}>
+              <Select
+                value={tabulacao}
+                onValueChange={(v) => {
+                  setTabulacao(v)
+                  // o checklist pode mudar conforme a tabulação vinculada
+                  setStatusMap({})
+                }}
+                disabled={!carteira}
+              >
                 <SelectTrigger>
                   <SelectValue
                     placeholder={
@@ -234,7 +263,7 @@ export function MonitoriaForm() {
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {TABULACOES.map((t) => (
+                  {tabulacoesDisponiveis.map((t) => (
                     <SelectItem key={t} value={t}>
                       {t}
                     </SelectItem>

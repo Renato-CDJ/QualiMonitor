@@ -17,6 +17,7 @@ import {
   LineChart,
   History,
   Layers,
+  Link2,
   FileSpreadsheet,
   FileDown,
   ChevronDown,
@@ -50,6 +51,7 @@ const MENUS: { id: string; label: string; icon: React.ComponentType<{ className?
     items: [
       { href: "/nova-monitoria", label: "Nova Monitoria", icon: ClipboardCheck },
       { href: "/checklists", label: "Editor de Checklist", icon: ListChecks },
+      { href: "/vinculos", label: "Vínculos de Tabulação", icon: Link2 },
       { href: "/feedback", label: "Feedback", icon: MessageSquareReply },
       { href: "/resultado-monitor", label: "Resultado Monitor", icon: UserCheck },
     ],

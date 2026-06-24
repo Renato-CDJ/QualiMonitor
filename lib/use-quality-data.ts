@@ -8,6 +8,7 @@ import type {
   Operador,
   FeedbackInvertido,
   RecebimentoOperador,
+  VinculoTabulacao,
 } from "./types"
 
 export function useQualityData() {
@@ -16,6 +17,8 @@ export function useQualityData() {
   const [monitorias, setMonitoriasState] = useState<Monitoria[]>([])
   const [feedbacks, setFeedbacksState] = useState<FeedbackInvertido[]>([])
   const [recebimentos, setRecebimentosState] = useState<RecebimentoOperador[]>([])
+  const [vinculos, setVinculosState] = useState<VinculoTabulacao[]>([])
+  const [tabulacoes, setTabulacoesState] = useState<string[]>([])
   const [ready, setReady] = useState(false)
 
   const refresh = useCallback(() => {
@@ -24,6 +27,8 @@ export function useQualityData() {
     setMonitoriasState(store.getMonitorias())
     setFeedbacksState(store.getFeedbacks())
     setRecebimentosState(store.getRecebimentos())
+    setVinculosState(store.getVinculos())
+    setTabulacoesState(store.getTabulacoes())
   }, [])
 
   useEffect(() => {
@@ -39,5 +44,5 @@ export function useQualityData() {
     }
   }, [refresh])
 
-  return { checklists, operadores, monitorias, feedbacks, recebimentos, ready, refresh, store }
+  return { checklists, operadores, monitorias, feedbacks, recebimentos, vinculos, tabulacoes, ready, refresh, store }
 }

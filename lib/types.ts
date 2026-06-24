@@ -24,6 +24,21 @@ export interface Operador {
   supervisor: string
 }
 
+/**
+ * Vínculo de Tabulação: associa uma Carteira a um Checklist e a uma Tabulação.
+ * Permite que a mesma carteira use checklists diferentes conforme a tabulação
+ * que está sendo monitorada (ex.: "Venda" usa o checklist de vendas, "Cobrança"
+ * usa o checklist de cobrança). Usado na tela de Nova Monitoria para filtrar as
+ * tabulações disponíveis e carregar o checklist correto.
+ */
+export interface VinculoTabulacao {
+  id: string
+  carteira: string
+  checklistId: string
+  tabulacao: string
+  criadoEm: string
+}
+
 export type StatusItem = "conforme" | "inconforme" | "na"
 
 export interface ApontamentoItem {
