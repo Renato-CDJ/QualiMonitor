@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react"
+import { getSupabase } from "./supabase/client"
 
 export type Perfil = "admin" | "comum" | "visitante"
 
@@ -28,25 +29,46 @@ const USUARIO_VISITANTE: Usuario = {
   perfil: "visitante",
 }
 
+// Sessão (usuário logado e carteira) permanece em localStorage por ser estado
+// efêmero de sessão. A lista de usuários é persistida no Supabase.
 const KEY_USER = "qm.auth.user.v1"
 const KEY_CARTEIRA = "qm.auth.carteira.v1"
-const KEY_USUARIOS = "qm.usuarios.v1"
 
-function lerUsuarios(): UsuarioRegistro[] {
-  if (typeof window === "undefined") return SEED_USUARIOS
-  try {
-    const raw = localStorage.getItem(KEY_USUARIOS)
-    if (!raw) return SEED_USUARIOS
-    const lista = JSON.parse(raw) as UsuarioRegistro[]
-    return Array.isArray(lista) && lista.length > 0 ? lista : SEED_USUARIOS
-  } catch {
-    return SEED_USUARIOS
-  }
+const TABELA_USUARIOS = "usuarios"
+
+function logErro(contexto: string, error: unknown) {
+  if (error) console.error(`[v0] Supabase erro (${contexto}):`, error)
 }
 
-function gravarUsuarios(lista: UsuarioRegistro[]) {
-  if (typeof window === "undefined") return
-  localStorage.setItem(KEY_USUARIOS, JSON.stringify(lista))
+/** Carrega os usuários do Supabase; faz seed do admin inicial se vazio. */
+async function carregarUsuarios(): Promise<UsuarioRegistro[]> {
+  const sb = getSupabase()
+  const { data, error } = await sb.from(TABELA_USUARIOS).select("data")
+  logErro("select usuarios", error)
+  if (error) return SEED_USUARIOS
+  const lista = (data ?? []).map((r) => (r as { data: UsuarioRegistro }).data)
+  if (lista.length === 0) {
+    // Seed inicial do administrador.
+    const rows = SEED_USUARIOS.map((u) => ({ usuario: u.usuario, data: u }))
+    const { error: seedErr } = await sb.from(TABELA_USUARIOS).upsert(rows, { onConflict: "usuario" })
+    logErro("seed usuarios", seedErr)
+    return SEED_USUARIOS
+  }
+  return lista
+}
+
+async function upsertUsuario(u: UsuarioRegistro) {
+  const sb = getSupabase()
+  const { error } = await sb
+    .from(TABELA_USUARIOS)
+    .upsert({ usuario: u.usuario, data: u }, { onConflict: "usuario" })
+  logErro("upsert usuario", error)
+}
+
+async function deletarUsuario(usuario: string) {
+  const sb = getSupabase()
+  const { error } = await sb.from(TABELA_USUARIOS).delete().eq("usuario", usuario)
+  logErro("delete usuario", error)
 }
 
 /** Remove a senha antes de expor/armazenar a sessão. */
@@ -82,12 +104,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [usuarios, setUsuarios] = useState<UsuarioRegistro[]>(SEED_USUARIOS)
 
   useEffect(() => {
+    let ativo = true
+    // Restaura a sessão local (efêmera).
     try {
-      // Garante o seed inicial de usuários.
-      const rawUsuarios = localStorage.getItem(KEY_USUARIOS)
-      if (!rawUsuarios) gravarUsuarios(SEED_USUARIOS)
-      setUsuarios(lerUsuarios())
-
       const rawUser = localStorage.getItem(KEY_USER)
       if (rawUser) setUser(JSON.parse(rawUser) as Usuario)
       const rawCart = localStorage.getItem(KEY_CARTEIRA)
@@ -95,7 +114,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* ignore */
     }
-    setReady(true)
+    // Carrega a lista de usuários do Supabase.
+    carregarUsuarios()
+      .then((lista) => {
+        if (ativo) setUsuarios(lista)
+      })
+      .catch((err) => console.error("[v0] Falha ao carregar usuários:", err))
+      .finally(() => {
+        if (ativo) setReady(true)
+      })
+    return () => {
+      ativo = false
+    }
   }, [])
 
   const exigeSenha = useCallback(
@@ -168,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const atualizada = [...usuarios, novo]
       setUsuarios(atualizada)
-      gravarUsuarios(atualizada)
+      void upsertUsuario(novo)
       return { ok: true }
     },
     [usuarios],
@@ -207,7 +237,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const lista = usuarios.map((x, i) => (i === idx ? atualizado : x))
       setUsuarios(lista)
-      gravarUsuarios(lista)
+      // Persiste no Supabase. Se o nome de usuário (PK) mudou, remove o antigo.
+      const nomeOriginal = usuarios[idx].usuario
+      if (nomeOriginal.toLowerCase() !== atualizado.usuario.toLowerCase()) {
+        void deletarUsuario(nomeOriginal)
+      }
+      void upsertUsuario(atualizado)
 
       // Se o usuário logado é o que está sendo editado, sincroniza a sessão.
       if (user && user.usuario.toLowerCase() === usuarioOriginal.toLowerCase()) {
@@ -230,7 +265,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const lista = usuarios.filter((x) => x.usuario.toLowerCase() !== usuario.toLowerCase())
       setUsuarios(lista)
-      gravarUsuarios(lista)
+      void deletarUsuario(alvo.usuario)
       return { ok: true }
     },
     [usuarios],
