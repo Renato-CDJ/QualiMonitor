@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { ensureSeed, store } from "./store"
+import { store } from "./store"
 import type {
   Checklist,
   Monitoria,
@@ -32,13 +32,21 @@ export function useQualityData() {
   }, [])
 
   useEffect(() => {
-    ensureSeed()
-    refresh()
-    setReady(true)
+    let ativo = true
     const handler = () => refresh()
     window.addEventListener("qm:update", handler)
     window.addEventListener("storage", handler)
+    // Hidrata o cache a partir do Supabase e só então libera a UI.
+    store
+      .hydrate()
+      .catch((err) => console.error("[v0] Falha ao hidratar dados:", err))
+      .finally(() => {
+        if (!ativo) return
+        refresh()
+        setReady(true)
+      })
     return () => {
+      ativo = false
       window.removeEventListener("qm:update", handler)
       window.removeEventListener("storage", handler)
     }

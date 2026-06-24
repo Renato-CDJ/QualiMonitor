@@ -208,7 +208,7 @@ export function Dashboard() {
                   <DialogTitle>Resetar dados de demonstração?</DialogTitle>
                 </DialogHeader>
                 <p className="text-sm text-muted-foreground">
-                  Isso apaga todas as monitorias e checklists do localStorage e recria os
+                  Isso apaga todas as monitorias e checklists do banco de dados e recria os
                   dados de exemplo.
                 </p>
                 <DialogFooter>
