@@ -35,7 +35,7 @@ export function TypewriterCredit() {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-3 z-10 flex justify-center px-4">
-      <span className="flex items-center gap-1.5 rounded-full border border-border bg-card/70 px-3 py-1.5 text-[11px] text-muted-foreground shadow-sm backdrop-blur-sm">
+      <span className="flex items-center gap-1.5 text-[11px]">
         <span className="font-medium text-foreground" aria-label={TEXTO}>
           {texto}
         </span>
