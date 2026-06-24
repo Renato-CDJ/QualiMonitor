@@ -357,12 +357,10 @@ export function ChecklistEditor() {
                             {blocoTotal}
                           </span>
                           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                            <input
+                            <BlocoNomeInput
                               value={g.bloco === SEM_BLOCO ? "" : g.bloco}
                               placeholder={SEM_BLOCO}
-                              onChange={(e) => renomearBloco(g.bloco, e.target.value)}
-                              aria-label="Nome do bloco"
-                              className="w-full border-0 bg-transparent text-sm font-semibold outline-none placeholder:text-muted-foreground"
+                              onCommit={(novo) => renomearBloco(g.bloco, novo)}
                             />
                             <span className="text-[11px] text-muted-foreground">
                               {g.itens.length} {g.itens.length === 1 ? "item" : "itens"} ·{" "}
@@ -551,5 +549,47 @@ export function ChecklistEditor() {
         </Card>
       )}
     </div>
+  )
+}
+
+// Input do nome do bloco com buffer local: enquanto o usuário digita o valor
+// fica em estado próprio e só é gravado (commit) ao sair do campo ou pressionar
+// Enter. Isso evita que renomear o bloco a cada tecla remonte o elemento e faça
+// o input perder o foco.
+function BlocoNomeInput({
+  value,
+  placeholder,
+  onCommit,
+}: {
+  value: string
+  placeholder?: string
+  onCommit: (novo: string) => void
+}) {
+  const [local, setLocal] = useState(value)
+
+  // Sincroniza quando o valor externo muda (ex.: troca de checklist)
+  useEffect(() => {
+    setLocal(value)
+  }, [value])
+
+  function commit() {
+    if (local !== value) onCommit(local)
+  }
+
+  return (
+    <input
+      value={local}
+      placeholder={placeholder}
+      onChange={(e) => setLocal(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault()
+          e.currentTarget.blur()
+        }
+      }}
+      aria-label="Nome do bloco"
+      className="w-full border-0 bg-transparent text-sm font-semibold outline-none placeholder:text-muted-foreground"
+    />
   )
 }
