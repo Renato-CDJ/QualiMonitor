@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import {
   AlertTriangle,
   ArrowLeft,
+  ArrowRight,
   CheckCircle2,
   MinusCircle,
   PhoneCall,
@@ -698,17 +699,18 @@ function Comparativo({
       {/* Tabela comparativa (padrão) */}
       {modo === "tabela" && (
         <div className="overflow-hidden rounded-xl border border-border">
-          <table className="w-full text-sm">
+          <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-border bg-secondary/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <th className="py-2.5 pl-4 pr-3 font-medium">Item</th>
-                <th className="w-[150px] py-2.5 px-3 font-medium">Monitor</th>
-                <th className="w-[150px] py-2.5 px-3 font-medium">Operador</th>
-                <th className="w-[120px] py-2.5 pl-3 pr-4 font-medium text-right">Situação</th>
+              <tr className="border-b border-border bg-secondary/60 text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+                <th className="py-3 pl-5 pr-3 font-semibold">Item avaliado</th>
+                <th className="w-[150px] py-3 px-3 text-center font-semibold">Monitor</th>
+                <th className="w-[60px] py-3 px-1 font-semibold" aria-hidden />
+                <th className="w-[150px] py-3 px-3 text-center font-semibold">Operador</th>
+                <th className="w-[140px] py-3 pl-3 pr-5 text-center font-semibold">Situação</th>
               </tr>
             </thead>
             <tbody>
-              {checklist.itens.map((it) => {
+              {checklist.itens.map((it, idx) => {
                 const sm = (mapMonitor.get(it.id) ?? "conforme") as StatusItem
                 const so = (mapOperador.get(it.id) ?? "conforme") as StatusItem
                 const divergente = sm !== so
@@ -717,33 +719,53 @@ function Comparativo({
                     key={it.id}
                     className={cn(
                       "border-b border-border/50 align-middle transition-colors last:border-0",
-                      divergente ? "bg-chart-3/[0.06] hover:bg-chart-3/10" : "hover:bg-secondary/30",
+                      divergente
+                        ? "bg-chart-3/[0.07] hover:bg-chart-3/[0.12]"
+                        : cn(idx % 2 === 1 && "bg-secondary/20", "hover:bg-secondary/40"),
                     )}
                   >
-                    <td className="py-2.5 pl-4 pr-3">
+                    <td className="relative py-3 pl-5 pr-3">
+                      {/* faixa de destaque lateral para linhas divergentes */}
+                      <span
+                        className={cn(
+                          "absolute inset-y-0 left-0 w-1",
+                          divergente ? "bg-chart-3" : "bg-transparent",
+                        )}
+                        aria-hidden
+                      />
                       <div className="flex items-start gap-2">
-                        {divergente && <span className="mt-1 size-1.5 shrink-0 rounded-full bg-chart-3" aria-hidden />}
+                        <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-secondary text-[11px] font-medium tabular-nums text-muted-foreground">
+                          {idx + 1}
+                        </span>
                         <span className="leading-snug">{it.texto}</span>
-                        {it.critico && <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-destructive" />}
+                        {it.critico && (
+                          <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-destructive" aria-label="Item crítico" />
+                        )}
                       </div>
                     </td>
-                    <td className="py-2.5 px-3">
-                      <span className={cn("inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs", statusClass(sm))}>
+                    <td className="py-3 px-3 text-center">
+                      <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium", statusClass(sm))}>
                         {statusIcon(sm)} {STATUS_LABEL[sm]}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3">
-                      <span className={cn("inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs", statusClass(so))}>
+                    <td className="py-3 px-1 text-center">
+                      <ArrowRight
+                        className={cn("mx-auto size-4", divergente ? "text-chart-3" : "text-muted-foreground/40")}
+                        aria-hidden
+                      />
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium", statusClass(so))}>
                         {statusIcon(so)} {STATUS_LABEL[so]}
                       </span>
                     </td>
-                    <td className="py-2.5 pl-3 pr-4 text-right">
+                    <td className="py-3 pl-3 pr-5 text-center">
                       {divergente ? (
-                        <Badge variant="outline" className="gap-1 border-chart-3/40 bg-chart-3/10 text-chart-3">
+                        <Badge variant="outline" className="gap-1 border-chart-3/50 bg-chart-3/15 font-medium text-chart-3">
                           <AlertTriangle className="size-3" /> Divergente
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="gap-1 border-chart-5/30 bg-chart-5/10 text-chart-5">
+                        <Badge variant="outline" className="gap-1 border-chart-5/40 bg-chart-5/15 font-medium text-chart-5">
                           <Equal className="size-3" /> Igual
                         </Badge>
                       )}
