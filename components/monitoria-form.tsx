@@ -58,6 +58,12 @@ export function MonitoriaForm() {
     [vinculos, carteira],
   )
 
+  // Operadores que pertencem à carteira selecionada (mostrados no campo de busca).
+  const operadoresCarteira = useMemo(
+    () => (carteira ? operadores.filter((o) => o.carteira === carteira) : []),
+    [operadores, carteira],
+  )
+
   // Tabulações disponíveis para a carteira. Se a carteira tiver vínculos,
   // usamos somente as tabulações vinculadas; caso contrário, lista completa.
   const tabulacoesDisponiveis = useMemo(() => {
@@ -254,13 +260,31 @@ export function MonitoriaForm() {
             </div>
 
             <div className="flex flex-col gap-1.5 sm:col-span-2">
-              <Label>Operador (banco de dados)</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label>Operador (banco de dados)</Label>
+                {carteira && (
+                  <span className="text-xs text-muted-foreground">
+                    {operadoresCarteira.length}{" "}
+                    {operadoresCarteira.length === 1 ? "operador" : "operadores"} na {carteira}
+                  </span>
+                )}
+              </div>
               <OperadorSearch
                 operadores={operadores}
                 value={operadorId}
                 onChange={setOperadorId}
                 filtroCarteira={carteira || undefined}
               />
+              {!carteira ? (
+                <p className="text-xs text-muted-foreground">
+                  Selecione uma carteira para listar os operadores vinculados a ela.
+                </p>
+              ) : operadoresCarteira.length === 0 ? (
+                <p className="text-xs text-destructive">
+                  Nenhum operador cadastrado nesta carteira. Importe os operadores em
+                  Administração → Checklists &amp; Operadores.
+                </p>
+              ) : null}
             </div>
 
             <div className="flex flex-col gap-1.5 sm:col-span-2">
