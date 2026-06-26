@@ -1,4 +1,4 @@
-import type { Checklist, Monitoria, RecebimentoOperador, SiglaQuadrante } from "./types"
+import type { Checklist, Monitoria, Operador, RecebimentoOperador, SiglaQuadrante } from "./types"
 import { media, resumoQuartis } from "./analytics"
 
 export type Periodicidade = "diario" | "semanal" | "mensal"
@@ -685,4 +685,135 @@ export function quadranteOperadores(
       }
     })
     .sort((a, b) => b.nota - a.nota)
+}
+
+/* ---------------- JORNADA DO OPERADOR (por tempo de empresa) ---------------- */
+
+/**
+ * Faixas de tempo de empresa usadas no comparativo da Jornada do Operador.
+ * - 0 a 3 meses · recém-chegados
+ * - 4 a 6 meses · em desenvolvimento
+ * - 7+ meses · experientes
+ */
+export const SEGMENTOS_TEMPO = [
+  { id: "0-3", rotulo: "0 a 3 meses", min: 0, max: 3 },
+  { id: "4-6", rotulo: "4 a 6 meses", min: 4, max: 6 },
+  { id: "7+", rotulo: "Acima de 7 meses", min: 7, max: Number.POSITIVE_INFINITY },
+] as const
+
+export type SegmentoTempoId = (typeof SEGMENTOS_TEMPO)[number]["id"]
+
+/** Quantidade de meses completos entre a admissão e a data de referência. */
+export function mesesDeEmpresa(admissaoISO: string, ref: Date = new Date()): number {
+  if (!admissaoISO) return 0
+  const d = new Date(admissaoISO + "T00:00:00")
+  if (Number.isNaN(d.getTime())) return 0
+  let meses = (ref.getFullYear() - d.getFullYear()) * 12 + (ref.getMonth() - d.getMonth())
+  if (ref.getDate() < d.getDate()) meses--
+  return Math.max(0, meses)
+}
+
+function segmentoPorMeses(meses: number): SegmentoTempoId {
+  if (meses <= 3) return "0-3"
+  if (meses <= 6) return "4-6"
+  return "7+"
+}
+
+/**
+ * Quadrante de qualidade por nota (Q1..Q4):
+ * - Q1 Excelente (90+) · Q2 Bom (75-89) · Q3 Regular (60-74) · Q4 Crítico (<60)
+ */
+export function quadrantePorNota(nota: number): "q1" | "q2" | "q3" | "q4" {
+  if (nota >= 90) return "q1"
+  if (nota >= 75) return "q2"
+  if (nota >= 60) return "q3"
+  return "q4"
+}
+
+export interface JornadaSegmento {
+  id: SegmentoTempoId
+  segmento: string // rótulo legível
+  operadores: number // operadores distintos com monitoria no recorte
+  monitorias: number // total de monitorias no segmento
+  nota: number // nota média das monitorias do segmento
+  // contagem de operadores classificados em cada quadrante (pela nota média do operador)
+  q1: number
+  q2: number
+  q3: number
+  q4: number
+  // percentual de operadores em cada quadrante (sobre o total de operadores do segmento)
+  pctQ1: number
+  pctQ2: number
+  pctQ3: number
+  pctQ4: number
+}
+
+/**
+ * Jornada do Operador: compara os operadores por tempo de empresa
+ * (0-3, 4-6 e 7+ meses). Para cada faixa retorna a nota média, a
+ * quantidade de operadores e a distribuição (qtd e %) deles entre os
+ * quadrantes de qualidade Q1..Q4 — classificados pela nota média individual.
+ * Opcionalmente filtra por carteira.
+ */
+export function jornadaOperador(
+  monitorias: Monitoria[],
+  operadores: Operador[],
+  carteira?: string,
+  ref: Date = new Date(),
+): JornadaSegmento[] {
+  // tempo de empresa por operador
+  const mesesPorId = new Map<string, number>()
+  for (const op of operadores) mesesPorId.set(op.id, mesesDeEmpresa(op.admissao, ref))
+
+  // agrupa monitorias por operador (apenas operadores com tempo de empresa conhecido)
+  const porOperadorMap = new Map<string, { notas: number[]; seg: SegmentoTempoId }>()
+  for (const m of monitorias) {
+    if (carteira && carteira !== "todas" && m.carteira !== carteira) continue
+    const meses = mesesPorId.get(m.operadorId)
+    if (meses === undefined) continue // sem cadastro/admissão → fora do comparativo
+    const seg = segmentoPorMeses(meses)
+    const atual = porOperadorMap.get(m.operadorId) ?? { notas: [], seg }
+    atual.notas.push(m.nota)
+    porOperadorMap.set(m.operadorId, atual)
+  }
+
+  const round1 = (n: number) => Math.round(n * 10) / 10
+
+  // inicializa acumuladores por segmento
+  const acc = new Map<
+    SegmentoTempoId,
+    { notas: number[]; operadores: number; q1: number; q2: number; q3: number; q4: number }
+  >()
+  for (const s of SEGMENTOS_TEMPO) {
+    acc.set(s.id, { notas: [], operadores: 0, q1: 0, q2: 0, q3: 0, q4: 0 })
+  }
+
+  for (const { notas, seg } of porOperadorMap.values()) {
+    const a = acc.get(seg)!
+    a.operadores++
+    a.notas.push(...notas)
+    const mediaOp = media(notas)
+    a[quadrantePorNota(mediaOp)]++
+  }
+
+  return SEGMENTOS_TEMPO.map((s) => {
+    const a = acc.get(s.id)!
+    const totalOp = a.operadores || 0
+    const pct = (n: number) => (totalOp ? round1((n / totalOp) * 100) : 0)
+    return {
+      id: s.id,
+      segmento: s.rotulo,
+      operadores: a.operadores,
+      monitorias: a.notas.length,
+      nota: round1(media(a.notas)),
+      q1: a.q1,
+      q2: a.q2,
+      q3: a.q3,
+      q4: a.q4,
+      pctQ1: pct(a.q1),
+      pctQ2: pct(a.q2),
+      pctQ3: pct(a.q3),
+      pctQ4: pct(a.q4),
+    }
+  })
 }
