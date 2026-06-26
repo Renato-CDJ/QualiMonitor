@@ -25,13 +25,7 @@ export function OperadorSearch({ operadores, value, onChange, filtroCarteira }: 
       : operadores
     const q = query.trim().toLowerCase()
     if (!q) return base.slice(0, 8)
-    return base
-      .filter(
-        (o) =>
-          o.nome.toLowerCase().includes(q) ||
-          o.matricula.toLowerCase().includes(q),
-      )
-      .slice(0, 8)
+    return base.filter((o) => o.nome.toLowerCase().includes(q)).slice(0, 8)
   }, [operadores, query, filtroCarteira])
 
   return (
@@ -39,7 +33,7 @@ export function OperadorSearch({ operadores, value, onChange, filtroCarteira }: 
       <div className="flex items-center gap-2 rounded-md border border-input bg-secondary/40 px-3">
         <Search className="size-4 shrink-0 text-muted-foreground" />
         <input
-          value={open ? query : selecionado ? `${selecionado.nome} · ${selecionado.matricula}` : query}
+          value={open ? query : selecionado ? selecionado.nome : query}
           onChange={(e) => {
             setQuery(e.target.value)
             setOpen(true)
@@ -49,7 +43,7 @@ export function OperadorSearch({ operadores, value, onChange, filtroCarteira }: 
             setQuery("")
           }}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
-          placeholder="Buscar operador por nome ou matrícula..."
+          placeholder="Buscar operador por nome..."
           className="h-10 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
       </div>
@@ -83,7 +77,7 @@ export function OperadorSearch({ operadores, value, onChange, filtroCarteira }: 
                     <span className="flex flex-col">
                       <span className="font-medium leading-tight">{o.nome}</span>
                       <span className="text-xs text-muted-foreground">
-                        {o.matricula} · {o.carteira} · Sup. {o.supervisor}
+                        {o.carteira}
                       </span>
                     </span>
                     {o.id === value && <Check className="ml-auto size-4 text-primary" />}

@@ -15,7 +15,6 @@ import {
   Grid2x2,
   MessageSquareReply,
   Briefcase,
-  Hash,
   ShieldCheck,
   Download,
   Search,
@@ -44,7 +43,7 @@ import {
   type Periodicidade,
 } from "@/lib/aggregations"
 import { media, resumoQuartis } from "@/lib/analytics"
-import { notaBadgeClass, faixaNota, formatarData } from "@/lib/analytics"
+import { notaBadgeClass, faixaNota, formatarData, tempoDeEmpresa } from "@/lib/analytics"
 import {
   TendenciaChart,
   FaixasPieChart,
@@ -329,16 +328,18 @@ export function HistoricoOperador() {
                   </h2>
                   <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <Hash className="size-3.5" />
-                      {operadorSelecionado.matricula}
-                    </span>
-                    <span className="flex items-center gap-1">
                       <Briefcase className="size-3.5" />
                       {operadorSelecionado.carteira}
                     </span>
+                    {operadorSelecionado.admissao && (
+                      <span className="flex items-center gap-1">
+                        <CalendarClock className="size-3.5" />
+                        Admissão {formatarData(operadorSelecionado.admissao)}
+                      </span>
+                    )}
                     <span className="flex items-center gap-1">
                       <ShieldCheck className="size-3.5" />
-                      Sup. {operadorSelecionado.supervisor}
+                      {tempoDeEmpresa(operadorSelecionado.admissao)} de empresa
                     </span>
                   </div>
                 </div>

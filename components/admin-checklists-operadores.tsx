@@ -8,7 +8,6 @@ import {
   Download,
   Users,
   ListChecks,
-  AlertTriangle,
   Trash2,
   Search,
   FileSpreadsheet,
@@ -36,8 +35,8 @@ import {
 } from "@/components/ui/table"
 import { useQualityData } from "@/lib/use-quality-data"
 import { store } from "@/lib/store"
-import type { Checklist, ChecklistItem, Operador } from "@/lib/types"
-import { cn } from "@/lib/utils"
+import { parseAdmissao, tempoDeEmpresa, formatarData } from "@/lib/analytics"
+import type { Checklist, Operador } from "@/lib/types"
 
 const SEM_BLOCO = "Sem bloco"
 
@@ -61,10 +60,22 @@ function pegarColuna(linha: Record<string, unknown>, possiveis: string[]): strin
   return ""
 }
 
+/**
+ * Igual a pegarColuna, mas retorna o valor BRUTO (sem converter para string),
+ * preservando datas/números seriais do Excel para o parseAdmissao interpretar.
+ */
+function pegarColunaCrua(linha: Record<string, unknown>, possiveis: string[]): unknown {
+  for (const chave of Object.keys(linha)) {
+    if (possiveis.includes(normalizar(chave))) {
+      return linha[chave]
+    }
+  }
+  return ""
+}
+
 interface LinhaImportada {
   nome: string
-  matricula: string
-  supervisor: string
+  admissao: string
 }
 
 export function AdminChecklistsOperadores() {
@@ -166,32 +177,11 @@ function ChecklistDialog({
   const [importando, setImportando] = useState(false)
   const [busca, setBusca] = useState("")
 
-  // Agrupa os itens por bloco preservando a ordem (mesma lógica do editor).
-  const grupos = useMemo(() => {
-    if (!checklist) return [] as { bloco: string; itens: ChecklistItem[] }[]
-    const ordem: string[] = []
-    const mapa = new Map<string, ChecklistItem[]>()
-    for (const it of checklist.itens) {
-      const b = it.bloco?.trim() || SEM_BLOCO
-      if (!mapa.has(b)) {
-        mapa.set(b, [])
-        ordem.push(b)
-      }
-      mapa.get(b)!.push(it)
-    }
-    return ordem.map((bloco) => ({ bloco, itens: mapa.get(bloco)! }))
-  }, [checklist])
-
   const operadoresFiltrados = useMemo(() => {
     const termo = busca.trim().toLowerCase()
     const lista = [...operadores].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
     if (!termo) return lista
-    return lista.filter(
-      (o) =>
-        o.nome.toLowerCase().includes(termo) ||
-        o.matricula.toLowerCase().includes(termo) ||
-        o.supervisor.toLowerCase().includes(termo),
-    )
+    return lista.filter((o) => o.nome.toLowerCase().includes(termo))
   }, [operadores, busca])
 
   async function importarPlanilha(file: File) {
@@ -210,51 +200,61 @@ function ChecklistDialog({
       const importadas: LinhaImportada[] = linhas
         .map((linha) => ({
           nome: pegarColuna(linha, ["nome", "nome completo", "operador", "colaborador", "agente"]),
-          matricula: pegarColuna(linha, ["matricula", "matrícula", "matricula", "re", "id", "codigo", "código"]),
-          supervisor: pegarColuna(linha, ["supervisor", "gestor", "lider", "líder", "coordenador"]),
+          admissao: parseAdmissao(
+            pegarColunaCrua(linha, [
+              "admissao",
+              "admissão",
+              "data de admissao",
+              "data de admissão",
+              "data admissao",
+              "data admissão",
+              "dt admissao",
+              "dt admissão",
+            ]),
+          ),
         }))
-        .filter((r) => r.nome || r.matricula)
+        .filter((r) => r.nome)
 
       if (importadas.length === 0) {
-        toast.error("Nenhuma linha válida encontrada. Verifique as colunas Nome e Matrícula.")
+        toast.error("Nenhuma linha válida encontrada. Verifique a coluna Nome.")
         return
       }
 
       const existentes = store.getOperadores()
-      const porMatricula = new Map(
-        existentes.filter((o) => o.matricula).map((o) => [o.matricula.toLowerCase(), o]),
+      // Deduplica por nome + carteira (não há mais matrícula).
+      const chaveDe = (nome: string) => `${checklist.carteira.toLowerCase()}::${nome.toLowerCase()}`
+      const porChave = new Map(
+        existentes
+          .filter((o) => o.carteira === checklist.carteira)
+          .map((o) => [chaveDe(o.nome), o]),
       )
       const resultado = [...existentes]
       let novos = 0
       let atualizados = 0
-      let ignorados = 0
+      let semAdmissao = 0
 
       for (const r of importadas) {
-        if (!r.nome || !r.matricula) {
-          ignorados++
-          continue
-        }
-        const chave = r.matricula.toLowerCase()
-        const existente = porMatricula.get(chave)
+        if (!r.admissao) semAdmissao++
+        const chave = chaveDe(r.nome)
+        const existente = porChave.get(chave)
         if (existente) {
           const idx = resultado.findIndex((o) => o.id === existente.id)
           resultado[idx] = {
             ...existente,
             nome: r.nome,
             carteira: checklist.carteira,
-            supervisor: r.supervisor || existente.supervisor,
+            admissao: r.admissao || existente.admissao,
           }
           atualizados++
         } else {
           const novo: Operador = {
             id: store.uid(),
             nome: r.nome,
-            matricula: r.matricula,
             carteira: checklist.carteira,
-            supervisor: r.supervisor,
+            admissao: r.admissao,
           }
           resultado.push(novo)
-          porMatricula.set(chave, novo)
+          porChave.set(chave, novo)
           novos++
         }
       }
@@ -262,7 +262,7 @@ function ChecklistDialog({
       store.setOperadores(resultado)
 
       const partes = [`${novos} novo(s)`, `${atualizados} atualizado(s)`]
-      if (ignorados > 0) partes.push(`${ignorados} ignorado(s)`)
+      if (semAdmissao > 0) partes.push(`${semAdmissao} sem data de admissão`)
       toast.success(`Importação concluída: ${partes.join(", ")}.`)
     } catch (err) {
       console.error("[v0] Erro ao importar planilha:", err)
@@ -275,9 +275,9 @@ function ChecklistDialog({
 
   function baixarModelo() {
     const ws = XLSX.utils.aoa_to_sheet([
-      ["Nome", "Matrícula", "Supervisor"],
-      ["João Pereira", "M10234", "Roberto Silva"],
-      ["Ana Souza", "M10241", "Patrícia Ramos"],
+      ["Nome", "Admissão"],
+      ["João Pereira", "15/03/2023"],
+      ["Ana Souza", "02/08/2024"],
     ])
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, "Operadores")
@@ -291,7 +291,7 @@ function ChecklistDialog({
 
   return (
     <Dialog open={!!checklist} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="flex max-h-[90vh] w-[95vw] flex-col gap-4 overflow-y-auto sm:max-w-4xl lg:max-w-5xl">
         {checklist && (
           <>
             <DialogHeader>
@@ -304,53 +304,8 @@ function ChecklistDialog({
               </DialogDescription>
             </DialogHeader>
 
-            {/* Estrutura do checklist agrupada por bloco */}
-            <div className="flex flex-col gap-3">
-              <h3 className="text-sm font-semibold">Estrutura do checklist</h3>
-              <div className="flex flex-col gap-3">
-                {grupos.map((g) => {
-                  const blocoTotal = g.itens.reduce((s, i) => s + (i.critico ? 0 : i.peso || 0), 0)
-                  return (
-                    <div key={g.bloco} className="rounded-lg border border-border bg-secondary/30 p-3">
-                      <div className="mb-2 flex items-center justify-between gap-2">
-                        <span className="text-sm font-medium">{g.bloco}</span>
-                        <Badge variant="outline" className="text-[11px]">
-                          {g.itens.length} {g.itens.length === 1 ? "item" : "itens"} · {blocoTotal} pts
-                        </Badge>
-                      </div>
-                      <ul className="flex flex-col gap-1.5">
-                        {g.itens.map((it) => (
-                          <li key={it.id} className="flex items-center gap-2 text-sm">
-                            <span
-                              className={cn(
-                                "flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-bold",
-                                it.critico
-                                  ? "bg-destructive text-destructive-foreground"
-                                  : "bg-secondary text-secondary-foreground",
-                              )}
-                            >
-                              {it.peso}
-                            </span>
-                            <span className="min-w-0 flex-1 truncate">{it.texto}</span>
-                            {it.critico && (
-                              <Badge
-                                variant="outline"
-                                className="border-destructive/40 bg-destructive/10 text-destructive"
-                              >
-                                <AlertTriangle className="mr-1 size-3" /> Crítico
-                              </Badge>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
             {/* Operadores da carteira */}
-            <div className="flex flex-col gap-3 border-t border-border pt-4">
+            <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="flex items-center gap-2 text-sm font-semibold">
                   <Users className="size-4" /> Operadores da carteira
@@ -384,10 +339,10 @@ function ChecklistDialog({
 
               <p className="flex items-start gap-1.5 rounded-md bg-secondary/40 p-2.5 text-xs text-muted-foreground">
                 <FileSpreadsheet className="mt-0.5 size-3.5 shrink-0" />
-                A planilha deve conter as colunas <span className="font-medium text-foreground">Nome</span>,{" "}
-                <span className="font-medium text-foreground">Matrícula</span> e (opcional){" "}
-                <span className="font-medium text-foreground">Supervisor</span>. Operadores com matrícula já
-                existente são atualizados e movidos para esta carteira.
+                A planilha deve conter as colunas <span className="font-medium text-foreground">Nome</span> e{" "}
+                <span className="font-medium text-foreground">Admissão</span> (data de admissão). O tempo de
+                empresa é calculado automaticamente a partir da admissão. Operadores com o mesmo nome nesta
+                carteira são atualizados.
               </p>
 
               {operadores.length > 0 && (
@@ -407,8 +362,8 @@ function ChecklistDialog({
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nome</TableHead>
-                      <TableHead>Matrícula</TableHead>
-                      <TableHead>Supervisor</TableHead>
+                      <TableHead>Admissão</TableHead>
+                      <TableHead>Tempo de empresa</TableHead>
                       <TableHead className="w-12 text-right">Ação</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -416,8 +371,10 @@ function ChecklistDialog({
                     {operadoresFiltrados.map((o) => (
                       <TableRow key={o.id}>
                         <TableCell className="font-medium">{o.nome}</TableCell>
-                        <TableCell className="tabular-nums text-muted-foreground">{o.matricula}</TableCell>
-                        <TableCell className="text-muted-foreground">{o.supervisor || "—"}</TableCell>
+                        <TableCell className="tabular-nums text-muted-foreground">
+                          {o.admissao ? formatarData(o.admissao) : "—"}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{tempoDeEmpresa(o.admissao)}</TableCell>
                         <TableCell className="text-right">
                           <Button
                             variant="ghost"
