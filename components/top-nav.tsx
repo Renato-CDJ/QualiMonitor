@@ -26,6 +26,7 @@ import {
   ShieldCheck,
   Users,
   Headset,
+  ClipboardList,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -89,6 +90,7 @@ const MENU_ADMIN = {
   items: [
     { href: "/admin/usuarios", label: "Usuários", icon: Users },
     { href: "/admin/operadores", label: "Operadores", icon: Headset },
+    { href: "/admin/checklists-operadores", label: "Checklists & Operadores", icon: ClipboardList },
   ],
 } satisfies { id: string; label: string; icon: React.ComponentType<{ className?: string }>; items: NavItem[] }
 
