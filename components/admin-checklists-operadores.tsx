@@ -8,7 +8,6 @@ import {
   Download,
   Users,
   ListChecks,
-  AlertTriangle,
   Trash2,
   Search,
   FileSpreadsheet,
@@ -37,8 +36,7 @@ import {
 import { useQualityData } from "@/lib/use-quality-data"
 import { store } from "@/lib/store"
 import { parseAdmissao, tempoDeEmpresa, formatarData } from "@/lib/analytics"
-import type { Checklist, ChecklistItem, Operador } from "@/lib/types"
-import { cn } from "@/lib/utils"
+import type { Checklist, Operador } from "@/lib/types"
 
 const SEM_BLOCO = "Sem bloco"
 
@@ -179,22 +177,6 @@ function ChecklistDialog({
   const [importando, setImportando] = useState(false)
   const [busca, setBusca] = useState("")
 
-  // Agrupa os itens por bloco preservando a ordem (mesma lógica do editor).
-  const grupos = useMemo(() => {
-    if (!checklist) return [] as { bloco: string; itens: ChecklistItem[] }[]
-    const ordem: string[] = []
-    const mapa = new Map<string, ChecklistItem[]>()
-    for (const it of checklist.itens) {
-      const b = it.bloco?.trim() || SEM_BLOCO
-      if (!mapa.has(b)) {
-        mapa.set(b, [])
-        ordem.push(b)
-      }
-      mapa.get(b)!.push(it)
-    }
-    return ordem.map((bloco) => ({ bloco, itens: mapa.get(bloco)! }))
-  }, [checklist])
-
   const operadoresFiltrados = useMemo(() => {
     const termo = busca.trim().toLowerCase()
     const lista = [...operadores].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
@@ -309,7 +291,7 @@ function ChecklistDialog({
 
   return (
     <Dialog open={!!checklist} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="flex max-h-[90vh] w-[95vw] flex-col gap-4 overflow-y-auto sm:max-w-4xl lg:max-w-5xl">
         {checklist && (
           <>
             <DialogHeader>
@@ -322,53 +304,8 @@ function ChecklistDialog({
               </DialogDescription>
             </DialogHeader>
 
-            {/* Estrutura do checklist agrupada por bloco */}
-            <div className="flex flex-col gap-3">
-              <h3 className="text-sm font-semibold">Estrutura do checklist</h3>
-              <div className="flex flex-col gap-3">
-                {grupos.map((g) => {
-                  const blocoTotal = g.itens.reduce((s, i) => s + (i.critico ? 0 : i.peso || 0), 0)
-                  return (
-                    <div key={g.bloco} className="rounded-lg border border-border bg-secondary/30 p-3">
-                      <div className="mb-2 flex items-center justify-between gap-2">
-                        <span className="text-sm font-medium">{g.bloco}</span>
-                        <Badge variant="outline" className="text-[11px]">
-                          {g.itens.length} {g.itens.length === 1 ? "item" : "itens"} · {blocoTotal} pts
-                        </Badge>
-                      </div>
-                      <ul className="flex flex-col gap-1.5">
-                        {g.itens.map((it) => (
-                          <li key={it.id} className="flex items-center gap-2 text-sm">
-                            <span
-                              className={cn(
-                                "flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-bold",
-                                it.critico
-                                  ? "bg-destructive text-destructive-foreground"
-                                  : "bg-secondary text-secondary-foreground",
-                              )}
-                            >
-                              {it.peso}
-                            </span>
-                            <span className="min-w-0 flex-1 truncate">{it.texto}</span>
-                            {it.critico && (
-                              <Badge
-                                variant="outline"
-                                className="border-destructive/40 bg-destructive/10 text-destructive"
-                              >
-                                <AlertTriangle className="mr-1 size-3" /> Crítico
-                              </Badge>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
             {/* Operadores da carteira */}
-            <div className="flex flex-col gap-3 border-t border-border pt-4">
+            <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="flex items-center gap-2 text-sm font-semibold">
                   <Users className="size-4" /> Operadores da carteira
