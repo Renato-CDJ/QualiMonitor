@@ -54,6 +54,24 @@ function statusClass(status: StatusItem) {
   return "border-chart-5/30 bg-chart-5/10 text-chart-5"
 }
 
+/** Pill de status maior e mais legível, usado nas colunas Monitor/Operador. */
+function StatusPill({ status }: { status: StatusItem }) {
+  const dotClass =
+    status === "inconforme" ? "bg-destructive" : status === "na" ? "bg-muted-foreground" : "bg-chart-5"
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+        statusClass(status),
+      )}
+    >
+      <span className={cn("size-1.5 rounded-full", dotClass)} aria-hidden />
+      {statusIcon(status)}
+      {STATUS_LABEL[status]}
+    </span>
+  )
+}
+
 export function FeedbackInvertido() {
   const { checklists, operadores, monitorias, feedbacks, ready, refresh } = useQualityData()
   const [avaliandoId, setAvaliandoId] = useState<string | null>(null)
