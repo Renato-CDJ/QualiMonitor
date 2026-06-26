@@ -38,7 +38,6 @@ import { useQualityData } from "@/lib/use-quality-data"
 import { kpis, porOperador } from "@/lib/aggregations"
 import { notaBadgeClass, faixaNota } from "@/lib/analytics"
 import { DispersaoOperadoresChart } from "@/components/dashboard-charts"
-import { AnaliseCategoria } from "@/components/analise-categoria"
 import { cn } from "@/lib/utils"
 import * as XLSX from "xlsx"
 
@@ -106,7 +105,7 @@ function hojeISO() {
 }
 
 export function AnaliseNotas() {
-  const { monitorias, checklists, ready } = useQualityData()
+  const { monitorias, ready } = useQualityData()
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
   const [faixaFiltro, setFaixaFiltro] = useState<string>("todas")
   const [dataInicio, setDataInicio] = useState<string>(inicioDoMes)
@@ -491,13 +490,6 @@ export function AnaliseNotas() {
           </Table>
         </CardContent>
       </Card>
-
-      {/* Análise por categoria do checklist */}
-      <AnaliseCategoria
-        monitorias={filtradas}
-        checklists={checklists}
-        carteira={carteiraFiltro}
-      />
     </div>
   )
 }
