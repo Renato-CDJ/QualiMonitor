@@ -19,9 +19,9 @@ export interface Checklist {
 export interface Operador {
   id: string
   nome: string
-  matricula: string
   carteira: string
-  supervisor: string
+  /** Data de admissão do operador no formato ISO (YYYY-MM-DD). */
+  admissao: string
 }
 
 /**

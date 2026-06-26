@@ -33,16 +33,16 @@ import {
 } from "@/components/ui/table"
 import { useQualityData } from "@/lib/use-quality-data"
 import { store } from "@/lib/store"
+import { tempoDeEmpresa, formatarData } from "@/lib/analytics"
 import type { Operador } from "@/lib/types"
 
 type FormState = {
   nome: string
-  matricula: string
   carteira: string
-  supervisor: string
+  admissao: string
 }
 
-const FORM_VAZIO: FormState = { nome: "", matricula: "", carteira: "", supervisor: "" }
+const FORM_VAZIO: FormState = { nome: "", carteira: "", admissao: "" }
 
 export function AdminOperadores() {
   const { operadores, ready } = useQualityData()
@@ -54,13 +54,9 @@ export function AdminOperadores() {
   const [erro, setErro] = useState<string | null>(null)
   const [confirmarExclusao, setConfirmarExclusao] = useState<Operador | null>(null)
 
-  // Sugestões de carteiras/supervisores existentes para facilitar o cadastro.
+  // Sugestões de carteiras existentes para facilitar o cadastro.
   const carteiras = useMemo(
     () => Array.from(new Set(operadores.map((o) => o.carteira))).sort((a, b) => a.localeCompare(b, "pt-BR")),
-    [operadores],
-  )
-  const supervisores = useMemo(
-    () => Array.from(new Set(operadores.map((o) => o.supervisor))).sort((a, b) => a.localeCompare(b, "pt-BR")),
     [operadores],
   )
 
@@ -71,9 +67,7 @@ export function AdminOperadores() {
     return lista.filter(
       (o) =>
         o.nome.toLowerCase().includes(termo) ||
-        o.matricula.toLowerCase().includes(termo) ||
-        o.carteira.toLowerCase().includes(termo) ||
-        o.supervisor.toLowerCase().includes(termo),
+        o.carteira.toLowerCase().includes(termo),
     )
   }, [operadores, busca])
 
@@ -86,7 +80,7 @@ export function AdminOperadores() {
 
   function abrirEdicao(o: Operador) {
     setEditando(o.id)
-    setForm({ nome: o.nome, matricula: o.matricula, carteira: o.carteira, supervisor: o.supervisor })
+    setForm({ nome: o.nome, carteira: o.carteira, admissao: o.admissao })
     setErro(null)
     setDialogAberto(true)
   }
@@ -94,26 +88,20 @@ export function AdminOperadores() {
   function salvar() {
     setErro(null)
     const nome = form.nome.trim()
-    const matricula = form.matricula.trim()
     const carteira = form.carteira.trim()
-    const supervisor = form.supervisor.trim()
+    const admissao = form.admissao.trim()
     if (!nome) return setErro("Informe o nome do operador.")
-    if (!matricula) return setErro("Informe a matrícula.")
     if (!carteira) return setErro("Informe a carteira.")
+    if (!admissao) return setErro("Informe a data de admissão.")
 
     const lista = store.getOperadores()
-    // Matrícula duplicada (ignora o próprio ao editar).
-    const duplicada = lista.some(
-      (o) => o.matricula.toLowerCase() === matricula.toLowerCase() && o.id !== editando,
-    )
-    if (duplicada) return setErro("Já existe um operador com essa matrícula.")
 
     if (editando) {
       store.setOperadores(
-        lista.map((o) => (o.id === editando ? { ...o, nome, matricula, carteira, supervisor } : o)),
+        lista.map((o) => (o.id === editando ? { ...o, nome, carteira, admissao } : o)),
       )
     } else {
-      const novo: Operador = { id: store.uid(), nome, matricula, carteira, supervisor }
+      const novo: Operador = { id: store.uid(), nome, carteira, admissao }
       store.setOperadores([...lista, novo])
     }
     setDialogAberto(false)
@@ -159,9 +147,9 @@ export function AdminOperadores() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
-                <TableHead>Matrícula</TableHead>
                 <TableHead>Carteira</TableHead>
-                <TableHead>Supervisor</TableHead>
+                <TableHead>Admissão</TableHead>
+                <TableHead>Tempo de empresa</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -169,11 +157,13 @@ export function AdminOperadores() {
               {filtrados.map((o) => (
                 <TableRow key={o.id}>
                   <TableCell className="font-medium">{o.nome}</TableCell>
-                  <TableCell className="tabular-nums text-muted-foreground">{o.matricula}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{o.carteira}</Badge>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{o.supervisor || "—"}</TableCell>
+                  <TableCell className="tabular-nums text-muted-foreground">
+                    {o.admissao ? formatarData(o.admissao) : "—"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{tempoDeEmpresa(o.admissao)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
                       <Button
@@ -234,17 +224,6 @@ export function AdminOperadores() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="op-matricula">Matrícula</Label>
-              <Input
-                id="op-matricula"
-                value={form.matricula}
-                onChange={(e) => setForm((f) => ({ ...f, matricula: e.target.value }))}
-                placeholder="Ex.: M10234"
-                autoComplete="off"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
               <Label htmlFor="op-carteira">Carteira</Label>
               {carteiras.length > 0 ? (
                 <Select
@@ -273,19 +252,18 @@ export function AdminOperadores() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="op-supervisor">Supervisor</Label>
+              <Label htmlFor="op-admissao">Data de admissão</Label>
               <Input
-                id="op-supervisor"
-                value={form.supervisor}
-                onChange={(e) => setForm((f) => ({ ...f, supervisor: e.target.value }))}
-                placeholder="Ex.: Roberto Silva"
-                list="lista-supervisores"
+                id="op-admissao"
+                type="date"
+                value={form.admissao}
+                onChange={(e) => setForm((f) => ({ ...f, admissao: e.target.value }))}
               />
-              <datalist id="lista-supervisores">
-                {supervisores.map((s) => (
-                  <option key={s} value={s} />
-                ))}
-              </datalist>
+              {form.admissao && (
+                <p className="text-xs text-muted-foreground">
+                  Tempo de empresa: {tempoDeEmpresa(form.admissao)}
+                </p>
+              )}
             </div>
 
             {erro && <p className="text-sm text-destructive">{erro}</p>}

@@ -67,11 +67,10 @@ create index if not exists idx_checklist_itens_checklist on public.checklist_ite
 -- OPERADORES
 -- ----------------------------------------------------------------------------
 create table if not exists public.operadores (
-  id         text primary key,
-  nome       text not null,
-  matricula  text,
-  carteira   text not null,
-  supervisor text
+  id        text primary key,
+  nome      text not null,
+  carteira  text not null,
+  admissao  date
 );
 
 create index if not exists idx_operadores_carteira on public.operadores (carteira);

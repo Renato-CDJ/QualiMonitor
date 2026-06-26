@@ -92,16 +92,22 @@ const NOMES = [
   "Felipe Castro", "Gabriela Dias", "Henrique Nunes", "Isabela Cruz", "João Pereira",
   "Karina Melo", "Lucas Barros", "Marina Teixeira", "Nathan Gomes", "Olívia Faria",
 ]
-const SUPERVISORES = ["Roberto Silva", "Patrícia Ramos", "Marcelo Antunes"]
 const CARTEIRAS = ["Carteira X", "Carteira Y", "Carteira Z"]
 
-const SEED_OPERADORES: Operador[] = NOMES.map((nome, i) => ({
-  id: `op-${i + 1}`,
-  nome,
-  matricula: `M${(10234 + i * 7).toString()}`,
-  carteira: CARTEIRAS[i % 3],
-  supervisor: SUPERVISORES[i % 3],
-}))
+const SEED_OPERADORES: Operador[] = NOMES.map((nome, i) => {
+  // Datas de admissão variadas para demonstrar o cálculo de tempo de empresa.
+  const adm = new Date()
+  adm.setMonth(adm.getMonth() - (2 + i * 3))
+  const admissao = `${adm.getFullYear()}-${String(adm.getMonth() + 1).padStart(2, "0")}-${String(
+    adm.getDate(),
+  ).padStart(2, "0")}`
+  return {
+    id: `op-${i + 1}`,
+    nome,
+    carteira: CARTEIRAS[i % 3],
+    admissao,
+  }
+})
 
 const MONITORES = ["Sofia Andrade", "Rafael Pinto", "Camila Duarte"]
 const TABS = ["Venda", "Não Venda", "Retenção", "Cobrança", "Suporte Técnico", "Reclamação"]
