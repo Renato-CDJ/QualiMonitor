@@ -394,42 +394,47 @@ export function MonitoriaForm() {
                 )
                 const blocoCritico = g.itens.some((i) => i.critico)
                 return (
-                  <section key={g.bloco} className="flex flex-col gap-2.5">
-                    {/* Cabeçalho do bloco */}
-                    <div
-                      className={cn(
-                        "flex items-center justify-between gap-3 rounded-lg border bg-secondary/40 px-3 py-2.5",
-                        blocoCritico && "border-destructive/30 bg-destructive/5",
-                      )}
-                    >
-                      <div className="flex min-w-0 items-center gap-3">
+                  <section
+                    key={g.bloco}
+                    className={cn(
+                      "grid gap-4 rounded-xl border bg-card/40 p-3 md:grid-cols-[220px_1fr] md:gap-5 md:p-4",
+                      blocoCritico && "border-destructive/25",
+                    )}
+                  >
+                    {/* Cabeçalho do bloco (lateral) */}
+                    <div className="flex flex-col gap-3 md:sticky md:top-4 md:self-start">
+                      <div
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg border p-3",
+                          blocoCritico
+                            ? "border-destructive/30 bg-destructive/[0.06]"
+                            : "border-border bg-secondary/50",
+                        )}
+                      >
                         <span
                           className={cn(
-                            "flex size-10 shrink-0 items-center justify-center rounded-md text-sm font-bold tabular-nums",
+                            "flex size-11 shrink-0 items-center justify-center rounded-lg text-base font-bold tabular-nums",
                             blocoCritico
                               ? "bg-destructive text-destructive-foreground"
-                              : "bg-secondary text-secondary-foreground",
+                              : "bg-primary text-primary-foreground",
                           )}
                         >
                           {blocoTotal}
                         </span>
                         <div className="min-w-0">
-                          <h3 className="truncate text-sm font-semibold uppercase tracking-wide">
+                          <h3 className="text-sm font-semibold leading-tight text-balance">
                             {g.bloco}
                           </h3>
-                          <p className="text-[11px] text-muted-foreground">
+                          <p className="mt-0.5 text-[11px] text-muted-foreground">
                             {g.itens.length} {g.itens.length === 1 ? "item" : "itens"} ·{" "}
                             {blocoTotal} pts
                           </p>
                         </div>
                       </div>
                       {blocoCritico && (
-                        <Badge
-                          variant="outline"
-                          className="shrink-0 border-destructive/40 bg-destructive/10 text-destructive"
-                        >
-                          <AlertTriangle className="mr-1 size-3" /> Bloco crítico
-                        </Badge>
+                        <span className="inline-flex w-fit items-center gap-1 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-[11px] font-medium text-destructive">
+                          <AlertTriangle className="size-3" /> Bloco crítico
+                        </span>
                       )}
                     </div>
 
@@ -441,23 +446,23 @@ export function MonitoriaForm() {
                           status === "inconforme"
                             ? "border-l-destructive"
                             : status === "na"
-                              ? "border-l-muted-foreground/40"
+                              ? "border-l-muted-foreground/50"
                               : "border-l-chart-5/70"
                         return (
                           <div
                             key={it.id}
                             className={cn(
-                              "flex flex-col gap-3 rounded-lg border border-l-[3px] bg-card p-4 transition-colors md:flex-row md:items-center md:justify-between",
+                              "flex flex-col gap-3 rounded-lg border border-l-[3px] bg-background p-3.5 shadow-sm transition-colors lg:flex-row lg:items-center lg:justify-between",
                               acento,
-                              status === "inconforme" && "bg-destructive/[0.04]",
-                              status === "na" && "bg-muted/40",
+                              status === "inconforme" && "bg-destructive/[0.05]",
+                              status === "na" && "bg-muted/50",
                             )}
                           >
                             {/* Texto do item + indicador de status atual */}
                             <div className="flex min-w-0 flex-1 items-start gap-3">
                               <span
                                 className={cn(
-                                  "flex size-9 shrink-0 items-center justify-center rounded-md text-sm font-bold tabular-nums",
+                                  "flex size-8 shrink-0 items-center justify-center rounded-md text-xs font-bold tabular-nums",
                                   it.critico
                                     ? "bg-destructive text-destructive-foreground"
                                     : "bg-secondary text-secondary-foreground",
@@ -473,7 +478,7 @@ export function MonitoriaForm() {
                                 <div className="mt-1.5 flex flex-wrap items-center gap-2">
                                   <span
                                     className={cn(
-                                      "inline-flex items-center gap-1 text-[11px] font-medium",
+                                      "inline-flex items-center gap-1.5 text-[11px] font-medium",
                                       status === "inconforme"
                                         ? "text-destructive"
                                         : status === "na"
@@ -507,27 +512,33 @@ export function MonitoriaForm() {
                             </div>
 
                             {/* Ações: apenas Inconforme e Não se aplica (toggle) */}
-                            <div className="flex shrink-0 items-center gap-2 md:pl-3">
-                              <Button
+                            <div className="flex shrink-0 items-center gap-2 lg:pl-3">
+                              <button
                                 type="button"
-                                size="sm"
-                                variant={status === "inconforme" ? "destructive" : "outline"}
                                 onClick={() => alternarStatus(it.id, "inconforme")}
                                 aria-pressed={status === "inconforme"}
-                                className="gap-1.5"
+                                className={cn(
+                                  "inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors lg:flex-none",
+                                  status === "inconforme"
+                                    ? "border-destructive bg-destructive text-destructive-foreground"
+                                    : "border-border bg-transparent text-muted-foreground hover:border-destructive/50 hover:bg-destructive/10 hover:text-destructive",
+                                )}
                               >
                                 <XCircle className="size-4" /> Inconforme
-                              </Button>
-                              <Button
+                              </button>
+                              <button
                                 type="button"
-                                size="sm"
-                                variant={status === "na" ? "secondary" : "outline"}
                                 onClick={() => alternarStatus(it.id, "na")}
                                 aria-pressed={status === "na"}
-                                className={cn("gap-1.5", status === "na" && "ring-1 ring-border")}
+                                className={cn(
+                                  "inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors lg:flex-none",
+                                  status === "na"
+                                    ? "border-foreground/30 bg-secondary text-secondary-foreground"
+                                    : "border-border bg-transparent text-muted-foreground hover:bg-secondary hover:text-foreground",
+                                )}
                               >
                                 <MinusCircle className="size-4" /> Não se aplica
-                              </Button>
+                              </button>
                             </div>
                           </div>
                         )
