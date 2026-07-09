@@ -4,11 +4,12 @@ import { useMemo, useState } from "react"
 import { toast } from "sonner"
 import {
   AlertTriangle,
-  CheckCircle2,
   MinusCircle,
   XCircle,
   Save,
   RotateCcw,
+  Pencil,
+  Check,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -46,6 +47,9 @@ export function MonitoriaForm() {
   const [tabulacao, setTabulacao] = useState<string>("")
   const [observacao, setObservacao] = useState("")
   const [statusMap, setStatusMap] = useState<Record<string, StatusItem>>({})
+  // Recolhe o bloco "Dados da Monitoria" assim que o checklist é carregado,
+  // dando foco total ao preenchimento do checklist.
+  const [dadosColapsados, setDadosColapsados] = useState(false)
 
   const carteiras = useMemo(
     () => Array.from(new Set(checklists.map((c) => c.carteira))),
@@ -130,9 +134,18 @@ export function MonitoriaForm() {
     return { conforme, inconforme, na }
   }, [apontamentos])
 
-  // Define o status do item diretamente (seletor segmentado do checklist).
-  function selecionarStatus(itemId: string, status: StatusItem) {
-    setStatusMap((prev) => ({ ...prev, [itemId]: status }))
+  const operadorNome = useMemo(
+    () => operadores.find((o) => o.id === operadorId)?.nome ?? "",
+    [operadores, operadorId],
+  )
+
+  // Alterna o status do item. Como só existem os botões "Inconforme" e
+  // "Não se aplica", clicar no status já ativo volta o item para "conforme".
+  function alternarStatus(itemId: string, status: StatusItem) {
+    setStatusMap((prev) => {
+      const atual = prev[itemId] ?? "conforme"
+      return { ...prev, [itemId]: atual === status ? "conforme" : status }
+    })
   }
 
   function resetItens() {
@@ -148,6 +161,7 @@ export function MonitoriaForm() {
     setTabulacao("")
     setObservacao("")
     setStatusMap({})
+    setDadosColapsados(false)
   }
 
   function salvar() {
@@ -186,9 +200,48 @@ export function MonitoriaForm() {
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       {/* Coluna principal */}
       <div className="flex flex-col gap-6">
-        <Card>
-          <CardHeader>
+        {/* Resumo compacto: aparece quando o checklist está carregado, ocultando
+            o formulário longo de dados já preenchidos. */}
+        {dadosColapsados && checklistVisivel && (
+          <Card>
+            <CardContent className="flex flex-wrap items-center justify-between gap-3 py-3">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                <span className="font-semibold">{carteira}</span>
+                <span className="text-muted-foreground">·</span>
+                <span className="truncate">{operadorNome || "Operador não selecionado"}</span>
+                <Badge variant="secondary" className="font-normal">
+                  {tabulacao}
+                </Badge>
+                <span className="text-xs text-muted-foreground">
+                  {data.split("-").reverse().join("/")} · {horario}
+                  {ecCallId ? ` · ${ecCallId}` : ""}
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDadosColapsados(false)}
+                className="gap-1.5"
+              >
+                <Pencil className="size-3.5" /> Editar dados
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card className={cn(dadosColapsados && checklistVisivel && "hidden")}>
+          <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
             <CardTitle className="text-base">Dados da Monitoria</CardTitle>
+            {checklistVisivel && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setDadosColapsados(true)}
+                className="gap-1.5"
+              >
+                <Check className="size-3.5" /> Concluir
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
@@ -200,6 +253,7 @@ export function MonitoriaForm() {
                   setOperadorId(null)
                   setTabulacao("")
                   setStatusMap({})
+                  setDadosColapsados(false)
                 }}
               >
                 <SelectTrigger>
@@ -291,6 +345,8 @@ export function MonitoriaForm() {
                   setTabulacao(v)
                   // o checklist pode mudar conforme a tabulação vinculada
                   setStatusMap({})
+                  // recolhe o bloco de dados para dar foco ao checklist
+                  if (v) setDadosColapsados(true)
                 }}
                 disabled={!carteira}
               >
@@ -378,26 +434,26 @@ export function MonitoriaForm() {
                     </div>
 
                     {/* Itens do bloco */}
-                    <div className="flex flex-col gap-2 pl-1">
+                    <div className="flex flex-col gap-2.5">
                       {g.itens.map((it) => {
                         const status = statusMap[it.id] ?? "conforme"
                         const acento =
                           status === "inconforme"
                             ? "border-l-destructive"
                             : status === "na"
-                              ? "border-l-muted-foreground/50"
-                              : "border-l-chart-5"
+                              ? "border-l-muted-foreground/40"
+                              : "border-l-chart-5/70"
                         return (
                           <div
                             key={it.id}
                             className={cn(
-                              "flex flex-col gap-3 rounded-lg border border-l-4 bg-card p-3 transition-colors lg:flex-row lg:items-center lg:justify-between",
+                              "flex flex-col gap-3 rounded-lg border border-l-[3px] bg-card p-4 transition-colors md:flex-row md:items-center md:justify-between",
                               acento,
-                              status === "inconforme" && "bg-destructive/5",
-                              status === "na" && "bg-muted/30",
+                              status === "inconforme" && "bg-destructive/[0.04]",
+                              status === "na" && "bg-muted/40",
                             )}
                           >
-                            {/* Peso + texto do item */}
+                            {/* Texto do item + indicador de status atual */}
                             <div className="flex min-w-0 flex-1 items-start gap-3">
                               <span
                                 className={cn(
@@ -411,65 +467,67 @@ export function MonitoriaForm() {
                                 {it.peso}
                               </span>
                               <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium leading-snug text-pretty">
+                                <p className="text-sm font-medium leading-relaxed text-pretty">
                                   {it.texto}
                                 </p>
-                                {it.critico && (
-                                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-destructive">
-                                    <AlertTriangle className="size-3" /> Crítico — zera a nota
+                                <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                                  <span
+                                    className={cn(
+                                      "inline-flex items-center gap-1 text-[11px] font-medium",
+                                      status === "inconforme"
+                                        ? "text-destructive"
+                                        : status === "na"
+                                          ? "text-muted-foreground"
+                                          : "text-chart-5",
+                                    )}
+                                  >
+                                    <span
+                                      className={cn(
+                                        "size-1.5 rounded-full",
+                                        status === "inconforme"
+                                          ? "bg-destructive"
+                                          : status === "na"
+                                            ? "bg-muted-foreground"
+                                            : "bg-chart-5",
+                                      )}
+                                    />
+                                    {status === "inconforme"
+                                      ? "Inconforme"
+                                      : status === "na"
+                                        ? "Não se aplica"
+                                        : "Conforme"}
                                   </span>
-                                )}
+                                  {it.critico && (
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-destructive">
+                                      <AlertTriangle className="size-3" /> Crítico — zera a nota
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
 
-                            {/* Seletor segmentado de status */}
-                            <div
-                              role="radiogroup"
-                              aria-label={`Status do item: ${it.texto}`}
-                              className="flex shrink-0 items-center gap-1 rounded-lg border border-border bg-background/60 p-1"
-                            >
-                              <button
+                            {/* Ações: apenas Inconforme e Não se aplica (toggle) */}
+                            <div className="flex shrink-0 items-center gap-2 md:pl-3">
+                              <Button
                                 type="button"
-                                role="radio"
-                                aria-checked={status === "conforme"}
-                                onClick={() => selecionarStatus(it.id, "conforme")}
-                                className={cn(
-                                  "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
-                                  status === "conforme"
-                                    ? "bg-chart-5/15 text-chart-5"
-                                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                                )}
-                              >
-                                <CheckCircle2 className="size-4" /> Conforme
-                              </button>
-                              <button
-                                type="button"
-                                role="radio"
-                                aria-checked={status === "inconforme"}
-                                onClick={() => selecionarStatus(it.id, "inconforme")}
-                                className={cn(
-                                  "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
-                                  status === "inconforme"
-                                    ? "bg-destructive text-destructive-foreground"
-                                    : "text-muted-foreground hover:bg-destructive/10 hover:text-destructive",
-                                )}
+                                size="sm"
+                                variant={status === "inconforme" ? "destructive" : "outline"}
+                                onClick={() => alternarStatus(it.id, "inconforme")}
+                                aria-pressed={status === "inconforme"}
+                                className="gap-1.5"
                               >
                                 <XCircle className="size-4" /> Inconforme
-                              </button>
-                              <button
+                              </Button>
+                              <Button
                                 type="button"
-                                role="radio"
-                                aria-checked={status === "na"}
-                                onClick={() => selecionarStatus(it.id, "na")}
-                                className={cn(
-                                  "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
-                                  status === "na"
-                                    ? "bg-secondary text-secondary-foreground ring-1 ring-border"
-                                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                                )}
+                                size="sm"
+                                variant={status === "na" ? "secondary" : "outline"}
+                                onClick={() => alternarStatus(it.id, "na")}
+                                aria-pressed={status === "na"}
+                                className={cn("gap-1.5", status === "na" && "ring-1 ring-border")}
                               >
                                 <MinusCircle className="size-4" /> Não se aplica
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         )
