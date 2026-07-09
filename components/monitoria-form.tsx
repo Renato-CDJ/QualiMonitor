@@ -29,7 +29,7 @@ import { useAuth } from "@/lib/auth"
 import { type ApontamentoItem, type StatusItem, type Monitoria, type ChecklistItem } from "@/lib/types"
 import { store } from "@/lib/store"
 import { notaColorClass, faixaNota } from "@/lib/analytics"
-import { cn } from "@/lib/utils"
+import { cn, normalizarCarteira } from "@/lib/utils"
 
 const HOJE = new Date().toISOString().slice(0, 10)
 const AGORA = new Date().toTimeString().slice(0, 5)
@@ -56,15 +56,26 @@ export function MonitoriaForm() {
     [checklists],
   )
 
-  // Vínculos da carteira selecionada
+  // Vínculos da carteira selecionada (comparação normalizada por segurança).
   const vinculosCarteira = useMemo(
-    () => vinculos.filter((v) => v.carteira === carteira),
+    () =>
+      vinculos.filter(
+        (v) => normalizarCarteira(v.carteira) === normalizarCarteira(carteira),
+      ),
     [vinculos, carteira],
   )
 
   // Operadores que pertencem à carteira selecionada (mostrados no campo de busca).
+  // Usa comparação normalizada (sem acento/caixa/espaços) para que operadores
+  // cadastrados com a carteira escrita de forma ligeiramente diferente ainda
+  // apareçam vinculados ao checklist da carteira.
   const operadoresCarteira = useMemo(
-    () => (carteira ? operadores.filter((o) => o.carteira === carteira) : []),
+    () =>
+      carteira
+        ? operadores.filter(
+            (o) => normalizarCarteira(o.carteira) === normalizarCarteira(carteira),
+          )
+        : [],
     [operadores, carteira],
   )
 

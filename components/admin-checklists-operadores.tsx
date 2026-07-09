@@ -36,6 +36,7 @@ import {
 import { useQualityData } from "@/lib/use-quality-data"
 import { store } from "@/lib/store"
 import { parseAdmissao, tempoDeEmpresa, formatarData } from "@/lib/analytics"
+import { normalizarCarteira } from "@/lib/utils"
 import type { Checklist, Operador } from "@/lib/types"
 
 const SEM_BLOCO = "Sem bloco"
@@ -82,13 +83,16 @@ export function AdminChecklistsOperadores() {
   const { checklists, operadores, ready } = useQualityData()
   const [aberto, setAberto] = useState<Checklist | null>(null)
 
-  // Operadores agrupados por carteira (para mostrar a contagem em cada card).
+  // Operadores agrupados por carteira NORMALIZADA (sem acento/caixa/espaços),
+  // para que a contagem e a listagem funcionem mesmo quando a carteira foi
+  // digitada de forma ligeiramente diferente do nome do checklist.
   const operadoresPorCarteira = useMemo(() => {
     const mapa = new Map<string, Operador[]>()
     for (const op of operadores) {
-      const arr = mapa.get(op.carteira) ?? []
+      const chave = normalizarCarteira(op.carteira)
+      const arr = mapa.get(chave) ?? []
       arr.push(op)
-      mapa.set(op.carteira, arr)
+      mapa.set(chave, arr)
     }
     return mapa
   }, [operadores])
@@ -116,7 +120,8 @@ export function AdminChecklistsOperadores() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {checklists.map((c) => {
-                const qtdOperadores = operadoresPorCarteira.get(c.carteira)?.length ?? 0
+                const qtdOperadores =
+                  operadoresPorCarteira.get(normalizarCarteira(c.carteira))?.length ?? 0
                 const blocos = new Set(
                   c.itens.map((i) => i.bloco?.trim() || SEM_BLOCO),
                 ).size
@@ -155,7 +160,9 @@ export function AdminChecklistsOperadores() {
 
       <ChecklistDialog
         checklist={aberto}
-        operadores={aberto ? (operadoresPorCarteira.get(aberto.carteira) ?? []) : []}
+        operadores={
+          aberto ? (operadoresPorCarteira.get(normalizarCarteira(aberto.carteira)) ?? []) : []
+        }
         onClose={() => setAberto(null)}
       />
     </div>
