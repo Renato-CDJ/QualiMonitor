@@ -52,7 +52,7 @@ export function LoginScreen() {
 
       {/* Título da marca fora da caixa, centralizado na tela, com efeito neon animado (SVG) */}
       <div className="mb-16 flex w-full select-none justify-center px-4 duration-500 animate-in fade-in slide-in-from-top-4">
-        <NeonTitle text="QualiMonitor" />
+        <NeonTitle text="Quali.Monitor" />
       </div>
 
       <div className="relative w-full max-w-sm animate-in fade-in zoom-in-95 duration-500">

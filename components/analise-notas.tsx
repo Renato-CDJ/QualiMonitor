@@ -104,6 +104,38 @@ function hojeISO() {
   return new Date().toISOString().slice(0, 10)
 }
 
+function SortHeader({
+  label,
+  sortKey,
+  active,
+  sortDir,
+  onSort,
+  align = "right",
+}: {
+  label: string
+  sortKey: SortKey
+  active: boolean
+  sortDir: SortDir
+  onSort: (key: SortKey) => void
+  align?: "left" | "right"
+}) {
+  const Icon = !active ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown
+  return (
+    <TableHead className={align === "right" ? "text-right" : undefined}>
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className={`inline-flex items-center gap-1 hover:text-foreground ${
+          align === "right" ? "flex-row-reverse" : ""
+        } ${active ? "text-foreground" : ""}`}
+      >
+        {label}
+        <Icon className="size-3.5 opacity-70" />
+      </button>
+    </TableHead>
+  )
+}
+
 export function AnaliseNotas() {
   const { monitorias, ready } = useQualityData()
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
@@ -210,33 +242,6 @@ export function AnaliseNotas() {
     )
   }
 
-  function SortHeader({
-    label,
-    sortKey: key,
-    align = "right",
-  }: {
-    label: string
-    sortKey: SortKey
-    align?: "left" | "right"
-  }) {
-    const active = sortKey === key
-    const Icon = !active ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown
-    return (
-      <TableHead className={align === "right" ? "text-right" : undefined}>
-        <button
-          type="button"
-          onClick={() => toggleSort(key)}
-          className={`inline-flex items-center gap-1 hover:text-foreground ${
-            align === "right" ? "flex-row-reverse" : ""
-          } ${active ? "text-foreground" : ""}`}
-        >
-          {label}
-          <Icon className="size-3.5 opacity-70" />
-        </button>
-      </TableHead>
-    )
-  }
-
   const faixaContagem = useMemo(() => {
     const c = { excelente: 0, bom: 0, regular: 0, critico: 0 }
     for (const m of filtradas) {
@@ -259,27 +264,28 @@ export function AnaliseNotas() {
   return (
     <div className="flex flex-col gap-6">
       {/* Filtros */}
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label className="text-xs text-muted-foreground">Carteira</Label>
-          <Select value={carteiraFiltro} onValueChange={setCarteiraFiltro}>
-            <SelectTrigger className="w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas as carteiras</SelectItem>
-              {carteiras.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label className="text-xs text-muted-foreground">Faixa</Label>
-          <Select value={faixaFiltro} onValueChange={setFaixaFiltro}>
-            <SelectTrigger className="w-48">
+      <div className="rounded-xl border border-border/70 bg-card/60 p-4 shadow-sm">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex min-w-[11rem] flex-1 flex-col gap-1.5 sm:flex-none">
+            <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Carteira</Label>
+            <Select value={carteiraFiltro} onValueChange={setCarteiraFiltro}>
+              <SelectTrigger className="h-10 w-full bg-background sm:w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas as carteiras</SelectItem>
+                {carteiras.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex min-w-[11rem] flex-1 flex-col gap-1.5 sm:flex-none">
+            <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Faixa</Label>
+            <Select value={faixaFiltro} onValueChange={setFaixaFiltro}>
+              <SelectTrigger className="h-10 w-full bg-background sm:w-52">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -288,24 +294,24 @@ export function AnaliseNotas() {
               <SelectItem value="bom">Q2 · Bom (75-89)</SelectItem>
               <SelectItem value="regular">Q3 · Regular (60-74)</SelectItem>
               <SelectItem value="critico">Q4 · Crítico (&lt;60)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="data-inicio" className="text-xs text-muted-foreground">
-            De
-          </Label>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex min-w-[10rem] flex-1 flex-col gap-1.5 sm:flex-none">
+            <Label htmlFor="data-inicio" className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              De
+            </Label>
           <Input
             id="data-inicio"
             type="date"
             value={dataInicio}
             max={dataFim || undefined}
             onChange={(e) => setDataInicio(e.target.value)}
-            className="w-40"
+            className="h-10 w-full bg-background sm:w-40"
           />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="data-fim" className="text-xs text-muted-foreground">
+          </div>
+          <div className="flex min-w-[10rem] flex-1 flex-col gap-1.5 sm:flex-none">
+            <Label htmlFor="data-fim" className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             Até
           </Label>
           <Input
@@ -314,12 +320,13 @@ export function AnaliseNotas() {
             value={dataFim}
             min={dataInicio || undefined}
             onChange={(e) => setDataFim(e.target.value)}
-            className="w-40"
+            className="h-10 w-full bg-background sm:w-40"
           />
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 gap-2 border-primary/30 bg-primary/5 px-4 text-primary hover:bg-primary/10 hover:text-primary"
           onClick={() => {
             setDataInicio(inicioDoMes())
             setDataFim(hojeISO())
@@ -327,9 +334,11 @@ export function AnaliseNotas() {
         >
           Mês atual
         </Button>
-        <span className="pb-1.5 text-xs text-muted-foreground">
-          {filtradas.length} monitorias analisadas
-        </span>
+          <div className="ml-auto flex h-10 items-center rounded-lg bg-muted/50 px-3 text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground">{filtradas.length}</span>
+            <span className="ml-1">monitorias analisadas</span>
+          </div>
+        </div>
       </div>
 
       {/* Distribuição por faixa de desempenho */}
@@ -433,18 +442,18 @@ export function AnaliseNotas() {
           <Table>
             <TableHeader>
               <TableRow>
-                <SortHeader label="Operador" sortKey="operador" align="left" />
-                <SortHeader label="Monitorias" sortKey="volume" />
-                <SortHeader label="Média" sortKey="nota" />
-                <SortHeader label="Mín" sortKey="min" />
-                <SortHeader label="Mediana" sortKey="mediana" />
-                <SortHeader label="Máx" sortKey="max" />
-                <SortHeader label="IQR" sortKey="iqr" />
-                <SortHeader label="Q1" sortKey="q1" />
-                <SortHeader label="Q2" sortKey="q2" />
-                <SortHeader label="Q3" sortKey="q3" />
-                <SortHeader label="Q4" sortKey="q4" />
-                <SortHeader label="Faixa" sortKey="faixa" />
+                <SortHeader label="Operador" sortKey="operador" active={sortKey === "operador"} sortDir={sortDir} onSort={toggleSort} align="left" />
+                <SortHeader label="Monitorias" sortKey="volume" active={sortKey === "volume"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Média" sortKey="nota" active={sortKey === "nota"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Mín" sortKey="min" active={sortKey === "min"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Mediana" sortKey="mediana" active={sortKey === "mediana"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Máx" sortKey="max" active={sortKey === "max"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="IQR" sortKey="iqr" active={sortKey === "iqr"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Q1" sortKey="q1" active={sortKey === "q1"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Q2" sortKey="q2" active={sortKey === "q2"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Q3" sortKey="q3" active={sortKey === "q3"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Q4" sortKey="q4" active={sortKey === "q4"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Faixa" sortKey="faixa" active={sortKey === "faixa"} sortDir={sortDir} onSort={toggleSort} />
               </TableRow>
             </TableHeader>
             <TableBody>
