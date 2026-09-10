@@ -178,7 +178,6 @@ export function MonitoriaForm() {
   function salvar() {
     if (!checklist) return toast.error("Selecione a carteira.")
     if (!operadorId) return toast.error("Busque e selecione o operador.")
-    if (!ecCallId.trim()) return toast.error("Informe o EC ou Call ID.")
     if (!tabulacao) return toast.error("Selecione a tabulação.")
 
     const operador = operadores.find((o) => o.id === operadorId)!
@@ -301,7 +300,10 @@ export function MonitoriaForm() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label>EC ou Call ID</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label>EC ou Call ID</Label>
+                <span className="text-xs text-muted-foreground">Opcional</span>
+              </div>
               <Input
                 value={ecCallId}
                 onChange={(e) => setEcCallId(e.target.value)}
@@ -322,7 +324,7 @@ export function MonitoriaForm() {
 
             <div className="flex flex-col gap-1.5 sm:col-span-2">
               <div className="flex items-center justify-between gap-2">
-                <Label>Operador (banco de dados)</Label>
+                <Label>Operador</Label>
                 {carteira && (
                   <span className="text-xs text-muted-foreground">
                     {operadoresCarteira.length}{" "}
