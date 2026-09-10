@@ -19,13 +19,6 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
@@ -44,6 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useQualityData } from "@/lib/use-quality-data"
+import { useAuth } from "@/lib/auth"
 import {
   porMonitor,
   conformidadePorMonitor,
@@ -113,17 +107,25 @@ function Kpi({
 
 export function ResultadoMonitor() {
   const { monitorias, checklists, ready } = useQualityData()
+  const { user } = useAuth()
+
+  const minhasMonitorias = useMemo(() => {
+    if (!user) return []
+    const identificadores = new Set([user.nome.trim().toLowerCase(), user.usuario.trim().toLowerCase()])
+    return monitorias.filter((monitoria) => identificadores.has(monitoria.monitor.trim().toLowerCase()))
+  }, [monitorias, user])
 
   const monitores = useMemo(
-    () => Array.from(new Set(monitorias.map((m) => m.monitor))).sort(),
-    [monitorias],
+    () => Array.from(new Set(minhasMonitorias.map((m) => m.monitor))).sort(),
+    [minhasMonitorias],
   )
   const carteiras = useMemo(
     () => Array.from(new Set(monitorias.map((m) => m.carteira))).sort(),
     [monitorias],
   )
 
-  const [monitorFiltro, setMonitorFiltro] = useState<string>("todos")
+  // O resultado é sempre limitado ao monitor autenticado.
+  const monitorFiltro = "todos"
   // Conjunto vazio = todas as carteiras
   const [selecionadas, setSelecionadas] = useState<Set<string>>(new Set())
   const [dataInicio, setDataInicio] = useState<string>("")
@@ -156,14 +158,14 @@ export function ResultadoMonitor() {
 
   const filtradas = useMemo(
     () =>
-      monitorias.filter((m) => {
+      minhasMonitorias.filter((m) => {
         if (monitorFiltro !== "todos" && m.monitor !== monitorFiltro) return false
         if (!todasCarteiras && !selecionadas.has(m.carteira)) return false
         if (dataInicio && m.data < dataInicio) return false
         if (dataFim && m.data > dataFim) return false
         return true
       }),
-    [monitorias, monitorFiltro, selecionadas, todasCarteiras, dataInicio, dataFim],
+    [minhasMonitorias, monitorFiltro, selecionadas, todasCarteiras, dataInicio, dataFim],
   )
 
   const rankMonitores = useMemo(() => porMonitor(filtradas), [filtradas])
@@ -234,7 +236,7 @@ export function ResultadoMonitor() {
       ? Array.from(selecionadas)[0]
       : `${selecionadas.size} carteiras`
 
-  const monitorLabel = monitorFiltro === "todos" ? "Todos os monitores" : monitorFiltro
+  const monitorLabel = user?.nome || user?.usuario || "Meu resultado"
 
   if (!ready) {
     return <div className="p-6 text-sm text-muted-foreground">Carregando...</div>
@@ -249,24 +251,6 @@ export function ResultadoMonitor() {
           Filtros
         </div>
         <div className="flex flex-wrap items-end gap-x-6 gap-y-4 p-4">
-          {/* Monitor */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-muted-foreground">Monitor</Label>
-            <Select value={monitorFiltro} onValueChange={setMonitorFiltro}>
-              <SelectTrigger className="w-52">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os monitores</SelectItem>
-                {monitores.map((m) => (
-                  <SelectItem key={m} value={m}>
-                    {m}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Carteiras (multi) */}
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs text-muted-foreground">Carteiras</Label>

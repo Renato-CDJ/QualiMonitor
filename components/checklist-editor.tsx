@@ -22,12 +22,12 @@ import type { Checklist, ChecklistItem } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 export function ChecklistEditor() {
-  const { checklists, ready } = useQualityData()
+  const { carteiras, checklists, ready } = useQualityData()
   const [selecionadoId, setSelecionadoId] = useState<string | null>(null)
   const [rascunho, setRascunho] = useState<Checklist | null>(null)
 
-  // nova carteira dialog
-  const [novaCarteira, setNovaCarteira] = useState("")
+  // novo checklist dialog
+  const [carteiraSelecionada, setCarteiraSelecionada] = useState("")
   const [novoNome, setNovoNome] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -172,21 +172,25 @@ export function ChecklistEditor() {
     toast.success("Checklist salvo com sucesso.")
   }
 
-  function criarCarteira() {
-    if (!novaCarteira.trim()) return toast.error("Informe o nome da carteira.")
+  function criarChecklist() {
+    if (!carteiraSelecionada) return toast.error("Selecione uma carteira.")
+    const carteira = carteiras.find((item) => item.id === carteiraSelecionada)
+    if (!carteira) return toast.error("A carteira selecionada não está disponível.")
+    if (!novoNome.trim()) return toast.error("Informe o nome do checklist.")
+
     const novo: Checklist = {
       id: store.uid(),
-      carteira: novaCarteira.trim(),
-      nome: novoNome.trim() || "Novo Checklist",
+      carteira: carteira.nome,
+      nome: novoNome.trim(),
       atualizadoEm: new Date().toISOString(),
       itens: [{ id: store.uid(), texto: "Novo item", peso: 5, critico: false }],
     }
     store.setChecklists([...store.getChecklists(), novo])
     setSelecionadoId(novo.id)
-    setNovaCarteira("")
+    setCarteiraSelecionada("")
     setNovoNome("")
     setDialogOpen(false)
-    toast.success("Carteira criada.")
+    toast.success("Checklist criado.")
   }
 
   function excluirChecklist() {
@@ -216,16 +220,29 @@ export function ChecklistEditor() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Nova carteira</DialogTitle>
+              <DialogTitle>Novo checklist</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-2">
               <div className="flex flex-col gap-1.5">
-                <Label>Nome da carteira</Label>
-                <Input
-                  value={novaCarteira}
-                  onChange={(e) => setNovaCarteira(e.target.value)}
-                  placeholder="Ex: Carteira W"
-                />
+                <Label htmlFor="checklist-carteira">Carteira</Label>
+                <select
+                  id="checklist-carteira"
+                  value={carteiraSelecionada}
+                  onChange={(e) => setCarteiraSelecionada(e.target.value)}
+                  className="h-10 rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="">Selecione uma carteira</option>
+                  {carteiras.filter((carteira) => carteira.ativa).map((carteira) => (
+                    <option key={carteira.id} value={carteira.id}>
+                      {carteira.nome}
+                    </option>
+                  ))}
+                </select>
+                {!carteiras.some((carteira) => carteira.ativa) && (
+                  <p className="text-xs text-muted-foreground">
+                    Nenhuma carteira ativa cadastrada na Administração.
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label>Nome do checklist</Label>
@@ -237,8 +254,12 @@ export function ChecklistEditor() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={criarCarteira} className="gap-2">
-                <Plus className="size-4" /> Criar
+              <Button
+                onClick={criarChecklist}
+                className="gap-2"
+                disabled={!carteiras.some((carteira) => carteira.ativa)}
+              >
+                <Plus className="size-4" /> Criar checklist
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -275,13 +296,17 @@ export function ChecklistEditor() {
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
-                <Label>Carteira</Label>
+                <Label htmlFor="checklist-carteira-atual">Carteira</Label>
                 <Input
+                  id="checklist-carteira-atual"
                   value={rascunho.carteira}
-                  onChange={(e) =>
-                    setRascunho({ ...rascunho, carteira: e.target.value })
-                  }
+                  readOnly
+                  className="bg-muted/50"
+                  aria-describedby="checklist-carteira-ajuda"
                 />
+                <p id="checklist-carteira-ajuda" className="text-xs text-muted-foreground">
+                  A carteira é gerenciada na aba Administração.
+                </p>
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label>Nome do checklist</Label>
@@ -553,7 +578,7 @@ export function ChecklistEditor() {
 }
 
 // Input do nome do bloco com buffer local: enquanto o usuário digita o valor
-// fica em estado próprio e só é gravado (commit) ao sair do campo ou pressionar
+// fica em estado pr��prio e só é gravado (commit) ao sair do campo ou pressionar
 // Enter. Isso evita que renomear o bloco a cada tecla remonte o elemento e faça
 // o input perder o foco.
 function BlocoNomeInput({

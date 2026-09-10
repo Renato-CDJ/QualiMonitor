@@ -56,7 +56,6 @@ const MENUS: { id: string; label: string; icon: React.ComponentType<{ className?
       { href: "/nova-monitoria", label: "Nova Monitoria", icon: ClipboardCheck },
       { href: "/checklists", label: "Editor de Checklist", icon: ListChecks },
       { href: "/feedback", label: "Feedback", icon: MessageSquareReply },
-      { href: "/resultado-monitor", label: "Resultado Monitor", icon: UserCheck },
     ],
   },
   {
@@ -93,6 +92,7 @@ const MENU_ADMIN = {
     { href: "/admin/checklists-operadores", label: "Checklists & Operadores", icon: ClipboardList },
     { href: "/admin/carteiras", label: "Carteiras", icon: Wallet },
     { href: "/admin/tabulacoes", label: "Tabulações", icon: Layers },
+    { href: "/resultado-monitor", label: "Resultado Monitor", icon: UserCheck },
   ],
 } satisfies { id: string; label: string; icon: React.ComponentType<{ className?: string }>; items: NavItem[] }
 
