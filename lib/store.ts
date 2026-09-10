@@ -10,7 +10,6 @@ import type {
   NivelRecebimento,
   VinculoTabulacao,
 } from "./types"
-import { TABULACOES } from "./types"
 
 /**
  * Store da aplicação respaldado pelo Supabase.
@@ -79,6 +78,17 @@ const SEED_CHECKLISTS: Checklist[] = [
   },
 ]
 
+const TABULACOES_FAKE = new Set([
+  "Venda",
+  "Não Venda",
+  "Retenção",
+  "Cobrança",
+  "Suporte Técnico",
+  "Reclamação",
+  "Cancelamento",
+  "Agendamento",
+])
+
 const SEED_VINCULOS: VinculoTabulacao[] = [
   { id: "vinc-x-venda", carteira: "Carteira X", checklistId: "chk-carteira-x", tabulacao: "Venda", criadoEm: new Date().toISOString() },
   { id: "vinc-x-naovenda", carteira: "Carteira X", checklistId: "chk-carteira-x", tabulacao: "Não Venda", criadoEm: new Date().toISOString() },
@@ -118,7 +128,6 @@ const SEED_OPERADORES: Operador[] = NOMES.map((nome, i) => {
 })
 
 const MONITORES = ["Sofia Andrade", "Rafael Pinto", "Camila Duarte"]
-const TABS = ["Venda", "Não Venda", "Retenção", "Cobrança", "Suporte Técnico", "Reclamação"]
 
 function calcularNota(checklist: Checklist, apontamentos: ApontamentoItem[]): number {
   let nota = 100
@@ -147,8 +156,8 @@ function gerarMonitoriasSeed(): Monitoria[] {
       const tabsCarteira = SEED_VINCULOS.filter((v) => v.carteira === op.carteira).map((v) => v.tabulacao)
       const tabulacaoSeed =
         tabsCarteira.length > 0
-          ? tabsCarteira[Math.floor(Math.random() * tabsCarteira.length)]
-          : TABS[Math.floor(Math.random() * TABS.length)]
+  ? tabsCarteira[Math.floor(Math.random() * tabsCarteira.length)]
+  : ""
       const apontamentos: ApontamentoItem[] = checklist.itens.map((it) => {
         const r = Math.random()
         let status: ApontamentoItem["status"] = "conforme"
@@ -198,7 +207,7 @@ const cache: Cache = {
   feedbacks: [],
   recebimentos: [],
   vinculos: [],
-  tabulacoes: [...TABULACOES],
+  tabulacoes: [],
 }
 
 let hydrated = false
@@ -323,7 +332,7 @@ async function seedInicial() {
   cache.checklists = SEED_CHECKLISTS
   cache.operadores = SEED_OPERADORES
   cache.vinculos = SEED_VINCULOS
-  cache.tabulacoes = [...TABULACOES]
+  cache.tabulacoes = []
   cache.monitorias = gerarMonitoriasSeed()
   cache.feedbacks = []
   cache.recebimentos = []
@@ -377,7 +386,11 @@ async function hydrate(): Promise<void> {
       cache.feedbacks = (feedbacks ?? []).map((r) => r.data)
       cache.vinculos = (vinculos ?? []).map((r) => r.data)
       cache.recebimentos = (recebimentos ?? []).map((r) => r.data)
-      cache.tabulacoes = tabRows.map((r) => r.nome)
+      const tabulacoesReais = tabRows.map((r) => r.nome).filter((nome) => !TABULACOES_FAKE.has(nome))
+      cache.tabulacoes = tabulacoesReais
+      if (tabulacoesReais.length !== tabRows.length) {
+        void persistTabulacoes(tabRows.map((r) => r.nome), tabulacoesReais)
+      }
     }
 
     hydrated = true

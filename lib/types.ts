@@ -121,13 +121,3 @@ export interface RecebimentoOperador {
  */
 export type SiglaQuadrante = "AA" | "AB" | "BA" | "BB"
 
-export const TABULACOES = [
-  "Venda",
-  "Não Venda",
-  "Retenção",
-  "Cobrança",
-  "Suporte Técnico",
-  "Reclamação",
-  "Cancelamento",
-  "Agendamento",
-]
