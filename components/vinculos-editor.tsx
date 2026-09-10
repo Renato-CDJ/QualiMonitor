@@ -312,11 +312,18 @@ export function VinculosEditor() {
               disabled={!carteira}
             >
               <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    carteira ? "Selecione o checklist" : "Selecione a carteira primeiro"
-                  }
-                />
+                {checklistId ? (
+                  <span className="truncate">
+                    {checklistsDaCarteira.find((c) => c.id === checklistId)?.nome ??
+                      "Checklist removido"}
+                  </span>
+                ) : (
+                  <SelectValue
+                    placeholder={
+                      carteira ? "Selecione o checklist" : "Selecione a carteira primeiro"
+                    }
+                  />
+                )}
               </SelectTrigger>
               <SelectContent>
                 {checklistsDaCarteira.map((c) => (
