@@ -264,27 +264,28 @@ export function AnaliseNotas() {
   return (
     <div className="flex flex-col gap-6">
       {/* Filtros */}
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label className="text-xs text-muted-foreground">Carteira</Label>
-          <Select value={carteiraFiltro} onValueChange={setCarteiraFiltro}>
-            <SelectTrigger className="w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas as carteiras</SelectItem>
-              {carteiras.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label className="text-xs text-muted-foreground">Faixa</Label>
-          <Select value={faixaFiltro} onValueChange={setFaixaFiltro}>
-            <SelectTrigger className="w-48">
+      <div className="rounded-xl border border-border/70 bg-card/60 p-4 shadow-sm">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex min-w-[11rem] flex-1 flex-col gap-1.5 sm:flex-none">
+            <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Carteira</Label>
+            <Select value={carteiraFiltro} onValueChange={setCarteiraFiltro}>
+              <SelectTrigger className="h-10 w-full bg-background sm:w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas as carteiras</SelectItem>
+                {carteiras.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex min-w-[11rem] flex-1 flex-col gap-1.5 sm:flex-none">
+            <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Faixa</Label>
+            <Select value={faixaFiltro} onValueChange={setFaixaFiltro}>
+              <SelectTrigger className="h-10 w-full bg-background sm:w-52">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -293,24 +294,24 @@ export function AnaliseNotas() {
               <SelectItem value="bom">Q2 · Bom (75-89)</SelectItem>
               <SelectItem value="regular">Q3 · Regular (60-74)</SelectItem>
               <SelectItem value="critico">Q4 · Crítico (&lt;60)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="data-inicio" className="text-xs text-muted-foreground">
-            De
-          </Label>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex min-w-[10rem] flex-1 flex-col gap-1.5 sm:flex-none">
+            <Label htmlFor="data-inicio" className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              De
+            </Label>
           <Input
             id="data-inicio"
             type="date"
             value={dataInicio}
             max={dataFim || undefined}
             onChange={(e) => setDataInicio(e.target.value)}
-            className="w-40"
+            className="h-10 w-full bg-background sm:w-40"
           />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="data-fim" className="text-xs text-muted-foreground">
+          </div>
+          <div className="flex min-w-[10rem] flex-1 flex-col gap-1.5 sm:flex-none">
+            <Label htmlFor="data-fim" className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             Até
           </Label>
           <Input
@@ -319,12 +320,13 @@ export function AnaliseNotas() {
             value={dataFim}
             min={dataInicio || undefined}
             onChange={(e) => setDataFim(e.target.value)}
-            className="w-40"
+            className="h-10 w-full bg-background sm:w-40"
           />
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 gap-2 border-primary/30 bg-primary/5 px-4 text-primary hover:bg-primary/10 hover:text-primary"
           onClick={() => {
             setDataInicio(inicioDoMes())
             setDataFim(hojeISO())
@@ -332,9 +334,11 @@ export function AnaliseNotas() {
         >
           Mês atual
         </Button>
-        <span className="pb-1.5 text-xs text-muted-foreground">
-          {filtradas.length} monitorias analisadas
-        </span>
+          <div className="ml-auto flex h-10 items-center rounded-lg bg-muted/50 px-3 text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground">{filtradas.length}</span>
+            <span className="ml-1">monitorias analisadas</span>
+          </div>
+        </div>
       </div>
 
       {/* Distribuição por faixa de desempenho */}
