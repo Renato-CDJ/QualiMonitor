@@ -104,6 +104,38 @@ function hojeISO() {
   return new Date().toISOString().slice(0, 10)
 }
 
+function SortHeader({
+  label,
+  sortKey,
+  active,
+  sortDir,
+  onSort,
+  align = "right",
+}: {
+  label: string
+  sortKey: SortKey
+  active: boolean
+  sortDir: SortDir
+  onSort: (key: SortKey) => void
+  align?: "left" | "right"
+}) {
+  const Icon = !active ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown
+  return (
+    <TableHead className={align === "right" ? "text-right" : undefined}>
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className={`inline-flex items-center gap-1 hover:text-foreground ${
+          align === "right" ? "flex-row-reverse" : ""
+        } ${active ? "text-foreground" : ""}`}
+      >
+        {label}
+        <Icon className="size-3.5 opacity-70" />
+      </button>
+    </TableHead>
+  )
+}
+
 export function AnaliseNotas() {
   const { monitorias, ready } = useQualityData()
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
@@ -207,33 +239,6 @@ export function AnaliseNotas() {
     XLSX.writeFile(
       wb,
       `estatisticas-operadores_${carteiraNome}_${dataInicio}_a_${dataFim}.xlsx`,
-    )
-  }
-
-  function SortHeader({
-    label,
-    sortKey: key,
-    align = "right",
-  }: {
-    label: string
-    sortKey: SortKey
-    align?: "left" | "right"
-  }) {
-    const active = sortKey === key
-    const Icon = !active ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown
-    return (
-      <TableHead className={align === "right" ? "text-right" : undefined}>
-        <button
-          type="button"
-          onClick={() => toggleSort(key)}
-          className={`inline-flex items-center gap-1 hover:text-foreground ${
-            align === "right" ? "flex-row-reverse" : ""
-          } ${active ? "text-foreground" : ""}`}
-        >
-          {label}
-          <Icon className="size-3.5 opacity-70" />
-        </button>
-      </TableHead>
     )
   }
 
@@ -433,18 +438,18 @@ export function AnaliseNotas() {
           <Table>
             <TableHeader>
               <TableRow>
-                <SortHeader label="Operador" sortKey="operador" align="left" />
-                <SortHeader label="Monitorias" sortKey="volume" />
-                <SortHeader label="Média" sortKey="nota" />
-                <SortHeader label="Mín" sortKey="min" />
-                <SortHeader label="Mediana" sortKey="mediana" />
-                <SortHeader label="Máx" sortKey="max" />
-                <SortHeader label="IQR" sortKey="iqr" />
-                <SortHeader label="Q1" sortKey="q1" />
-                <SortHeader label="Q2" sortKey="q2" />
-                <SortHeader label="Q3" sortKey="q3" />
-                <SortHeader label="Q4" sortKey="q4" />
-                <SortHeader label="Faixa" sortKey="faixa" />
+                <SortHeader label="Operador" sortKey="operador" active={sortKey === "operador"} sortDir={sortDir} onSort={toggleSort} align="left" />
+                <SortHeader label="Monitorias" sortKey="volume" active={sortKey === "volume"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Média" sortKey="nota" active={sortKey === "nota"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Mín" sortKey="min" active={sortKey === "min"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Mediana" sortKey="mediana" active={sortKey === "mediana"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Máx" sortKey="max" active={sortKey === "max"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="IQR" sortKey="iqr" active={sortKey === "iqr"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Q1" sortKey="q1" active={sortKey === "q1"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Q2" sortKey="q2" active={sortKey === "q2"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Q3" sortKey="q3" active={sortKey === "q3"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Q4" sortKey="q4" active={sortKey === "q4"} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Faixa" sortKey="faixa" active={sortKey === "faixa"} sortDir={sortDir} onSort={toggleSort} />
               </TableRow>
             </TableHeader>
             <TableBody>
