@@ -7,7 +7,7 @@ export default function ResultadoMonitorPage() {
       <div className="flex flex-col gap-6">
         <PageHeader
           title="Resultado por Monitor"
-          description="Desempenho consolidado por monitor com filtros de monitor, carteiras e período. Inclui notas médias, conformidades e inconformidades pontuadas, insights por carteira e ranking de monitores."
+          description="Consulte somente os resultados das monitorias realizadas por você, com filtros de carteira e período."
         />
         <ResultadoMonitor />
       </div>
