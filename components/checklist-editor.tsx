@@ -437,9 +437,9 @@ export function ChecklistEditor() {
                                 <div key={it.id} className="relative flex items-center pl-8">
                                   {/* ramificação horizontal */}
                                   <span className="absolute left-0 top-1/2 h-px w-8 bg-foreground/20" />
-                                  <div
-                                    className="flex min-h-11 flex-1 items-center gap-2 rounded-md border bg-card pr-2"
-                                    style={
+                                    <div
+                                      className="flex min-h-11 flex-1 flex-col gap-2 rounded-md border bg-card p-2.5"
+                                      style={
                                       cor
                                         ? {
                                             backgroundColor: `color-mix(in oklch, ${cor} 13%, var(--card))`,
@@ -448,8 +448,9 @@ export function ChecklistEditor() {
                                         : undefined
                                     }
                                   >
-                                    {/* peso */}
-                                    <input
+                                    <div className="flex w-full min-w-0 items-center gap-2">
+                                      {/* peso */}
+                                      <input
                                       type="number"
                                       min={0}
                                       max={100}
@@ -487,16 +488,6 @@ export function ChecklistEditor() {
                                         }
                                         aria-label="Texto do item"
                                         className="min-w-0 border-0 bg-transparent text-sm outline-none"
-                                      />
-                                      <textarea
-                                        value={it.descricao ?? ""}
-                                        onChange={(e) =>
-                                          atualizarItem(it.id, { descricao: e.target.value })
-                                        }
-                                        aria-label="Descrição do item"
-                                        placeholder="Descrição ou orientação opcional"
-                                        rows={1}
-                                        className="min-h-5 w-full resize-none border-0 bg-transparent text-xs leading-5 text-muted-foreground outline-none placeholder:text-muted-foreground/60"
                                       />
                                     </div>
                                     {/* mover para outro bloco */}
@@ -552,6 +543,25 @@ export function ChecklistEditor() {
                                     >
                                       <Trash2 className="size-4" />
                                     </button>
+                                    </div>
+                                    <div className="w-full rounded-md border border-dashed border-border/80 bg-muted/25 px-3 py-2">
+                                      <div className="mb-1 flex items-center gap-2">
+                                        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                                          Orientação do item
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground/60">Opcional</span>
+                                      </div>
+                                      <textarea
+                                        value={it.descricao ?? ""}
+                                        onChange={(e) =>
+                                          atualizarItem(it.id, { descricao: e.target.value })
+                                        }
+                                        aria-label="Descrição do item"
+                                        placeholder="Explique o que deve ser observado durante a monitoria..."
+                                        rows={2}
+                                        className="w-full resize-none border-0 bg-transparent p-0 text-xs leading-5 text-foreground outline-none placeholder:text-muted-foreground/60"
+                                      />
+                                    </div>
                                   </div>
                                 </div>
                               )
