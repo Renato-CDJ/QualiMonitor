@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: qualimonitor-backend
+Version: 0.1.0
+Summary: Backend Python do QualiMonitor
+Requires-Python: >=3.11
+Requires-Dist: Django<6.0,>=5.1
+Requires-Dist: dj-database-url<3.0,>=2.2
+Requires-Dist: psycopg[binary]<4.0,>=3.2
+Requires-Dist: whitenoise<7.0,>=6.7
+Requires-Dist: openpyxl<4.0,>=3.1

@@ -1,0 +1,5 @@
+Django<6.0,>=5.1
+dj-database-url<3.0,>=2.2
+psycopg[binary]<4.0,>=3.2
+whitenoise<7.0,>=6.7
+openpyxl<4.0,>=3.1

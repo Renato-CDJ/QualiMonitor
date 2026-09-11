@@ -14,6 +14,10 @@ dependencies = [
 [tool.django]
 settings = "config.settings"
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["apps*", "config*"]
+
 [build-system]
 requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
