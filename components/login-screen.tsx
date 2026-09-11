@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { useAuth } from "@/lib/auth"
 import { NeonTitle } from "@/components/neon-title"
 import { TypewriterCredit } from "@/components/typewriter-credit"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export function LoginScreen() {
   const { login, loginVisitante, exigeSenha } = useAuth()
@@ -33,7 +34,10 @@ export function LoginScreen() {
   }
 
   return (
-    <main className="relative flex min-h-svh flex-col items-center justify-start overflow-hidden bg-white px-4 pb-10 pt-[18vh] text-[#242424]">
+    <main className="relative flex min-h-svh flex-col items-center justify-start overflow-hidden bg-background px-4 pb-10 pt-[18vh] text-foreground transition-colors duration-300">
+      <div className="absolute right-4 top-4 z-20 md:right-6 md:top-6">
+        <ThemeToggle />
+      </div>
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-24 -top-24 size-80 animate-pulse rounded-full bg-[#f26522]/10 blur-3xl [animation-duration:6s]" />
         <div className="absolute -bottom-32 -right-20 size-96 animate-pulse rounded-full bg-[#f26522]/10 blur-3xl [animation-duration:8s]" />
@@ -55,12 +59,12 @@ export function LoginScreen() {
       </div>
 
       <div className="relative z-10 w-full max-w-sm animate-in fade-in zoom-in-95 duration-500">
-        <div className="rounded-2xl border border-[#242424]/15 bg-white/90 p-6 shadow-[0_18px_50px_rgba(36,36,36,0.12)] backdrop-blur-sm transition-shadow duration-300 hover:shadow-[0_22px_60px_rgba(242,101,34,0.16)]">
+        <div className="rounded-2xl border border-[#242424]/15 bg-card p-6 shadow-[0_18px_50px_rgba(36,36,36,0.12)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-shadow duration-300 hover:shadow-[0_22px_60px_rgba(242,101,34,0.16)]">
           <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="usuario" className="text-sm font-medium text-[#242424]">Nome de usuário</Label>
+              <Label htmlFor="usuario" className="text-sm font-medium text-foreground">Nome de usuário</Label>
               <div className="relative">
-                <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#777] transition-colors duration-200 peer-focus:text-[#f26522]" />
+                <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors duration-200 peer-focus:text-[#f26522]" />
                 <Input
                   id="usuario"
                   autoFocus
@@ -68,21 +72,21 @@ export function LoginScreen() {
                   placeholder="Digite seu nome de usuário"
                   value={usuario}
                   onChange={(e) => { setUsuario(e.target.value); if (erro) setErro(null) }}
-                  className="peer h-10 border-[#242424]/20 bg-white pl-9 text-[#242424] placeholder:text-[#888] transition-all duration-200 focus-visible:-translate-y-0.5 focus-visible:border-[#f26522] focus-visible:ring-[#f26522]/25"
+                  className="peer h-10 border-[#242424]/20 bg-background pl-9 text-foreground placeholder:text-muted-foreground transition-all duration-200 focus-visible:-translate-y-0.5 focus-visible:border-[#f26522] focus-visible:ring-[#f26522]/25"
                   aria-invalid={!!erro}
                   aria-describedby={erro ? "login-erro" : undefined}
                 />
               {usuario.trim() && !erro && <Check aria-hidden className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[#f26522] animate-in zoom-in-50" />}
               </div>
-              {!precisaSenha && usuario.trim() && !erro && <p className="text-xs text-[#777] animate-in fade-in">Você entrará com acesso padrão.</p>}
+              {!precisaSenha && usuario.trim() && !erro && <p className="text-xs text-muted-foreground animate-in fade-in">Você entrará com acesso padrão.</p>}
               {erro && <p id="login-erro" className="animate-in text-sm text-red-600 fade-in slide-in-from-top-1">{erro}</p>}
             </div>
 
             {precisaSenha && (
               <div className="flex animate-in flex-col gap-1.5 fade-in slide-in-from-top-1 duration-300">
-                <Label htmlFor="senha" className="text-sm font-medium text-[#242424]">Senha de administrador</Label>
+                <Label htmlFor="senha" className="text-sm font-medium text-foreground">Senha de administrador</Label>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#777]" />
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="senha"
                     type={mostrarSenha ? "text" : "password"}
@@ -90,10 +94,10 @@ export function LoginScreen() {
                     placeholder="Digite sua senha"
                     value={senha}
                     onChange={(e) => { setSenha(e.target.value); if (erro) setErro(null) }}
-                    className="h-10 border-[#242424]/20 bg-white px-9 text-[#242424] placeholder:text-[#888] transition-all duration-200 focus-visible:-translate-y-0.5 focus-visible:border-[#f26522] focus-visible:ring-[#f26522]/25"
+                    className="h-10 border-[#242424]/20 bg-background px-9 text-foreground placeholder:text-muted-foreground transition-all duration-200 focus-visible:-translate-y-0.5 focus-visible:border-[#f26522] focus-visible:ring-[#f26522]/25"
                     aria-invalid={!!erro}
                   />
-                  <button type="button" onClick={() => setMostrarSenha((v) => !v)} aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"} className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-[#777] transition-colors hover:text-[#f26522]">
+                  <button type="button" onClick={() => setMostrarSenha((v) => !v)} aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"} className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground transition-colors hover:text-[#f26522]">
                     {mostrarSenha ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </div>
@@ -105,13 +109,13 @@ export function LoginScreen() {
             </Button>
           </form>
 
-          <div className="my-5 flex items-center gap-3"><span className="h-px flex-1 bg-[#242424]/15" /><span className="text-xs uppercase tracking-wide text-[#777]">ou</span><span className="h-px flex-1 bg-[#242424]/15" /></div>
+          <div className="my-5 flex items-center gap-3"><span className="h-px flex-1 bg-[#242424]/15" /><span className="text-xs uppercase tracking-wide text-muted-foreground">ou</span><span className="h-px flex-1 bg-[#242424]/15" /></div>
 
-          <Button type="button" variant="outline" onClick={loginVisitante} disabled={carregando} className="group h-10 w-full gap-2 border-[#242424]/20 bg-white text-[#242424] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#f26522] hover:bg-[#fff4ee] hover:text-[#242424] hover:shadow-[0_8px_18px_rgba(242,101,34,0.12)]">
+          <Button type="button" variant="outline" onClick={loginVisitante} disabled={carregando} className="group h-10 w-full gap-2 border-border bg-background text-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-[#f26522] hover:bg-[#fff4ee] hover:text-foreground hover:shadow-[0_8px_18px_rgba(242,101,34,0.12)]">
             <Eye className="size-4" /> Acessar como Visitante <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5" />
           </Button>
 
-          <div className="mt-6 flex items-center justify-center gap-1.5 text-center text-xs text-[#777]"><ShieldCheck className="size-3.5 shrink-0 text-[#f26522]" /> Visitante tem acesso somente para visualizar e filtrar</div>
+          <div className="mt-6 flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground"><ShieldCheck className="size-3.5 shrink-0 text-[#f26522]" /> Visitante tem acesso somente para visualizar e filtrar</div>
         </div>
       </div>
 

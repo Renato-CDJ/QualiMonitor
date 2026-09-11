@@ -35,11 +35,13 @@ export function TypewriterCredit() {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-3 z-10 flex justify-center px-4">
-      <span className="flex items-center gap-1.5 text-[11px]">
-        <span className="font-medium text-foreground" aria-label={TEXTO}>
+      <span className="rounded-full border border-border/70 bg-background/90 px-3 py-1.5 text-[11px] text-foreground shadow-sm backdrop-blur-sm">
+        <span className="flex items-center gap-1.5">
+        <span className="font-semibold text-foreground" aria-label={TEXTO}>
           {texto}
         </span>
         <span className="inline-block h-3.5 w-px animate-pulse bg-primary" aria-hidden="true" />
+        </span>
       </span>
     </div>
   )
