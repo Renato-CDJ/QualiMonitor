@@ -311,6 +311,56 @@ export function paretoItens(monitorias: Monitoria[], checklists: Checklist[]) {
   })
 }
 
+export interface HistoricoApontamento {
+  monitoriaId: string
+  data: string
+  operadorId: string
+  operador: string
+  monitor: string
+  tabulacao: string
+  nota: number
+  itemId: string
+  texto: string
+  bloco: string
+  status: "conforme" | "inconforme" | "na"
+}
+
+/**
+ * Histórico cronológico dos apontamentos de cada operador. Mantém uma linha
+ * por item avaliado para permitir comparar o comportamento entre monitorias.
+ */
+export function historicoApontamentos(
+  monitorias: Monitoria[],
+  checklists: Checklist[],
+  operador?: string,
+): HistoricoApontamento[] {
+  const meta = new Map<string, { texto: string; bloco: string }>()
+  for (const checklist of checklists) {
+    for (const item of checklist.itens) {
+      meta.set(item.id, { texto: item.texto, bloco: item.bloco ?? "Sem categoria" })
+    }
+  }
+
+  return monitorias
+    .filter((monitoria) => !operador || monitoria.operadorNome === operador)
+    .flatMap((monitoria) =>
+      monitoria.apontamentos.map((apontamento) => ({
+        monitoriaId: monitoria.id,
+        data: monitoria.data,
+        operadorId: monitoria.operadorId,
+        operador: monitoria.operadorNome,
+        monitor: monitoria.monitor,
+        tabulacao: monitoria.tabulacao,
+        nota: monitoria.nota,
+        itemId: apontamento.itemId,
+        texto: meta.get(apontamento.itemId)?.texto ?? apontamento.itemId,
+        bloco: meta.get(apontamento.itemId)?.bloco ?? "Sem categoria",
+        status: apontamento.status,
+      })),
+    )
+    .sort((a, b) => b.data.localeCompare(a.data) || a.texto.localeCompare(b.texto, "pt-BR"))
+}
+
 export interface ItemAderencia {
   itemId: string
   texto: string

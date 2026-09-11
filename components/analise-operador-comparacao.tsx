@@ -1,10 +1,14 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ChevronRight, Layers } from "lucide-react"
+import { CalendarDays, ChevronRight, History, Layers } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { CardTitleHint } from "@/components/card-title-hint"
-import { analiseCategoriaPorOperador } from "@/lib/aggregations"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { analiseCategoriaPorOperador, historicoApontamentos } from "@/lib/aggregations"
 import type { Checklist, Monitoria } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -15,175 +19,75 @@ function pctTone(pct: number) {
   return "text-destructive"
 }
 
-export function AnalisOperadorComparacao({
-  monitorias,
-  checklists,
-  carteira,
-}: {
-  monitorias: Monitoria[]
-  checklists: Checklist[]
-  carteira?: string
-}) {
-  const dados = useMemo(
-    () => analiseCategoriaPorOperador(monitorias, checklists, carteira),
-    [monitorias, checklists, carteira],
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric" }).format(
+    new Date(`${value}T12:00:00`),
   )
+}
 
+export function AnalisOperadorComparacao({ monitorias, checklists, carteira }: { monitorias: Monitoria[]; checklists: Checklist[]; carteira?: string }) {
+  const dados = useMemo(() => analiseCategoriaPorOperador(monitorias, checklists, carteira), [monitorias, checklists, carteira])
+  const operadores = useMemo(() => Array.from(new Set(monitorias.map((m) => m.operadorNome))).sort((a, b) => a.localeCompare(b, "pt-BR")), [monitorias])
   const [abertos, setAbertos] = useState<Set<string>>(new Set())
+  const [operadorFiltro, setOperadorFiltro] = useState("todos")
+  const [dataInicio, setDataInicio] = useState("")
+  const [dataFim, setDataFim] = useState("")
 
-  function toggle(bloco: string) {
-    setAbertos((prev) => {
-      const next = new Set(prev)
-      if (next.has(bloco)) next.delete(bloco)
-      else next.add(bloco)
-      return next
-    })
-  }
-
-  // Agrupa por bloco
-  const blocoOperador = new Map<string, typeof dados>()
-  for (const item of dados) {
-    const key = `${item.bloco}`
-    if (!blocoOperador.has(key)) blocoOperador.set(key, [])
-    blocoOperador.get(key)!.push(item)
-  }
-
-  const blocos = Array.from(blocoOperador.entries())
-    .map(([bloco, itens]) => {
+  const blocos = useMemo(() => {
+    const mapa = new Map<string, typeof dados>()
+    for (const item of dados) {
+      if (!mapa.has(item.bloco)) mapa.set(item.bloco, [])
+      mapa.get(item.bloco)!.push(item)
+    }
+    const round1 = (n: number) => Math.round(n * 10) / 10
+    return Array.from(mapa.entries()).map(([bloco, itens]) => {
       const conforme = itens.reduce((s, i) => s + i.conforme, 0)
       const inconforme = itens.reduce((s, i) => s + i.inconforme, 0)
       const qtd = conforme + inconforme
-      const round1 = (n: number) => Math.round(n * 10) / 10
-      return {
-        bloco,
-        conforme,
-        inconforme,
-        qtd,
-        pctConforme: qtd ? round1((conforme / qtd) * 100) : 0,
-        pctInconforme: qtd ? round1((inconforme / qtd) * 100) : 0,
-        itens: itens.sort((a, b) => a.operador.localeCompare(b.operador, "pt-BR")),
-      }
-    })
-    .sort((a, b) => a.bloco.localeCompare(b.bloco, "pt-BR"))
+      return { bloco, conforme, inconforme, qtd, pctConforme: qtd ? round1((conforme / qtd) * 100) : 0, pctInconforme: qtd ? round1((inconforme / qtd) * 100) : 0, itens: itens.sort((a, b) => a.operador.localeCompare(b.operador, "pt-BR")) }
+    }).sort((a, b) => a.bloco.localeCompare(b.bloco, "pt-BR"))
+  }, [dados])
 
-  const todosAbertos = blocos.length > 0 && abertos.size === blocos.length
+  const historico = useMemo(() => historicoApontamentos(monitorias, checklists, operadorFiltro === "todos" ? undefined : operadorFiltro).filter((item) => (!dataInicio || item.data >= dataInicio) && (!dataFim || item.data <= dataFim)), [monitorias, checklists, operadorFiltro, dataInicio, dataFim])
+  const agrupado = useMemo(() => {
+    const mapa = new Map<string, typeof historico>()
+    for (const item of historico) {
+      const chave = item.data
+      if (!mapa.has(chave)) mapa.set(chave, [])
+      mapa.get(chave)!.push(item)
+    }
+    return Array.from(mapa.entries()).sort(([a], [b]) => b.localeCompare(a))
+  }, [historico])
 
-  function toggleTodos() {
-    setAbertos(todosAbertos ? new Set() : new Set(blocos.map((b) => b.bloco)))
+  function toggle(bloco: string) {
+    setAbertos((prev) => { const next = new Set(prev); next.has(bloco) ? next.delete(bloco) : next.add(bloco); return next })
   }
+  const todosAbertos = blocos.length > 0 && abertos.size === blocos.length
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <CardTitleHint
-            icon={<Layers className="size-4 text-muted-foreground" />}
-            title="Análise por Operador e Item"
-            description="Desempenho de cada operador por item do checklist. Clique em um tópico para abrir e ver como cada operador foi avaliado."
-          />
-          {blocos.length > 0 && (
-            <button
-              type="button"
-              onClick={toggleTodos}
-              className="text-xs font-medium text-primary hover:text-primary/80"
-            >
-              {todosAbertos ? "Recolher tudo" : "Expandir tudo"}
-            </button>
-          )}
-        </div>
+        <CardTitleHint icon={<Layers className="size-4 text-muted-foreground" />} title="Comparativo de evolução" description="Entenda o desempenho por tópico e acompanhe como os apontamentos mudaram entre monitorias." />
       </CardHeader>
       <CardContent>
-        {blocos.length === 0 ? (
-          <p className="py-16 text-center text-sm text-muted-foreground">
-            Sem apontamentos para os filtros selecionados.
-          </p>
-        ) : (
-          <div className="overflow-hidden rounded-lg border border-border">
-            {/* Cabeçalho */}
-            <div className="grid grid-cols-[1fr_100px_100px_100px] items-center gap-2 border-b border-border bg-secondary/50 px-3 py-2 text-xs font-medium text-muted-foreground">
-              <span>Tópico</span>
-              <span className="text-right">Qtd Itens</span>
-              <span className="text-right">% Conforme</span>
-              <span className="text-right">% Inconforme</span>
+        <Tabs defaultValue="comparativo" className="flex flex-col gap-5">
+          <TabsList className="w-fit">
+            <TabsTrigger value="comparativo">Visão por tópico</TabsTrigger>
+            <TabsTrigger value="historico" className="gap-2"><History className="size-4" /> Histórico de apontamentos</TabsTrigger>
+          </TabsList>
+          <TabsContent value="comparativo" className="mt-0">
+            <div className="mb-4 flex justify-end">{blocos.length > 0 && <button type="button" onClick={() => setAbertos(todosAbertos ? new Set() : new Set(blocos.map((b) => b.bloco)))} className="text-xs font-medium text-primary hover:text-primary/80">{todosAbertos ? "Recolher tudo" : "Expandir tudo"}</button>}</div>
+            {blocos.length === 0 ? <p className="py-16 text-center text-sm text-muted-foreground">Sem apontamentos para os filtros selecionados.</p> : <div className="overflow-x-auto rounded-lg border border-border"><div className="min-w-[620px]"><div className="grid grid-cols-[1fr_100px_100px_100px] gap-2 border-b bg-secondary/50 px-3 py-2 text-xs font-medium text-muted-foreground"><span>Tópico</span><span className="text-right">Qtd. itens</span><span className="text-right">% Conforme</span><span className="text-right">% Inconforme</span></div>{blocos.map((bloco, idx) => { const aberto = abertos.has(bloco.bloco); return <div key={bloco.bloco}><button type="button" onClick={() => toggle(bloco.bloco)} aria-expanded={aberto} className={cn("grid w-full grid-cols-[1fr_100px_100px_100px] items-center gap-2 px-3 py-3 text-left transition-colors hover:bg-secondary/40", idx % 2 === 1 && "bg-secondary/20")}><span className="flex items-center gap-2 font-medium"><ChevronRight className={cn("size-4 text-muted-foreground transition-transform", aberto && "rotate-90")} />{bloco.bloco}</span><span className="text-right tabular-nums font-medium">{bloco.qtd}</span><span className={cn("text-right tabular-nums font-medium", pctTone(bloco.pctConforme))}>{bloco.pctConforme}%</span><span className="text-right tabular-nums font-medium text-destructive">{bloco.pctInconforme > 0 ? `${bloco.pctInconforme}%` : "—"}</span></button>{aberto && <div className="border-t bg-background px-3 py-3">{Array.from(new Map(bloco.itens.map((item) => [item.itemId, item])).values()).map((item) => <div key={item.itemId} className="mb-3 last:mb-0"><p className="mb-2 pl-6 text-sm text-muted-foreground">{item.texto}</p><div className="ml-6 flex flex-col gap-1">{bloco.itens.filter((i) => i.itemId === item.itemId).map((i) => <div key={i.operadorId} className="grid grid-cols-[1fr_100px_100px] gap-2 text-xs"><span className="truncate text-muted-foreground">{i.operador}</span><span className={cn("text-right tabular-nums", pctTone(i.pctConforme))}>{i.pctConforme}% conforme</span><span className="text-right tabular-nums text-destructive">{i.pctInconforme > 0 ? `${i.pctInconforme}% inconforme` : "—"}</span></div>)}</div></div>)}</div>}</div> })}</div></div>}
+          </TabsContent>
+          <TabsContent value="historico" className="mt-0 flex flex-col gap-4">
+            <div className="grid gap-3 rounded-lg border bg-secondary/20 p-4 sm:grid-cols-3">
+              <div className="flex flex-col gap-1.5"><Label htmlFor="historico-operador" className="text-xs text-muted-foreground">Operador</Label><Select value={operadorFiltro} onValueChange={setOperadorFiltro}><SelectTrigger id="historico-operador"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="todos">Todos os operadores</SelectItem>{operadores.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></div>
+              <div className="flex flex-col gap-1.5"><Label htmlFor="historico-inicio" className="text-xs text-muted-foreground">De</Label><div className="relative"><CalendarDays className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" /><Input id="historico-inicio" type="date" value={dataInicio} max={dataFim || undefined} onChange={(e) => setDataInicio(e.target.value)} className="pl-9" /></div></div>
+              <div className="flex flex-col gap-1.5"><Label htmlFor="historico-fim" className="text-xs text-muted-foreground">Até</Label><div className="relative"><CalendarDays className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" /><Input id="historico-fim" type="date" value={dataFim} min={dataInicio || undefined} onChange={(e) => setDataFim(e.target.value)} className="pl-9" /></div></div>
             </div>
-
-            {blocos.map((bloco, idx) => {
-              const aberto = abertos.has(bloco.bloco)
-              return (
-                <div key={bloco.bloco}>
-                  {/* Linha do bloco */}
-                  <button
-                    type="button"
-                    onClick={() => toggle(bloco.bloco)}
-                    aria-expanded={aberto}
-                    className={cn(
-                      "grid w-full grid-cols-[1fr_100px_100px_100px] items-center gap-2 px-3 py-2.5 text-left transition-colors hover:bg-secondary/40",
-                      idx % 2 === 1 && "bg-secondary/20",
-                    )}
-                  >
-                    <span className="flex items-center gap-1.5 font-medium">
-                      <ChevronRight
-                        className={cn(
-                          "size-4 shrink-0 text-muted-foreground transition-transform",
-                          aberto && "rotate-90",
-                        )}
-                      />
-                      {bloco.bloco}
-                    </span>
-                    <span className="text-right tabular-nums font-medium">{bloco.qtd}</span>
-                    <span className={cn("text-right tabular-nums font-medium", pctTone(bloco.pctConforme))}>
-                      {bloco.pctConforme}%
-                    </span>
-                    <span
-                      className={cn(
-                        "text-right tabular-nums font-medium",
-                        bloco.pctInconforme > 0 ? "text-destructive" : "text-muted-foreground",
-                      )}
-                    >
-                      {bloco.pctInconforme > 0 ? `${bloco.pctInconforme}%` : "—"}
-                    </span>
-                  </button>
-
-                  {/* Itens expandidos */}
-                  {aberto &&
-                    Array.from(new Map(bloco.itens.map((item) => [item.itemId, item])).values()).map((item) => (
-                      <div
-                        key={item.itemId}
-                        className="border-t border-border/60 bg-background px-3 py-2.5 text-sm"
-                      >
-                        <div className="mb-2 flex items-start gap-2 pl-6">
-                          <span className="flex-1 text-muted-foreground">{item.texto}</span>
-                        </div>
-                        <div className="ml-6 grid grid-cols-[120px_120px_120px_120px] gap-2 text-xs">
-                          <span className="font-medium text-muted-foreground">Operador</span>
-                          <span className="text-right font-medium text-muted-foreground">Conforme</span>
-                          <span className="text-right font-medium text-muted-foreground">% Conforme</span>
-                          <span className="text-right font-medium text-muted-foreground">% Inconforme</span>
-                        </div>
-                        <div className="ml-6 flex flex-col gap-1">
-                          {bloco.itens
-                            .filter((operadorItem) => operadorItem.itemId === item.itemId)
-                            .sort((a, b) => a.operador.localeCompare(b.operador, "pt-BR"))
-                            .map((operadorItem) => (
-                              <div key={operadorItem.operadorId} className="grid grid-cols-[120px_120px_120px_120px] gap-2 py-1 text-xs">
-                                <span className="truncate text-muted-foreground">{operadorItem.operador}</span>
-                                <span className="text-right tabular-nums">{operadorItem.conforme}</span>
-                                <span className={cn("text-right tabular-nums", pctTone(operadorItem.pctConforme))}>
-                                  {operadorItem.pctConforme}%
-                                </span>
-                                <span className={cn("text-right tabular-nums", operadorItem.pctInconforme > 0 ? "text-destructive" : "text-muted-foreground")}>
-                                  {operadorItem.pctInconforme > 0 ? `${operadorItem.pctInconforme}%` : "—"}
-                                </span>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              )
-            })}
-          </div>
-        )}
+            {agrupado.length === 0 ? <p className="py-16 text-center text-sm text-muted-foreground">Nenhum apontamento encontrado nesse período.</p> : <div className="flex flex-col gap-3">{agrupado.map(([data, itens]) => <div key={data} className="overflow-hidden rounded-lg border"><div className="flex items-center justify-between border-b bg-secondary/40 px-4 py-3"><div><p className="font-semibold">{formatDate(data)}</p><p className="text-xs text-muted-foreground">{itens[0].operador} · {itens[0].monitor}</p></div><span className="text-xs text-muted-foreground">{itens.length} apontamento{itens.length === 1 ? "" : "s"}</span></div><div className="divide-y">{itens.map((item) => <div key={`${item.monitoriaId}-${item.itemId}`} className="grid gap-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_120px_90px] sm:items-center"><div><p className="text-sm font-medium">{item.texto}</p><p className="text-xs text-muted-foreground">{item.bloco} · {item.tabulacao}</p></div><span className={cn("text-xs font-medium", item.status === "inconforme" ? "text-destructive" : item.status === "conforme" ? "text-chart-5" : "text-muted-foreground")}>{item.status === "inconforme" ? "Inconforme" : item.status === "conforme" ? "Conforme" : "N.A."}</span><span className="text-xs tabular-nums text-muted-foreground">Nota {item.nota}</span></div>)}</div></div>)}</div>}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   )
