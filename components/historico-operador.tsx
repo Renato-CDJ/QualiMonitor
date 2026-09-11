@@ -9,7 +9,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   XCircle,
-  MinusCircle,
   Activity,
   ClipboardList,
   Grid2x2,

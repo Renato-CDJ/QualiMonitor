@@ -39,6 +39,39 @@ function hojeISO() {
   return new Date().toISOString().slice(0, 10)
 }
 
+function SortHeader({
+  label,
+  sortKey,
+  activeSortKey,
+  sortDir,
+  onSort,
+  align = "right",
+}: {
+  label: string
+  sortKey: SortKey
+  activeSortKey: SortKey
+  sortDir: SortDir
+  onSort: (key: SortKey) => void
+  align?: "left" | "right"
+}) {
+  const active = activeSortKey === sortKey
+  const Icon = !active ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown
+  return (
+    <TableHead className={align === "right" ? "text-right" : undefined}>
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className={`inline-flex items-center gap-1 hover:text-foreground ${
+          align === "right" ? "flex-row-reverse" : ""
+        } ${active ? "text-foreground" : ""}`}
+      >
+        {label}
+        <Icon className="size-3.5 opacity-70" />
+      </button>
+    </TableHead>
+  )
+}
+
 export function Operadores() {
   const { monitorias, ready } = useQualityData()
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
@@ -103,33 +136,6 @@ export function Operadores() {
       // texto começa A-Z (asc), números começam do maior (desc)
       setSortDir(key === "operador" ? "asc" : "desc")
     }
-  }
-
-  function SortHeader({
-    label,
-    sortKey: key,
-    align = "right",
-  }: {
-    label: string
-    sortKey: SortKey
-    align?: "left" | "right"
-  }) {
-    const active = sortKey === key
-    const Icon = !active ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown
-    return (
-      <TableHead className={align === "right" ? "text-right" : undefined}>
-        <button
-          type="button"
-          onClick={() => toggleSort(key)}
-          className={`inline-flex items-center gap-1 hover:text-foreground ${
-            align === "right" ? "flex-row-reverse" : ""
-          } ${active ? "text-foreground" : ""}`}
-        >
-          {label}
-          <Icon className="size-3.5 opacity-70" />
-        </button>
-      </TableHead>
-    )
   }
 
   if (!ready) {
@@ -210,13 +216,13 @@ export function Operadores() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-10">#</TableHead>
-                <SortHeader label="Operador" sortKey="operador" align="left" />
-                <SortHeader label="Monitorias" sortKey="volume" />
-                <SortHeader label="Nota média" sortKey="nota" />
-                <SortHeader label="Mín" sortKey="min" />
-                <SortHeader label="Mediana" sortKey="mediana" />
-                <SortHeader label="Máx" sortKey="max" />
-                <SortHeader label="Faixa" sortKey="faixa" />
+                <SortHeader label="Operador" sortKey="operador" activeSortKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="left" />
+                <SortHeader label="Monitorias" sortKey="volume" activeSortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Nota média" sortKey="nota" activeSortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Mín" sortKey="min" activeSortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Mediana" sortKey="mediana" activeSortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Máx" sortKey="max" activeSortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Faixa" sortKey="faixa" activeSortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
               </TableRow>
             </TableHeader>
             <TableBody>

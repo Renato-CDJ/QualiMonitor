@@ -34,7 +34,7 @@ import type {
   StatusItem,
 } from "@/lib/types"
 import { store } from "@/lib/store"
-import { notaColorClass, notaBadgeClass, faixaNota, formatarData } from "@/lib/analytics"
+import { notaColorClass, faixaNota, formatarData } from "@/lib/analytics"
 import { cn } from "@/lib/utils"
 
 const STATUS_LABEL: Record<StatusItem, string> = {

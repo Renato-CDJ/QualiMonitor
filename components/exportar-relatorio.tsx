@@ -101,7 +101,7 @@ function baixarExcel(arquivo: string, planilhas: Planilha[]) {
     let nome = abaSegura(p.aba) || "Planilha"
     // garante unicidade dos nomes de aba
     let sufixo = 2
-    let base = nome
+    const base = nome
     while (usados.has(nome)) {
       const corte = base.slice(0, 31 - String(sufixo).length - 1)
       nome = `${corte} ${sufixo}`
