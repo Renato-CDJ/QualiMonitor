@@ -19,12 +19,12 @@ export function NeonTitle({ text = "QualiMonitor" }: { text?: string }) {
     >
       <defs>
         <filter id="qm-blueFX" x="-15%" y="-30%" width="130%" height="160%">
-          <feDropShadow dx="0" dy="6" stdDeviation="10" floodColor="rgba(14,165,233,0.5)" />
-          <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="rgba(56,189,248,0.35)" />
+          <feDropShadow dx="0" dy="6" stdDeviation="10" floodColor="rgba(242,101,34,0.5)" />
+          <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="rgba(255,179,128,0.45)" />
         </filter>
 
         <filter id="qm-headsetGlow" x="-80%" y="-80%" width="260%" height="260%">
-          <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="rgba(56,189,248,0.9)" />
+          <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="rgba(255,179,128,0.9)" />
           <feDropShadow dx="0" dy="0" stdDeviation="9" floodColor="rgba(14,165,233,0.6)" />
         </filter>
 
@@ -48,11 +48,11 @@ export function NeonTitle({ text = "QualiMonitor" }: { text?: string }) {
         </linearGradient>
 
         <linearGradient id="qm-barLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0" />
-          <stop offset="25%" stopColor="#0ea5e9" stopOpacity="1" />
-          <stop offset="50%" stopColor="#bae6fd" stopOpacity="1" />
-          <stop offset="75%" stopColor="#0ea5e9" stopOpacity="1" />
-          <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
+          <stop offset="0%" stopColor="#f26522" stopOpacity="0" />
+          <stop offset="25%" stopColor="#f26522" stopOpacity="1" />
+          <stop offset="50%" stopColor="#ffd2bc" stopOpacity="1" />
+          <stop offset="75%" stopColor="#f26522" stopOpacity="1" />
+          <stop offset="100%" stopColor="#f26522" stopOpacity="0" />
         </linearGradient>
 
         <filter id="qm-barGlow" x="-20%" y="-200%" width="140%" height="500%">
@@ -89,7 +89,7 @@ export function NeonTitle({ text = "QualiMonitor" }: { text?: string }) {
           fontWeight="800"
           fontFamily="'Arial Black', 'Helvetica Neue', sans-serif"
           letterSpacing="-2"
-          fill="#0ea5e9"
+          fill="#f26522"
           filter="url(#qm-blueFX)"
         >
           {text}
@@ -117,7 +117,7 @@ export function NeonTitle({ text = "QualiMonitor" }: { text?: string }) {
         style={{ animation: "qm-barStretch 2.8s ease-in-out 0s infinite", transformOrigin: "460px 125px" }}
       >
         <line x1="120" y1="125" x2="800" y2="125" stroke="url(#qm-barLineGrad)" strokeWidth="2.5" strokeLinecap="round" />
-        <ellipse cx="460" cy="125" rx="110" ry="1.5" fill="#bae6fd" opacity="0.9" />
+        <ellipse cx="460" cy="125" rx="110" ry="1.5" fill="#ffd2bc" opacity="0.9" />
       </g>
 
       <style>{`

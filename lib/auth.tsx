@@ -119,7 +119,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then((lista) => {
         if (ativo) setUsuarios(lista)
       })
-      .catch((err) => console.error("[v0] Falha ao carregar usuários:", err))
+      .catch(() => {
+        // O preview pode operar sem Supabase; mantém o seed local como fallback.
+        if (ativo) setUsuarios(SEED_USUARIOS)
+      })
       .finally(() => {
         if (ativo) setReady(true)
       })

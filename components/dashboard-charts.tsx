@@ -44,10 +44,10 @@ const PIE_COLORS = [
 
 /* Cores semânticas por faixa de nota */
 const FAIXA_CORES: Record<string, string> = {
-  excelente: "#16a34a", // verde
-  bom: "#3b82f6", // azul
-  regular: "#f97316", // laranja
-  critico: "#ef4444", // vermelho
+  excelente: "var(--chart-5)",
+  bom: "var(--primary)",
+  regular: "var(--chart-3)",
+  critico: "var(--destructive)",
 }
 
 function corFaixa(faixa: string, fallback: string) {
@@ -985,9 +985,9 @@ export function DispersaoOperadoresChart({
 
 /* ---------- Insights: cores de conformidade ---------- */
 const CONFORMIDADE_CORES = {
-  conforme: "#16a34a", // verde
-  inconforme: "#ef4444", // vermelho
-  na: "#94a3b8", // cinza
+    conforme: "var(--chart-5)",
+    inconforme: "var(--destructive)",
+    na: "var(--muted-foreground)",
 }
 
 /* ---------- Insights: donut consolidado conforme / inconforme / N.A. ---------- */

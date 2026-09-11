@@ -29,10 +29,10 @@ import { toast } from "sonner"
 
 /* Quadrantes de qualidade (Q1..Q4) com cores semânticas */
 const QUADRANTES = [
-  { key: "pctQ1", qtdKey: "q1", label: "Q1 · Excelente (90+)", short: "Q1", color: "#16a34a" },
-  { key: "pctQ2", qtdKey: "q2", label: "Q2 · Bom (75-89)", short: "Q2", color: "#3b82f6" },
-  { key: "pctQ3", qtdKey: "q3", label: "Q3 · Regular (60-74)", short: "Q3", color: "#f97316" },
-  { key: "pctQ4", qtdKey: "q4", label: "Q4 · Crítico (<60)", short: "Q4", color: "#ef4444" },
+  { key: "pctQ1", qtdKey: "q1", label: "Q1 · Excelente (90+)", short: "Q1", color: "var(--chart-5)" },
+  { key: "pctQ2", qtdKey: "q2", label: "Q2 · Bom (75-89)", short: "Q2", color: "var(--primary)" },
+  { key: "pctQ3", qtdKey: "q3", label: "Q3 · Regular (60-74)", short: "Q3", color: "var(--chart-3)" },
+  { key: "pctQ4", qtdKey: "q4", label: "Q4 · Crítico (<60)", short: "Q4", color: "var(--destructive)" },
 ] as const
 
 function notaTone(nota: number) {
