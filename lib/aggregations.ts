@@ -541,6 +541,71 @@ export function analiseCategoria(
 }
 
 /** Totais consolidados de conforme/inconforme/N.A. para todos os apontamentos */
+export interface OperadorItemCategoria {
+  operador: string
+  operadorId: string
+  itemId: string
+  texto: string
+  bloco: string
+  conforme: number
+  inconforme: number
+  na: number
+  qtd: number
+  pctConforme: number
+  pctInconforme: number
+}
+
+export function analiseCategoriaPorOperador(
+  monitorias: Monitoria[],
+  checklists: Checklist[],
+  carteira?: string,
+): OperadorItemCategoria[] {
+  const meta = new Map<string, { texto: string; bloco: string; carteira: string }>()
+  for (const checklist of checklists) {
+    for (const item of checklist.itens) {
+      meta.set(item.id, {
+        texto: item.texto,
+        bloco: item.bloco?.trim() || SEM_BLOCO,
+        carteira: checklist.carteira,
+      })
+    }
+  }
+
+  const grupos = new Map<string, OperadorItemCategoria>()
+  const round1 = (value: number) => Math.round(value * 10) / 10
+  for (const monitoria of monitorias) {
+    if (carteira && carteira !== "todas" && monitoria.carteira !== carteira) continue
+    for (const apontamento of monitoria.apontamentos) {
+      const info = meta.get(apontamento.itemId)
+      if (info && carteira && carteira !== "todas" && info.carteira !== carteira) continue
+      const key = `${monitoria.operadorId}:${apontamento.itemId}`
+      const atual = grupos.get(key) ?? {
+        operador: monitoria.operadorNome,
+        operadorId: monitoria.operadorId,
+        itemId: apontamento.itemId,
+        texto: info?.texto ?? apontamento.itemId,
+        bloco: info?.bloco ?? SEM_BLOCO,
+        conforme: 0,
+        inconforme: 0,
+        na: 0,
+        qtd: 0,
+        pctConforme: 0,
+        pctInconforme: 0,
+      }
+      if (apontamento.status === "conforme") atual.conforme++
+      else if (apontamento.status === "inconforme") atual.inconforme++
+      else atual.na++
+      atual.qtd = atual.conforme + atual.inconforme
+      atual.pctConforme = atual.qtd ? round1((atual.conforme / atual.qtd) * 100) : 0
+      atual.pctInconforme = atual.qtd ? round1((atual.inconforme / atual.qtd) * 100) : 0
+      grupos.set(key, atual)
+    }
+  }
+  return Array.from(grupos.values()).sort((a, b) =>
+    a.operador.localeCompare(b.operador, "pt-BR") || a.bloco.localeCompare(b.bloco, "pt-BR") || a.texto.localeCompare(b.texto, "pt-BR"),
+  )
+}
+
 export function resumoConformidade(monitorias: Monitoria[]) {
   let conforme = 0
   let inconforme = 0

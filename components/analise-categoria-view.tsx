@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/select"
 import { useQualityData } from "@/lib/use-quality-data"
 import { AnaliseCategoria } from "@/components/analise-categoria"
+import { AnalisOperadorComparacao } from "@/components/analise-operador-comparacao"
+import { AnalisOperadorDetalhes } from "@/components/analise-operador-detalhes"
 
 export function AnaliseCategoriaView() {
   const { monitorias, checklists } = useQualityData()
@@ -57,6 +59,16 @@ export function AnaliseCategoriaView() {
       </div>
 
       <AnaliseCategoria monitorias={filtradas} checklists={checklists} carteira={carteiraFiltro} />
+      <AnalisOperadorComparacao
+        monitorias={filtradas}
+        checklists={checklists}
+        carteira={carteiraFiltro}
+      />
+      <AnalisOperadorDetalhes
+        monitorias={filtradas}
+        checklists={checklists}
+        carteira={carteiraFiltro}
+      />
     </div>
   )
 }

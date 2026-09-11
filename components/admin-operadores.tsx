@@ -45,7 +45,7 @@ type FormState = {
 const FORM_VAZIO: FormState = { nome: "", carteira: "", admissao: "" }
 
 export function AdminOperadores() {
-  const { operadores, ready } = useQualityData()
+  const { operadores, carteiras: carteirasCadastradas, ready } = useQualityData()
 
   const [busca, setBusca] = useState("")
   const [dialogAberto, setDialogAberto] = useState(false)
@@ -54,11 +54,13 @@ export function AdminOperadores() {
   const [erro, setErro] = useState<string | null>(null)
   const [confirmarExclusao, setConfirmarExclusao] = useState<Operador | null>(null)
 
-  // Sugestões de carteiras existentes para facilitar o cadastro.
-  const carteiras = useMemo(
-    () => Array.from(new Set(operadores.map((o) => o.carteira))).sort((a, b) => a.localeCompare(b, "pt-BR")),
-    [operadores],
-  )
+  const carteiras = useMemo(() => {
+    const disponiveis = carteirasCadastradas
+      .filter((carteira) => carteira.ativa || carteira.nome === form.carteira)
+      .map((carteira) => carteira.nome)
+
+    return Array.from(new Set(disponiveis)).sort((a, b) => a.localeCompare(b, "pt-BR"))
+  }, [carteirasCadastradas, form.carteira])
 
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase()
@@ -225,30 +227,26 @@ export function AdminOperadores() {
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="op-carteira">Carteira</Label>
-              {carteiras.length > 0 ? (
-                <Select
-                  value={form.carteira}
-                  onValueChange={(v) => setForm((f) => ({ ...f, carteira: v ?? "" }))}
-                >
-                  <SelectTrigger id="op-carteira">
-                    <SelectValue placeholder="Selecione a carteira" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {carteiras.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input
-                  id="op-carteira"
-                  value={form.carteira}
-                  onChange={(e) => setForm((f) => ({ ...f, carteira: e.target.value }))}
-                  placeholder="Ex.: Carteira X"
-                />
-              )}
+              <Select
+                value={form.carteira}
+                onValueChange={(v) => setForm((f) => ({ ...f, carteira: v ?? "" }))}
+                disabled={carteiras.length === 0}
+              >
+                <SelectTrigger id="op-carteira">
+                  <SelectValue
+                    placeholder={
+                      carteiras.length > 0 ? "Selecione a carteira" : "Nenhuma carteira cadastrada"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {carteiras.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex flex-col gap-1.5">
