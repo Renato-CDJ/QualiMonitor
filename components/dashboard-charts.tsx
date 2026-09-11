@@ -34,21 +34,21 @@ import { Button } from "@/components/ui/button"
 import { Eye, EyeOff } from "lucide-react"
 import { useNotasGlobais } from "@/lib/notas-context"
 
-const PIE_COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
-]
+  const CHART_BLUE = "#0875dc"
+  const CHART_TEAL = "#079b9b"
+  const CHART_GREEN = "#10a64a"
+  const CHART_LIGHT_BLUE = "#3d7ff0"
+  const CHART_RED = "#e05252"
 
-/* Cores semânticas por faixa de nota */
-const FAIXA_CORES: Record<string, string> = {
-  excelente: "var(--chart-5)",
-  bom: "var(--primary)",
-  regular: "var(--chart-3)",
-  critico: "var(--destructive)",
-}
+  const PIE_COLORS = [CHART_BLUE, CHART_TEAL, CHART_GREEN, CHART_LIGHT_BLUE, CHART_RED]
+
+  /* Cores semânticas por faixa de nota, fixas para manter a leitura igual nos dois temas. */
+  const FAIXA_CORES: Record<string, string> = {
+    excelente: CHART_GREEN,
+    bom: CHART_LIGHT_BLUE,
+    regular: CHART_TEAL,
+    critico: CHART_RED,
+  }
 
 function corFaixa(faixa: string, fallback: string) {
   const f = faixa
@@ -141,7 +141,7 @@ export function TendenciaChart({
   data: { rotulo: string; nota: number; volume: number }[]
 }) {
   const config = {
-    nota: { label: "Nota média", color: "var(--chart-1)" },
+    nota: { label: "Nota média", color: "CHART_BLUE" },
   } satisfies ChartConfig
   const { mostrarTodas } = useNotasGlobais()
   const [mostrarLocal, setMostrarNotas] = useState(false)
@@ -192,8 +192,8 @@ export function VolumeNotaChart({
   data: { rotulo: string; nota: number; volume: number }[]
 }) {
   const config = {
-    volume: { label: "Monitorias", color: "var(--chart-2)" },
-    nota: { label: "Nota média", color: "var(--chart-1)" },
+    volume: { label: "Monitorias", color: "CHART_TEAL" },
+    nota: { label: "Nota média", color: "CHART_BLUE" },
   } satisfies ChartConfig
   const { mostrarTodas } = useNotasGlobais()
   const [mostrarLocal, setMostrarNotas] = useState(false)
@@ -325,7 +325,7 @@ export function CarteiraBarChart({
   data: { carteira: string; nota: number; volume: number }[]
 }) {
   const config = {
-    nota: { label: "Nota média", color: "var(--chart-1)" },
+    nota: { label: "Nota média", color: "CHART_BLUE" },
   } satisfies ChartConfig
   const { mostrarTodas } = useNotasGlobais()
   const [mostrarLocal, setMostrarNotas] = useState(false)
@@ -371,7 +371,7 @@ export function ConformidadeCarteiraChart({
   data: { carteira: string; pctConforme: number; pctInconforme: number }[]
 }) {
   const config = {
-    pctConforme: { label: "% Conforme", color: "var(--chart-5)" },
+    pctConforme: { label: "% Conforme", color: "CHART_GREEN" },
     pctInconforme: { label: "% Inconforme", color: "var(--destructive)" },
   } satisfies ChartConfig
   const { mostrarTodas } = useNotasGlobais()
@@ -417,7 +417,7 @@ export function MonitorBarChart({
   data: { monitor: string; nota: number; volume: number }[]
 }) {
   const config = {
-    nota: { label: "Nota média", color: "var(--chart-1)" },
+    nota: { label: "Nota média", color: "CHART_BLUE" },
   } satisfies ChartConfig
   const { mostrarTodas } = useNotasGlobais()
   const [mostrarLocal, setMostrarNotas] = useState(false)
@@ -503,7 +503,7 @@ export function MonitorConformidadeChart({
   data: { monitor: string; pctConforme: number; pctInconforme: number }[]
 }) {
   const config = {
-    pctConforme: { label: "% Conforme", color: "var(--chart-5)" },
+    pctConforme: { label: "% Conforme", color: "CHART_GREEN" },
     pctInconforme: { label: "% Inconforme", color: "var(--destructive)" },
   } satisfies ChartConfig
   const { mostrarTodas } = useNotasGlobais()
@@ -549,7 +549,7 @@ export function MonitorContagemChart({
   data: { monitor: string; conforme: number; inconforme: number }[]
 }) {
   const config = {
-    conforme: { label: "Conformidades", color: "var(--chart-5)" },
+    conforme: { label: "Conformidades", color: "CHART_GREEN" },
     inconforme: { label: "Inconformidades", color: "var(--destructive)" },
   } satisfies ChartConfig
   const { mostrarTodas } = useNotasGlobais()
@@ -587,8 +587,8 @@ export function ParetoChart({
   data: { item: string; qtd: number; acumulado: number }[]
 }) {
   const config = {
-    qtd: { label: "Inconformidades", color: "var(--chart-4)" },
-    acumulado: { label: "% acumulado", color: "var(--chart-3)" },
+    qtd: { label: "Inconformidades", color: "CHART_RED" },
+    acumulado: { label: "% acumulado", color: "CHART_LIGHT_BLUE" },
   } satisfies ChartConfig
   const { mostrarTodas } = useNotasGlobais()
   const [mostrarLocal, setMostrarNotas] = useState(false)
@@ -666,10 +666,10 @@ export function HistogramaChart({
   data: { faixa: string; qtd: number; min: number }[]
 }) {
   const config = {
-    qtd: { label: "Monitorias", color: "var(--chart-1)" },
+    qtd: { label: "Monitorias", color: "CHART_BLUE" },
   } satisfies ChartConfig
   const cor = (min: number) =>
-    min < 60 ? "var(--destructive)" : min < 75 ? "var(--chart-3)" : "var(--chart-5)"
+    min < 60 ? "var(--destructive)" : min < 75 ? "CHART_LIGHT_BLUE" : "CHART_GREEN"
   return (
     <ChartContainer config={config} className="h-[300px] w-full">
       <BarChart data={data} margin={{ left: -16, right: 8, top: 8 }}>
@@ -701,7 +701,7 @@ export function QuartilCarteiraChart({
     ...d,
   }))
   const config = {
-    span: { label: "Distribuição", color: "var(--chart-2)" },
+    span: { label: "Distribuição", color: "CHART_TEAL" },
   } satisfies ChartConfig
   return (
     <ChartContainer config={config} className="h-[300px] w-full">
@@ -712,7 +712,7 @@ export function QuartilCarteiraChart({
         <ChartTooltip cursor={{ fill: "var(--muted)", fillOpacity: 0.3 }} content={<BoxplotTooltip />} />
         <Bar dataKey="base" stackId="q" fill="transparent" isAnimationActive={false} />
         <Bar dataKey="span" stackId="q" shape={<BoxplotShape />} isAnimationActive={false} />
-        <ReferenceLine y={75} stroke="var(--chart-3)" strokeDasharray="4 4" />
+        <ReferenceLine y={75} stroke="CHART_LIGHT_BLUE" strokeDasharray="4 4" />
       </BarChart>
     </ChartContainer>
   )
@@ -723,11 +723,11 @@ export function QuartilCarteiraChart({
    linha de mediana e ponto de média. A cor reflete o nível da mediana. */
 function corPorMediana(mediana: number) {
   return mediana >= 90
-    ? "var(--chart-5)" // Q1 Excelente
+    ? "CHART_GREEN" // Q1 Excelente
     : mediana >= 75
-      ? "var(--chart-1)" // Q2 Bom
+      ? "CHART_BLUE" // Q2 Bom
       : mediana >= 60
-        ? "var(--chart-3)" // Q3 Regular
+        ? "CHART_LIGHT_BLUE" // Q3 Regular
         : "var(--destructive)" // Q4 Crítico
 }
 
@@ -985,7 +985,7 @@ export function DispersaoOperadoresChart({
 
 /* ---------- Insights: cores de conformidade ---------- */
 const CONFORMIDADE_CORES = {
-    conforme: "var(--chart-5)",
+    conforme: "CHART_GREEN",
     inconforme: "var(--destructive)",
     na: "var(--muted-foreground)",
 }
@@ -1120,7 +1120,7 @@ export function QuartilChart({
     .slice(0, maxOperadores)
 
   const config = {
-    span: { label: "Distribuição", color: "var(--chart-1)" },
+    span: { label: "Distribuição", color: "CHART_BLUE" },
   } satisfies ChartConfig
 
   return (
@@ -1128,9 +1128,9 @@ export function QuartilChart({
       <BarChart data={data} margin={{ left: -16, right: 8, top: 8, bottom: 8 }} barCategoryGap="22%">
         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
         {/* Faixas de fundo dos 4 quadrantes (Q1–Q4) */}
-        <ReferenceArea y1={90} y2={100} fill="var(--chart-5)" fillOpacity={0.07} ifOverflow="extendDomain" />
-        <ReferenceArea y1={75} y2={90} fill="var(--chart-1)" fillOpacity={0.07} ifOverflow="extendDomain" />
-        <ReferenceArea y1={60} y2={75} fill="var(--chart-3)" fillOpacity={0.07} ifOverflow="extendDomain" />
+        <ReferenceArea y1={90} y2={100} fill="CHART_GREEN" fillOpacity={0.07} ifOverflow="extendDomain" />
+        <ReferenceArea y1={75} y2={90} fill="CHART_BLUE" fillOpacity={0.07} ifOverflow="extendDomain" />
+        <ReferenceArea y1={60} y2={75} fill="CHART_LIGHT_BLUE" fillOpacity={0.07} ifOverflow="extendDomain" />
         <ReferenceArea y1={0} y2={60} fill="var(--destructive)" fillOpacity={0.07} ifOverflow="extendDomain" />
         <XAxis dataKey="operador" tickLine={false} axisLine={false} fontSize={11} interval={0} angle={-30} textAnchor="end" height={50} />
         <YAxis domain={[0, 100]} ticks={[0, 60, 75, 90, 100]} tickLine={false} axisLine={false} fontSize={12} width={36} />
@@ -1138,8 +1138,8 @@ export function QuartilChart({
         {/* base transparente + span desenhado como boxplot */}
         <Bar dataKey="base" stackId="q" fill="transparent" isAnimationActive={false} />
         <Bar dataKey="span" stackId="q" shape={<BoxplotShape />} isAnimationActive={false} />
-        <ReferenceLine y={90} stroke="var(--chart-5)" strokeDasharray="4 4" strokeOpacity={0.5} />
-        <ReferenceLine y={75} stroke="var(--chart-3)" strokeDasharray="4 4" label={{ value: "meta 75", position: "right", fontSize: 10, fill: "var(--muted-foreground)" }} />
+        <ReferenceLine y={90} stroke="CHART_GREEN" strokeDasharray="4 4" strokeOpacity={0.5} />
+        <ReferenceLine y={75} stroke="CHART_LIGHT_BLUE" strokeDasharray="4 4" label={{ value: "meta 75", position: "right", fontSize: 10, fill: "var(--muted-foreground)" }} />
         <ReferenceLine y={60} stroke="var(--destructive)" strokeDasharray="4 4" strokeOpacity={0.5} />
       </BarChart>
     </ChartContainer>
