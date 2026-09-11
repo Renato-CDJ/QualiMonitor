@@ -105,6 +105,7 @@ function ProporcaoBar({ item }: { item: ItemAderencia }) {
 export function Insights() {
   const { monitorias, checklists, ready } = useQualityData()
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
+  const [operadorFiltro, setOperadorFiltro] = useState<string>("todos")
   const [visao, setVisao] = useState<"aderencia" | "oportunidade">("aderencia")
   const [dataInicio, setDataInicio] = useState<string>("")
   const [dataFim, setDataFim] = useState<string>("")
@@ -113,16 +114,21 @@ export function Insights() {
     () => Array.from(new Set(monitorias.map((m) => m.carteira))),
     [monitorias],
   )
+  const operadores = useMemo(
+    () => Array.from(new Set(monitorias.map((m) => m.operadorNome))).filter(Boolean).sort(),
+    [monitorias],
+  )
 
   const filtradas = useMemo(
     () =>
       monitorias.filter((m) => {
         if (carteiraFiltro !== "todas" && m.carteira !== carteiraFiltro) return false
+        if (operadorFiltro !== "todos" && m.operadorNome !== operadorFiltro) return false
         if (dataInicio && m.data < dataInicio) return false
         if (dataFim && m.data > dataFim) return false
         return true
       }),
-    [monitorias, carteiraFiltro, dataInicio, dataFim],
+    [monitorias, carteiraFiltro, operadorFiltro, dataInicio, dataFim],
   )
 
   const periodoLabel = useMemo(() => {
@@ -213,6 +219,22 @@ export function Insights() {
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
+            <Label className="text-xs text-muted-foreground">Operador</Label>
+            <Select value={operadorFiltro} onValueChange={setOperadorFiltro}>
+              <SelectTrigger className="w-52">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os operadores</SelectItem>
+                {operadores.map((operador) => (
+                  <SelectItem key={operador} value={operador}>
+                    {operador}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="ins-inicio" className="text-xs text-muted-foreground">
               De
             </Label>
@@ -246,6 +268,7 @@ export function Insights() {
               onClick={() => {
                 setDataInicio("")
                 setDataFim("")
+                setOperadorFiltro("todos")
               }}
             >
               Limpar período

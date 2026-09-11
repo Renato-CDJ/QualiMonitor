@@ -117,9 +117,9 @@ export function AnalisOperadorDetalhes({
               <Label htmlFor="operador-filtro" className="text-xs text-muted-foreground">
                 Operador
               </Label>
-              <Select value={operadorSelecionado} onValueChange={setOperadorSelecionado}>
+              <Select value={operadorAtivo} onValueChange={setOperadorSelecionado}>
                 <SelectTrigger id="operador-filtro" className="w-56">
-                  <SelectValue placeholder="Selecione um operador" />
+                  <SelectValue>{operadorNome}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {operadores.map((op) => (
