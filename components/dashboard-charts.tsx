@@ -864,12 +864,20 @@ export function DispersaoOperadoresChart({
             : "critico",
   }))
 
+  // Paleta exclusiva da dispersão, alinhada à referência visual do gráfico.
+  const DISPERSAO_CORES = {
+    excelente: "#159447",
+    bom: "#146fdf",
+    regular: "#d47f00",
+    critico: "#e31b2b",
+  } as const
+
   // Quadrantes: cada um ocupa um canto do plano 0-100 (divisão em 50/50).
   const quadrantes = {
-    excelente: { label: "Excelente (90+)", cor: FAIXA_CORES.excelente, xMin: 4, xMax: 46, yMin: 54, yMax: 96 },
-    bom: { label: "Bom (75-89)", cor: FAIXA_CORES.bom, xMin: 54, xMax: 96, yMin: 54, yMax: 96 },
-    regular: { label: "Regular (60-74)", cor: FAIXA_CORES.regular, xMin: 4, xMax: 46, yMin: 4, yMax: 46 },
-    critico: { label: "Crítico (<60)", cor: FAIXA_CORES.critico, xMin: 54, xMax: 96, yMin: 4, yMax: 46 },
+    excelente: { label: "Excelente (90+)", cor: DISPERSAO_CORES.excelente, xMin: 4, xMax: 46, yMin: 54, yMax: 96 },
+    bom: { label: "Bom (75-89)", cor: DISPERSAO_CORES.bom, xMin: 54, xMax: 96, yMin: 54, yMax: 96 },
+    regular: { label: "Regular (60-74)", cor: DISPERSAO_CORES.regular, xMin: 4, xMax: 46, yMin: 4, yMax: 46 },
+    critico: { label: "Crítico (<60)", cor: DISPERSAO_CORES.critico, xMin: 54, xMax: 96, yMin: 4, yMax: 46 },
   } as const
 
   type FaixaKey = keyof typeof quadrantes
