@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   MinusCircle,
   XCircle,
+  ListChecks,
   Save,
   RotateCcw,
   Pencil,
@@ -161,6 +162,13 @@ export function MonitoriaForm() {
 
   function resetItens() {
     setStatusMap({})
+  }
+
+  function marcarBlocoComoNaoSeAplica(itens: ChecklistItem[]) {
+    setStatusMap((prev) => ({
+      ...prev,
+      ...Object.fromEntries(itens.map((item) => [item.id, "na" as StatusItem])),
+    }))
   }
 
   function limparTudo() {
@@ -449,6 +457,16 @@ export function MonitoriaForm() {
                           <AlertTriangle className="size-3" /> Bloco crítico
                         </span>
                       )}
+                      <button
+                        type="button"
+                        onClick={() => marcarBlocoComoNaoSeAplica(g.itens)}
+                        title="Marcar todos os itens deste bloco como Não se aplica"
+                        aria-label={`Marcar todos os itens do bloco ${g.bloco} como Não se aplica`}
+                        className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-2 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-secondary hover:text-foreground md:w-fit"
+                      >
+                        <ListChecks className="size-3.5" />
+                        Marcar bloco como N/A
+                      </button>
                     </div>
 
                     {/* Itens do bloco */}
