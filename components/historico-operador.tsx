@@ -145,9 +145,9 @@ export function HistoricoOperador() {
     // Conformidade consolidada (todas as abas usam apontamentos)
     const conf = resumoConformidade(minhas)
     const confPie = [
-      { tipo: "Conforme", qtd: conf.conforme, cor: "#16a34a" },
-      { tipo: "Inconforme", qtd: conf.inconforme, cor: "#ef4444" },
-      { tipo: "Não se aplica", qtd: conf.na, cor: "#94a3b8" },
+      { tipo: "Conforme", qtd: conf.conforme, cor: "var(--chart-5)" },
+      { tipo: "Inconforme", qtd: conf.inconforme, cor: "var(--destructive)" },
+      { tipo: "Não se aplica", qtd: conf.na, cor: "var(--muted-foreground)" },
     ].filter((d) => d.qtd > 0)
 
     // Tabulações

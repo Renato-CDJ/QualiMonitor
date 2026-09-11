@@ -95,9 +95,9 @@ function ProporcaoBar({ item }: { item: ItemAderencia }) {
   const n = item.total ? (item.na / item.total) * 100 : 0
   return (
     <div className="flex h-2 w-full overflow-hidden rounded-full bg-secondary" aria-hidden>
-      <span style={{ width: `${c}%`, backgroundColor: "#16a34a" }} />
-      <span style={{ width: `${i}%`, backgroundColor: "#ef4444" }} />
-      <span style={{ width: `${n}%`, backgroundColor: "#94a3b8" }} />
+      <span style={{ width: `${c}%`, backgroundColor: "var(--chart-5)" }} />
+      <span style={{ width: `${i}%`, backgroundColor: "var(--destructive)" }} />
+      <span style={{ width: `${n}%`, backgroundColor: "var(--muted-foreground)" }} />
     </div>
   )
 }
@@ -182,9 +182,9 @@ export function Insights() {
 
   const pieData = useMemo(
     () => [
-      { tipo: "Conforme", qtd: resumo.conforme, cor: "#16a34a" },
-      { tipo: "Inconforme", qtd: resumo.inconforme, cor: "#ef4444" },
-      { tipo: "Não se aplica", qtd: resumo.na, cor: "#94a3b8" },
+      { tipo: "Conforme", qtd: resumo.conforme, cor: "var(--chart-5)" },
+      { tipo: "Inconforme", qtd: resumo.inconforme, cor: "var(--destructive)" },
+      { tipo: "Não se aplica", qtd: resumo.na, cor: "var(--muted-foreground)" },
     ],
     [resumo],
   )
