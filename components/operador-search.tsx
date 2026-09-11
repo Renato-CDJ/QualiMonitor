@@ -49,7 +49,7 @@ export function OperadorSearch({ operadores, value, onChange, filtroCarteira }: 
       </div>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-md border border-border bg-popover shadow-lg">
+        <div className="absolute inset-x-0 top-full z-50 mt-1 max-h-72 w-full overflow-hidden rounded-md border border-border bg-popover shadow-lg">
           {resultados.length === 0 ? (
             <p className="px-3 py-3 text-sm text-muted-foreground">
               Nenhum operador encontrado.

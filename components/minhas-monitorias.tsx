@@ -18,13 +18,6 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
   Table,
   TableBody,
   TableCell,
@@ -41,6 +34,7 @@ import {
 } from "@/components/ui/dialog"
 import { CardTitleHint } from "@/components/card-title-hint"
 import { useQualityData } from "@/lib/use-quality-data"
+import { useAuth } from "@/lib/auth"
 import { store } from "@/lib/store"
 import { notaColorClass } from "@/lib/analytics"
 import type { Monitoria } from "@/lib/types"
@@ -65,13 +59,8 @@ function contar(m: Monitoria) {
 
 export function MinhasMonitorias() {
   const { monitorias, ready } = useQualityData()
-
-  const monitores = useMemo(
-    () => Array.from(new Set(monitorias.map((m) => m.monitor))).sort(),
-    [monitorias],
-  )
-
-  const [monitorSelecionado, setMonitorSelecionado] = useState<string>("")
+  const { user } = useAuth()
+  const monitorSelecionado = user?.nome ?? ""
   const [busca, setBusca] = useState("")
   const [alvoExclusao, setAlvoExclusao] = useState<Monitoria | null>(null)
 
@@ -79,7 +68,7 @@ export function MinhasMonitorias() {
     if (!monitorSelecionado) return []
     const termo = busca.trim().toLowerCase()
     return monitorias
-      .filter((m) => m.monitor === monitorSelecionado)
+      .filter((m) => m.monitor.trim().toLowerCase() === monitorSelecionado.trim().toLowerCase())
       .filter((m) => {
         if (!termo) return true
         return (
@@ -116,19 +105,10 @@ export function MinhasMonitorias() {
         {/* Filtros de busca */}
         <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-muted-foreground">Monitor</Label>
-            <Select value={monitorSelecionado} onValueChange={setMonitorSelecionado}>
-              <SelectTrigger className="w-56">
-                <SelectValue placeholder="Selecione seu nome" />
-              </SelectTrigger>
-              <SelectContent>
-                {monitores.map((m) => (
-                  <SelectItem key={m} value={m}>
-                    {m}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="mm-monitor" className="text-xs text-muted-foreground">
+              Monitor conectado
+            </Label>
+            <Input id="mm-monitor" value={monitorSelecionado} readOnly className="w-56" />
           </div>
 
           <div className="flex flex-1 flex-col gap-1.5">
@@ -155,7 +135,7 @@ export function MinhasMonitorias() {
             <UserCheck className="size-6 text-muted-foreground" />
             <p className="text-sm font-medium">Selecione um monitor</p>
             <p className="max-w-sm text-xs text-muted-foreground">
-              Escolha seu nome acima para visualizar as monitorias que você realizou.
+              As monitorias exibidas pertencem exclusivamente ao usuário conectado.
             </p>
           </div>
         ) : minhas.length === 0 ? (
