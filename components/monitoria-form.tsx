@@ -390,7 +390,7 @@ export function MonitoriaForm() {
                 <CardTitle className="text-base">{checklist.nome}</CardTitle>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Flegue os itens que o operador NÃO realizou. Itens não flegados
-                  são considerados conformes.
+                  são considerados conformes. Passe o mouse sobre um item para consultar sua descrição.
                 </p>
               </div>
               <Button variant="ghost" size="sm" onClick={resetItens} className="gap-1.5">
@@ -464,6 +464,8 @@ export function MonitoriaForm() {
                         return (
                           <div
                             key={it.id}
+                            title={it.descricao?.trim() || undefined}
+                            aria-label={it.descricao?.trim() ? `${it.texto}. Descrição: ${it.descricao}` : it.texto}
                             className={cn(
                               "flex flex-col gap-3 rounded-lg border border-l-[3px] bg-background p-3.5 shadow-sm transition-colors lg:flex-row lg:items-center lg:justify-between",
                               acento,

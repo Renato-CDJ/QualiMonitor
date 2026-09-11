@@ -97,6 +97,7 @@ export function ChecklistEditor() {
               {
                 id: store.uid(),
                 texto: "Novo item de checklist",
+                descricao: "",
                 bloco: bloco === SEM_BLOCO ? undefined : bloco,
                 peso: 5,
                 critico: false,
@@ -123,7 +124,14 @@ export function ChecklistEditor() {
         ...prev,
         itens: [
           ...prev.itens,
-          { id: store.uid(), texto: "Novo item de checklist", bloco: nome, peso: 5, critico: false },
+          {
+            id: store.uid(),
+            texto: "Novo item de checklist",
+            descricao: "",
+            bloco: nome,
+            peso: 5,
+            critico: false,
+          },
         ],
       }
     })
@@ -183,7 +191,7 @@ export function ChecklistEditor() {
       carteira: carteira.nome,
       nome: novoNome.trim(),
       atualizadoEm: new Date().toISOString(),
-      itens: [{ id: store.uid(), texto: "Novo item", peso: 5, critico: false }],
+      itens: [{ id: store.uid(), texto: "Novo item", descricao: "", peso: 5, critico: false }],
     }
     store.setChecklists([...store.getChecklists(), novo])
     setSelecionadoId(novo.id)
@@ -430,7 +438,7 @@ export function ChecklistEditor() {
                                   {/* ramificação horizontal */}
                                   <span className="absolute left-0 top-1/2 h-px w-8 bg-foreground/20" />
                                   <div
-                                    className="flex h-11 flex-1 items-center gap-2 overflow-hidden rounded-md border bg-card pr-2"
+                                    className="flex min-h-11 flex-1 items-center gap-2 rounded-md border bg-card pr-2"
                                     style={
                                       cor
                                         ? {
@@ -470,15 +478,27 @@ export function ChecklistEditor() {
                                           : undefined
                                       }
                                     />
-                                    {/* texto do item */}
-                                    <input
-                                      value={it.texto}
-                                      onChange={(e) =>
-                                        atualizarItem(it.id, { texto: e.target.value })
-                                      }
-                                      aria-label="Texto do item"
-                                      className="min-w-0 flex-1 border-0 bg-transparent text-sm outline-none"
-                                    />
+                                    {/* texto e descrição do item */}
+                                    <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 py-1">
+                                      <input
+                                        value={it.texto}
+                                        onChange={(e) =>
+                                          atualizarItem(it.id, { texto: e.target.value })
+                                        }
+                                        aria-label="Texto do item"
+                                        className="min-w-0 border-0 bg-transparent text-sm outline-none"
+                                      />
+                                      <textarea
+                                        value={it.descricao ?? ""}
+                                        onChange={(e) =>
+                                          atualizarItem(it.id, { descricao: e.target.value })
+                                        }
+                                        aria-label="Descrição do item"
+                                        placeholder="Descrição ou orientação opcional"
+                                        rows={1}
+                                        className="min-h-5 w-full resize-none border-0 bg-transparent text-xs leading-5 text-muted-foreground outline-none placeholder:text-muted-foreground/60"
+                                      />
+                                    </div>
                                     {/* mover para outro bloco */}
                                     <select
                                       value={g.bloco}
