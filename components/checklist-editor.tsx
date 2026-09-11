@@ -97,6 +97,7 @@ export function ChecklistEditor() {
               {
                 id: store.uid(),
                 texto: "Novo item de checklist",
+                descricao: "",
                 bloco: bloco === SEM_BLOCO ? undefined : bloco,
                 peso: 5,
                 critico: false,
@@ -123,7 +124,14 @@ export function ChecklistEditor() {
         ...prev,
         itens: [
           ...prev.itens,
-          { id: store.uid(), texto: "Novo item de checklist", bloco: nome, peso: 5, critico: false },
+          {
+            id: store.uid(),
+            texto: "Novo item de checklist",
+            descricao: "",
+            bloco: nome,
+            peso: 5,
+            critico: false,
+          },
         ],
       }
     })
@@ -183,7 +191,7 @@ export function ChecklistEditor() {
       carteira: carteira.nome,
       nome: novoNome.trim(),
       atualizadoEm: new Date().toISOString(),
-      itens: [{ id: store.uid(), texto: "Novo item", peso: 5, critico: false }],
+      itens: [{ id: store.uid(), texto: "Novo item", descricao: "", peso: 5, critico: false }],
     }
     store.setChecklists([...store.getChecklists(), novo])
     setSelecionadoId(novo.id)
@@ -429,9 +437,9 @@ export function ChecklistEditor() {
                                 <div key={it.id} className="relative flex items-center pl-8">
                                   {/* ramificação horizontal */}
                                   <span className="absolute left-0 top-1/2 h-px w-8 bg-foreground/20" />
-                                  <div
-                                    className="flex h-11 flex-1 items-center gap-2 overflow-hidden rounded-md border bg-card pr-2"
-                                    style={
+                                    <div
+                                      className="flex min-h-11 min-w-0 max-w-full flex-1 flex-col gap-3 overflow-hidden rounded-md border bg-card p-3"
+                                      style={
                                       cor
                                         ? {
                                             backgroundColor: `color-mix(in oklch, ${cor} 13%, var(--card))`,
@@ -440,8 +448,9 @@ export function ChecklistEditor() {
                                         : undefined
                                     }
                                   >
-                                    {/* peso */}
-                                    <input
+                                    <div className="flex w-full min-w-0 items-center gap-2">
+                                      {/* peso */}
+                                      <input
                                       type="number"
                                       min={0}
                                       max={100}
@@ -470,15 +479,17 @@ export function ChecklistEditor() {
                                           : undefined
                                       }
                                     />
-                                    {/* texto do item */}
-                                    <input
-                                      value={it.texto}
-                                      onChange={(e) =>
-                                        atualizarItem(it.id, { texto: e.target.value })
-                                      }
-                                      aria-label="Texto do item"
-                                      className="min-w-0 flex-1 border-0 bg-transparent text-sm outline-none"
-                                    />
+                                    {/* texto e descrição do item */}
+                                    <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 py-1">
+                                      <input
+                                        value={it.texto}
+                                        onChange={(e) =>
+                                          atualizarItem(it.id, { texto: e.target.value })
+                                        }
+                                        aria-label="Texto do item"
+                                        className="min-w-0 border-0 bg-transparent text-sm outline-none"
+                                      />
+                                    </div>
                                     {/* mover para outro bloco */}
                                     <select
                                       value={g.bloco}
@@ -532,6 +543,25 @@ export function ChecklistEditor() {
                                     >
                                       <Trash2 className="size-4" />
                                     </button>
+                                    </div>
+                                    <div className="w-full min-w-0 max-w-full rounded-md border border-dashed border-border/80 bg-muted/25 px-3 py-3">
+                                      <div className="mb-1 flex items-center gap-2">
+                                        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                                          Orientação do item
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground/60">Opcional</span>
+                                      </div>
+                                      <textarea
+                                        value={it.descricao ?? ""}
+                                        onChange={(e) =>
+                                          atualizarItem(it.id, { descricao: e.target.value })
+                                        }
+                                        aria-label="Descrição do item"
+                                        placeholder="Explique o que deve ser observado durante a monitoria..."
+                                        rows={3}
+                                        className="block min-h-16 w-full min-w-0 resize-y break-words border-0 bg-transparent p-0 text-sm leading-6 text-foreground outline-none placeholder:text-muted-foreground/60"
+                                      />
+                                    </div>
                                   </div>
                                 </div>
                               )
