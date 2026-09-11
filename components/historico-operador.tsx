@@ -257,7 +257,7 @@ export function HistoricoOperador() {
   return (
     <div className="flex flex-col gap-6">
       {/* Barra de pesquisa */}
-      <Card>
+      <Card className="overflow-visible">
         <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-end">
           <div className="flex-1">
             <label className="mb-1.5 block text-xs text-muted-foreground">
