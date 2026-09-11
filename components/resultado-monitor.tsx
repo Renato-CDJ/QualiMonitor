@@ -19,6 +19,13 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
@@ -105,15 +112,16 @@ function Kpi({
   )
 }
 
-export function ResultadoMonitor() {
+export function ResultadoMonitor({ escopo = "admin" }: { escopo?: "admin" | "proprio" }) {
   const { monitorias, checklists, ready } = useQualityData()
   const { user } = useAuth()
 
   const minhasMonitorias = useMemo(() => {
+    if (escopo === "admin") return monitorias
     if (!user) return []
     const identificadores = new Set([user.nome.trim().toLowerCase(), user.usuario.trim().toLowerCase()])
     return monitorias.filter((monitoria) => identificadores.has(monitoria.monitor.trim().toLowerCase()))
-  }, [monitorias, user])
+  }, [escopo, monitorias, user])
 
   const monitores = useMemo(
     () => Array.from(new Set(minhasMonitorias.map((m) => m.monitor))).sort(),
@@ -124,8 +132,7 @@ export function ResultadoMonitor() {
     [monitorias],
   )
 
-  // O resultado é sempre limitado ao monitor autenticado.
-  const monitorFiltro = "todos"
+  const [monitorFiltro, setMonitorFiltro] = useState("todos")
   // Conjunto vazio = todas as carteiras
   const [selecionadas, setSelecionadas] = useState<Set<string>>(new Set())
   const [dataInicio, setDataInicio] = useState<string>("")
@@ -251,6 +258,24 @@ export function ResultadoMonitor() {
           Filtros
         </div>
         <div className="flex flex-wrap items-end gap-x-6 gap-y-4 p-4">
+          {escopo === "admin" && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="rm-monitor" className="text-xs text-muted-foreground">
+                Monitor
+              </Label>
+              <Select value={monitorFiltro} onValueChange={setMonitorFiltro}>
+                <SelectTrigger id="rm-monitor" className="w-52">
+                  <SelectValue placeholder="Todos os monitores" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os monitores</SelectItem>
+                  {monitores.map((monitor) => (
+                    <SelectItem key={monitor} value={monitor}>{monitor}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           {/* Carteiras (multi) */}
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs text-muted-foreground">Carteiras</Label>
