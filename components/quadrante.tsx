@@ -1,7 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { Grid2x2, Plus, Tag, Type, Download, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Hash } from "lucide-react"
+import { useMemo, useRef, useState } from "react"
+import { Grid2x2, Plus, Tag, Type, Download, Upload, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Hash } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { CardTitleHint } from "@/components/card-title-hint"
 import { Badge } from "@/components/ui/badge"
@@ -102,6 +102,7 @@ export function Quadrante() {
   const [dialogAberto, setDialogAberto] = useState(false)
   const [operadorSel, setOperadorSel] = useState<string>("")
   const [nivelSel, setNivelSel] = useState<NivelRecebimento>("alto")
+  const arquivoPerformanceRef = useRef<HTMLInputElement>(null)
 
   const carteiras = useMemo(
     () => Array.from(new Set(monitorias.map((m) => m.carteira))),
@@ -214,6 +215,61 @@ export function Quadrante() {
       `Performance ${nivelSel === "alto" ? "Alta" : "Baixa"} definida para ${operadorSel}`,
     )
     setDialogAberto(false)
+  }
+
+  async function importarPerformance(event: React.ChangeEvent<HTMLInputElement>) {
+    const arquivo = event.target.files?.[0]
+    event.target.value = ""
+    if (!arquivo) return
+
+    try {
+      const workbook = XLSX.read(await arquivo.arrayBuffer(), { type: "array" })
+      const primeiraAba = workbook.Sheets[workbook.SheetNames[0]]
+      const linhas = XLSX.utils.sheet_to_json<Record<string, unknown>>(primeiraAba, {
+        defval: "",
+      })
+      const normalizar = (valor: unknown) =>
+        String(valor ?? "")
+          .normalize("NFD")
+          .replace(/[\\u0300-\\u036f]/g, "")
+          .trim()
+          .toLowerCase()
+      const chave = (valor: unknown) => normalizar(valor).replace(/[^a-z0-9]/g, "")
+      const operadoresPorNome = new Map(dados.map((operador) => [normalizar(operador.operador), operador.operador]))
+      const nomes = new Set(["operador", "nome", "nomeoperador", "operadornome"])
+      const niveis = new Set(["performance", "nivel", "nivelperformance", "recebimento"])
+      let importados = 0
+      const erros: string[] = []
+
+      for (const linha of linhas) {
+        const entradas = Object.entries(linha)
+        const nomeValor = entradas.find(([cabecalho]) => nomes.has(chave(cabecalho)))?.[1]
+        const nivelValor = entradas.find(([cabecalho]) => niveis.has(chave(cabecalho)))?.[1]
+        const nome = operadoresPorNome.get(normalizar(nomeValor))
+        const nivelNormalizado = normalizar(nivelValor)
+        const nivel: NivelRecebimento | null =
+          ["alto", "alta", "a", "high"].includes(nivelNormalizado)
+            ? "alto"
+            : ["baixo", "baixa", "b", "low"].includes(nivelNormalizado)
+              ? "baixo"
+              : null
+
+        if (!nome || !nivel) {
+          erros.push(String(nomeValor || "linha sem operador"))
+          continue
+        }
+        store.setRecebimentoOperador(nome, nivel)
+        importados += 1
+      }
+
+      if (importados > 0) {
+        toast.success(`${importados} performance(s) importada(s)${erros.length ? `; ${erros.length} ignorada(s)` : ""}.`)
+      } else {
+        toast.error("Nenhuma linha válida foi importada. Use as colunas Operador e Performance.")
+      }
+    } catch {
+      toast.error("Não foi possível ler a planilha. Envie um arquivo Excel válido.")
+    }
   }
 
   function exportarExcel() {
@@ -395,6 +451,33 @@ export function Quadrante() {
                       <SelectItem value="baixo">Baixa Performance (B)</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="flex flex-col gap-2 rounded-md border border-border bg-muted/30 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm font-medium">Importar planilha</span>
+                      <span className="text-xs text-muted-foreground">
+                        Colunas esperadas: Operador e Performance (Alta/Baixa).
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => arquivoPerformanceRef.current?.click()}
+                    >
+                      <Upload className="size-4" />
+                      Importar Excel
+                    </Button>
+                    <input
+                      ref={arquivoPerformanceRef}
+                      type="file"
+                      accept=".xlsx,.xls"
+                      onChange={importarPerformance}
+                      className="sr-only"
+                      aria-label="Importar performances por Excel"
+                    />
+                  </div>
                 </div>
               </div>
               <DialogFooter>
