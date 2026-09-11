@@ -1,0 +1,8 @@
+{
+  "experimentalServices": {
+    "backend": {
+      "entrypoint": "backend/config/wsgi.py",
+      "routePrefix": "api"
+    }
+  }
+}

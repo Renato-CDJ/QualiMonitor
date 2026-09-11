@@ -1,0 +1,19 @@
+[project]
+name = "qualimonitor-backend"
+version = "0.1.0"
+description = "Backend Python do QualiMonitor"
+requires-python = ">=3.11"
+dependencies = [
+  "Django>=5.1,<6.0",
+  "dj-database-url>=2.2,<3.0",
+  "psycopg[binary]>=3.2,<4.0",
+  "whitenoise>=6.7,<7.0",
+  "openpyxl>=3.1,<4.0",
+]
+
+[tool.django]
+settings = "config.settings"
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
