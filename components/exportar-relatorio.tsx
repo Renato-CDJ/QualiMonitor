@@ -48,6 +48,8 @@ import {
   porMonitor,
   conformidadePorMonitor,
   analiseCategoria,
+  analiseCategoriaPorOperador,
+  historicoApontamentos,
 } from "@/lib/aggregations"
 import { faixaNota } from "@/lib/analytics"
 import * as XLSX from "xlsx"
@@ -331,6 +333,70 @@ const GRUPOS: GrupoExport[] = [
           }
           return [{ aba: "Análise por Categoria", linhas }]
         },
+      },
+      {
+        id: "comparativo-evolucao",
+        nome: "Comparativo de Evolução por Tópico",
+        descricao: "Resumo por tópico e detalhamento por operador da visão comparativa",
+        build: ({ monitorias, checklists }) => {
+          const dados = analiseCategoriaPorOperador(monitorias, checklists)
+          const porTopico = new Map<string, typeof dados>()
+          for (const item of dados) {
+            if (!porTopico.has(item.bloco)) porTopico.set(item.bloco, [])
+            porTopico.get(item.bloco)!.push(item)
+          }
+          const resumo = Array.from(porTopico.entries()).map(([topico, itens]) => {
+            const conformes = itens.reduce((total, item) => total + item.conforme, 0)
+            const inconformes = itens.reduce((total, item) => total + item.inconforme, 0)
+            const avaliados = conformes + inconformes
+            return {
+              Tópico: topico,
+              "Quantidade avaliada": avaliados,
+              Conformes: conformes,
+              Inconformes: inconformes,
+              "% Conforme": avaliados ? round1((conformes / avaliados) * 100) : 0,
+              "% Inconforme": avaliados ? round1((inconformes / avaliados) * 100) : 0,
+            }
+          })
+          return [
+            { aba: "Resumo por tópico", linhas: resumo },
+            {
+              aba: "Detalhamento",
+              linhas: dados.map((item) => ({
+                Tópico: item.bloco,
+                Item: item.texto,
+                Operador: item.operador,
+                "Quantidade avaliada": item.qtd,
+                Conformes: item.conforme,
+                Inconformes: item.inconforme,
+                "Não se aplica": item.na,
+                "% Conforme": item.pctConforme,
+                "% Inconforme": item.pctInconforme,
+              })),
+            },
+          ]
+        },
+      },
+      {
+        id: "historico-apontamentos",
+        nome: "Histórico de Apontamentos",
+        descricao: "Linha do tempo dos apontamentos, status, tópico, operador e nota",
+        build: ({ monitorias, checklists }) => [
+          {
+            aba: "Histórico de Apontamentos",
+            linhas: historicoApontamentos(monitorias, checklists).map((item) => ({
+              Data: item.data,
+              Operador: item.operador,
+              Monitor: item.monitor,
+              Tabulação: item.tabulacao,
+              Tópico: item.bloco,
+              Item: item.texto,
+              Status: item.status === "na" ? "Não se aplica" : item.status === "conforme" ? "Conforme" : "Inconforme",
+              Nota: item.nota,
+              "ID da Monitoria": item.monitoriaId,
+            })),
+          },
+        ],
       },
     ],
   },

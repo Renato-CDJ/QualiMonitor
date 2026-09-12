@@ -588,8 +588,8 @@ export function ParetoChart({
   data: { item: string; qtd: number; acumulado: number }[]
 }) {
   const config = {
-    qtd: { label: "Inconformidades", color: CHART_RED },
-    acumulado: { label: "% acumulado", color: CHART_LIGHT_BLUE },
+  qtd: { label: "Inconformidades", color: "var(--chart-pareto-bars)" },
+  acumulado: { label: "% acumulado", color: "var(--chart-pareto-line)" },
   } satisfies ChartConfig
   const { mostrarTodas } = useNotasGlobais()
   const [mostrarLocal, setMostrarNotas] = useState(false)
