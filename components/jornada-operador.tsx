@@ -245,7 +245,17 @@ export function JornadaOperador({
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <ChartLegend content={<ChartLegendContent />} />
                   {QUADRANTES.map((q) => (
-                    <Bar key={q.key} dataKey={q.key} fill={q.color} radius={[4, 4, 0, 0]} maxBarSize={32} />
+                    <Bar key={q.key} dataKey={q.key} fill={q.color} radius={[4, 4, 0, 0]} maxBarSize={32}>
+                      <LabelList
+                        dataKey={q.key}
+                        position="top"
+                        offset={6}
+                        fontSize={11}
+                        fontWeight={600}
+                        fill="var(--foreground)"
+                        formatter={(v: number) => (v > 0 ? `${v}%` : "")}
+                      />
+                    </Bar>
                   ))}
                 </BarChart>
               </ChartContainer>
