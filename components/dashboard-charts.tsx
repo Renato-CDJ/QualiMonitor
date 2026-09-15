@@ -31,7 +31,8 @@ import type { Monitoria } from "@/lib/types"
 import { resumoQuartis } from "@/lib/analytics"
 import { porOperador } from "@/lib/aggregations"
 import { Button } from "@/components/ui/button"
-import { Eye, EyeOff } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Expand, Eye, EyeOff } from "lucide-react"
 import { useNotasGlobais } from "@/lib/notas-context"
 
   const CHART_BLUE = "#0875dc"
@@ -114,6 +115,26 @@ function makeLeaderLabel(corResolver: (name: string, index: number) => string, m
 }
 
 /* ---------- Botão reutilizável: exibir/ocultar notas ---------- */
+export function ChartFullscreen({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="relative">
+      {children}
+      <Dialog>
+        <DialogTrigger render={<Button variant="ghost" size="icon" className="absolute right-0 top-0 z-10 size-8 text-muted-foreground" aria-label={`Ampliar ${title}`} title={`Ampliar ${title}`} />}>
+          <Expand data-icon="inline-start" />
+        </DialogTrigger>
+        <DialogContent className="h-[92vh] w-[96vw] max-w-none overflow-hidden p-6">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>Visualização ampliada do gráfico.</DialogDescription>
+          </DialogHeader>
+          <div className="min-h-0 flex-1 overflow-auto rounded-xl border bg-card/30 p-4">{children}</div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
 function ToggleNotasButton({
   mostrar,
   onToggle,
