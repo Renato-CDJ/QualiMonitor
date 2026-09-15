@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { CalendarDays, ChevronRight, Download, History, Layers, RotateCcw } from "lucide-react"
+import { CalendarDays, ChevronRight, Download, History, Layers, RotateCcw, Search } from "lucide-react"
 import * as XLSX from "xlsx"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -31,13 +31,23 @@ export function AnalisOperadorComparacao({ monitorias, checklists, carteira }: {
   const dados = useMemo(() => analiseCategoriaPorOperador(monitorias, checklists, carteira), [monitorias, checklists, carteira])
   const operadores = useMemo(() => Array.from(new Set(monitorias.map((m) => m.operadorNome))).sort((a, b) => a.localeCompare(b, "pt-BR")), [monitorias])
   const [abertos, setAbertos] = useState<Set<string>>(new Set())
+  const [operadorSelecionado, setOperadorSelecionado] = useState("todos")
+  const [buscaOperador, setBuscaOperador] = useState("")
+  const operadoresVisiveis = useMemo(
+    () => operadores.filter((operador) => operador.toLocaleLowerCase("pt-BR").includes(buscaOperador.toLocaleLowerCase("pt-BR"))),
+    [operadores, buscaOperador],
+  )
+  const dadosVisiveis = useMemo(
+    () => operadorSelecionado === "todos" ? dados : dados.filter((item) => item.operador === operadorSelecionado),
+    [dados, operadorSelecionado],
+  )
   const [operadorFiltro, setOperadorFiltro] = useState("todos")
   const [dataInicio, setDataInicio] = useState("")
   const [dataFim, setDataFim] = useState("")
 
   const blocos = useMemo(() => {
-    const mapa = new Map<string, typeof dados>()
-    for (const item of dados) {
+    const mapa = new Map<string, typeof dadosVisiveis>()
+    for (const item of dadosVisiveis) {
       if (!mapa.has(item.bloco)) mapa.set(item.bloco, [])
       mapa.get(item.bloco)!.push(item)
     }
@@ -48,7 +58,15 @@ export function AnalisOperadorComparacao({ monitorias, checklists, carteira }: {
       const qtd = conforme + inconforme
       return { bloco, conforme, inconforme, qtd, pctConforme: qtd ? round1((conforme / qtd) * 100) : 0, pctInconforme: qtd ? round1((inconforme / qtd) * 100) : 0, itens: itens.sort((a, b) => a.operador.localeCompare(b.operador, "pt-BR")) }
     }).sort((a, b) => a.bloco.localeCompare(b.bloco, "pt-BR"))
-  }, [dados])
+  }, [dadosVisiveis])
+
+  const operadorResumo = useMemo(() => operadores.map((operador) => {
+    const itens = dados.filter((item) => item.operador === operador)
+    const conforme = itens.reduce((sum, item) => sum + item.conforme, 0)
+    const inconforme = itens.reduce((sum, item) => sum + item.inconforme, 0)
+    const avaliados = conforme + inconforme
+    return { operador, qtd: avaliados, media: avaliados ? Math.round((conforme / avaliados) * 100) : 0 }
+  }), [dados, operadores])
 
   const historico = useMemo(() => historicoApontamentos(monitorias, checklists, operadorFiltro === "todos" ? undefined : operadorFiltro).filter((item) => (!dataInicio || item.data >= dataInicio) && (!dataFim || item.data <= dataFim)), [monitorias, checklists, operadorFiltro, dataInicio, dataFim])
   const agrupado = useMemo(() => {
@@ -113,7 +131,7 @@ export function AnalisOperadorComparacao({ monitorias, checklists, carteira }: {
   return (
     <Card>
       <CardHeader>
-        <CardTitleHint icon={<Layers className="size-4 text-muted-foreground" />} title="Comparativo de evolução" description="Entenda o desempenho por tópico e acompanhe como os apontamentos mudaram entre monitorias." />
+        <CardTitleHint icon={<Layers className="size-4 text-muted-foreground" />} title="Resultado do Operador por Item" description="Compare os resultados por tópico e acompanhe a conformidade de cada operador nos itens do checklist." />
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="comparativo" className="flex flex-col gap-5">
@@ -127,9 +145,25 @@ export function AnalisOperadorComparacao({ monitorias, checklists, carteira }: {
                 <Download data-icon="inline-start" />
                 Exportar Excel
               </Button>
-              {blocos.length > 0 && <button type="button" onClick={() => setAbertos(todosAbertos ? new Set() : new Set(blocos.map((b) => b.bloco)))} className="text-xs font-medium text-primary hover:text-primary/80">{todosAbertos ? "Recolher tudo" : "Expandir tudo"}</button>}
+              {blocos.length > 0 && <Button type="button" variant="ghost" size="sm" onClick={() => setAbertos(todosAbertos ? new Set() : new Set(blocos.map((b) => b.bloco)))}>{todosAbertos ? "Recolher tudo" : "Expandir tudo"}</Button>}
             </div>
-            {blocos.length === 0 ? <p className="py-16 text-center text-sm text-muted-foreground">Sem apontamentos para os filtros selecionados.</p> : <div className="overflow-x-auto rounded-lg border border-border"><div className="min-w-[620px]"><div className="grid grid-cols-[1fr_100px_100px_100px] gap-2 border-b bg-secondary/50 px-3 py-2 text-xs font-medium text-muted-foreground"><span>Tópico</span><span className="text-right">Qtd. itens</span><span className="text-right">% Conforme</span><span className="text-right">% Inconforme</span></div>{blocos.map((bloco, idx) => { const aberto = abertos.has(bloco.bloco); return <div key={bloco.bloco}><button type="button" onClick={() => toggle(bloco.bloco)} aria-expanded={aberto} className={cn("grid w-full grid-cols-[1fr_100px_100px_100px] items-center gap-2 px-3 py-3 text-left transition-colors hover:bg-secondary/40", idx % 2 === 1 && "bg-secondary/20")}><span className="flex items-center gap-2 font-medium"><ChevronRight className={cn("size-4 text-muted-foreground transition-transform", aberto && "rotate-90")} />{bloco.bloco}</span><span className="text-right tabular-nums font-medium">{bloco.qtd}</span><span className={cn("text-right tabular-nums font-medium", pctTone(bloco.pctConforme))}>{bloco.pctConforme}%</span><span className="text-right tabular-nums font-medium text-destructive">{bloco.pctInconforme > 0 ? `${bloco.pctInconforme}%` : "—"}</span></button>{aberto && <div className="border-t bg-background px-3 py-3">{Array.from(new Map(bloco.itens.map((item) => [item.itemId, item])).values()).map((item) => <div key={item.itemId} className="mb-3 last:mb-0"><p className="mb-2 pl-6 text-sm text-muted-foreground">{item.texto}</p><div className="ml-6 flex flex-col gap-1">{bloco.itens.filter((i) => i.itemId === item.itemId).map((i) => <div key={i.operadorId} className="grid grid-cols-[1fr_100px_100px] gap-2 text-xs"><span className="truncate text-muted-foreground">{i.operador}</span><span className={cn("text-right tabular-nums", pctTone(i.pctConforme))}>{i.pctConforme}% conforme</span><span className="text-right tabular-nums text-destructive">{i.pctInconforme > 0 ? `${i.pctInconforme}% inconforme` : "—"}</span></div>)}</div></div>)}</div>}</div> })}</div></div>}
+            {operadores.length > 0 && <div className="grid gap-4 rounded-2xl border bg-muted/20 p-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+              <div className="flex min-h-0 flex-col gap-3">
+                <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Operadores da carteira</p><p className="mt-1 text-xs text-muted-foreground">Selecione um operador para detalhar os resultados.</p></div>
+                <div className="relative"><Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" /><Input aria-label="Pesquisar operador" placeholder="Pesquisar operador..." value={buscaOperador} onChange={(event) => setBuscaOperador(event.target.value)} className="pl-9" /></div>
+                <div className="max-h-80 overflow-y-auto pr-1">
+                  <div className="flex flex-col gap-2">
+                    <button type="button" onClick={() => setOperadorSelecionado("todos")} className={cn("rounded-xl border px-4 py-3 text-left transition-colors", operadorSelecionado === "todos" ? "border-primary bg-primary/10" : "bg-background hover:border-primary/40")}><p className="text-sm font-semibold">Todos os operadores</p><p className="mt-1 text-xs text-muted-foreground">Visão consolidada da carteira</p></button>
+                    {operadorResumo.filter((item) => operadoresVisiveis.includes(item.operador)).map((item) => <button key={item.operador} type="button" onClick={() => setOperadorSelecionado(item.operador)} className={cn("rounded-xl border px-4 py-3 text-left transition-colors", operadorSelecionado === item.operador ? "border-primary bg-primary/10" : "bg-background hover:border-primary/40")}><p className="truncate text-sm font-semibold">{item.operador}</p><p className="mt-1 text-xs text-muted-foreground">{item.qtd} itens avaliados · média {item.media}%</p></button>)}
+                  </div>
+                </div>
+              </div>
+              <div className="min-w-0 overflow-hidden rounded-xl border bg-background/70">
+                <div className="grid min-w-[600px] grid-cols-[minmax(220px,1fr)_100px_110px_110px] gap-2 border-b bg-secondary/50 px-3 py-2 text-xs font-medium text-muted-foreground"><span>Tópico</span><span className="text-right">Qtd Itens</span><span className="text-right">% Conforme</span><span className="text-right">% Inconforme</span></div>
+                {blocos.length === 0 ? <p className="px-4 py-10 text-center text-sm text-muted-foreground">Sem apontamentos para este operador.</p> : <div className="min-w-[600px]">{blocos.map((bloco, idx) => { const aberto = abertos.has(bloco.bloco); return <div key={bloco.bloco}><button type="button" onClick={() => toggle(bloco.bloco)} aria-expanded={aberto} className={cn("grid w-full grid-cols-[minmax(220px,1fr)_100px_110px_110px] items-center gap-2 px-3 py-3 text-left transition-colors hover:bg-secondary/40", idx % 2 === 1 && "bg-secondary/20")}><span className="flex items-center gap-2 font-medium"><ChevronRight className={cn("size-4 text-muted-foreground transition-transform", aberto && "rotate-90")} />{bloco.bloco}</span><span className="text-right tabular-nums font-medium">{bloco.qtd}</span><span className={cn("text-right tabular-nums font-medium", pctTone(bloco.pctConforme))}>{bloco.pctConforme}%</span><span className="text-right tabular-nums font-medium text-destructive">{bloco.pctInconforme > 0 ? `${bloco.pctInconforme}%` : "—"}</span></button>{aberto && <div className="border-t bg-background px-4 py-3">{Array.from(new Map(bloco.itens.map((item) => [item.itemId, item])).values()).map((item) => <div key={item.itemId} className="mb-3 last:mb-0"><p className="mb-2 pl-6 text-sm text-muted-foreground">{item.texto}</p><div className="ml-6 flex flex-col gap-1">{bloco.itens.filter((i) => i.itemId === item.itemId).map((i) => operadorSelecionado === "todos" ? <div key={i.operadorId} className="grid grid-cols-[1fr_100px_100px] gap-2 text-xs"><span className="truncate text-muted-foreground">{i.operador}</span><span className={cn("text-right tabular-nums", pctTone(i.pctConforme))}>{i.pctConforme}% conforme</span><span className="text-right tabular-nums text-destructive">{i.pctInconforme > 0 ? `${i.pctInconforme}% inconforme` : "—"}</span></div> : <div key={i.operadorId} className="grid grid-cols-[1fr_100px_100px] gap-2 text-xs"><span aria-hidden="true" /><span className={cn("text-right tabular-nums", pctTone(i.pctConforme))}>{i.pctConforme}% conforme</span><span className="text-right tabular-nums text-destructive">{i.pctInconforme > 0 ? `${i.pctInconforme}% inconforme` : "—"}</span></div>)}</div></div>)}</div>}</div> })}</div>}
+              </div>
+            </div>}
+            {false && <div>{/* blocos.map((bloco, idx) => { const aberto = abertos.has(bloco.bloco); return <div key={bloco.bloco}><button type="button" onClick={() => toggle(bloco.bloco)} aria-expanded={aberto} className={cn("grid w-full grid-cols-[1fr_100px_100px_100px] items-center gap-2 px-3 py-3 text-left transition-colors hover:bg-secondary/40", idx % 2 === 1 && "bg-secondary/20")}><span className="flex items-center gap-2 font-medium"><ChevronRight className={cn("size-4 text-muted-foreground transition-transform", aberto && "rotate-90")} />{bloco.bloco}</span><span className="text-right tabular-nums font-medium">{bloco.qtd}</span><span className={cn("text-right tabular-nums font-medium", pctTone(bloco.pctConforme))}>{bloco.pctConforme}%</span><span className="text-right tabular-nums font-medium text-destructive">{bloco.pctInconforme > 0 ? `${bloco.pctInconforme}%` : "—"}</span></button>{aberto && <div className="border-t bg-background px-3 py-3">{Array.from(new Map(bloco.itens.map((item) => [item.itemId, item])).values()).map((item) => <div key={item.itemId} className="mb-3 last:mb-0"><p className="mb-2 pl-6 text-sm text-muted-foreground">{item.texto}</p><div className="ml-6 flex flex-col gap-1">{bloco.itens.filter((i) => i.itemId === item.itemId).map((i) => operadorSelecionado === "todos" ? <div key={i.operadorId} className="grid grid-cols-[1fr_100px_100px] gap-2 text-xs"><span className="truncate text-muted-foreground">{i.operador}</span><span className={cn("text-right tabular-nums", pctTone(i.pctConforme))}>{i.pctConforme}% conforme</span><span className="text-right tabular-nums text-destructive">{i.pctInconforme > 0 ? `${i.pctInconforme}% inconforme` : "—"}</span></div> : <div key={i.operadorId} className="grid grid-cols-[1fr_100px_100px] gap-2 text-xs"><span aria-hidden="true" /><span className={cn("text-right tabular-nums", pctTone(i.pctConforme))}>{i.pctConforme}% conforme</span><span className="text-right tabular-nums text-destructive">{i.pctInconforme > 0 ? `${i.pctInconforme}% inconforme` : "—"}</span></div>)}</div></div>)}</div>}</div> })}*/}</div>}
           </TabsContent>
           <TabsContent value="historico" className="mt-0 flex flex-col gap-4">
             <div className="rounded-xl border bg-secondary/20 p-4">

@@ -212,9 +212,35 @@ const cache: Cache = {
 
 let hydrated = false
 let hydrating: Promise<void> | null = null
+const LOCAL_CACHE_KEY = "qualimonitor.data.v2"
+
+function salvarCacheLocal() {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(cache))
+}
+
+function carregarCacheLocal() {
+  if (typeof window === "undefined") return false
+  try {
+    const salvo = JSON.parse(window.localStorage.getItem(LOCAL_CACHE_KEY) || "null") as Partial<Cache> | null
+    if (!salvo) return false
+    cache.carteiras = salvo.carteiras ?? []
+    cache.checklists = salvo.checklists ?? []
+    cache.operadores = salvo.operadores ?? []
+    cache.monitorias = salvo.monitorias ?? []
+    cache.feedbacks = salvo.feedbacks ?? []
+    cache.recebimentos = salvo.recebimentos ?? []
+    cache.vinculos = salvo.vinculos ?? []
+    cache.tabulacoes = salvo.tabulacoes ?? []
+    return true
+  } catch {
+    return false
+  }
+}
 
 function emitUpdate(key: string) {
   if (typeof window === "undefined") return
+  salvarCacheLocal()
   window.dispatchEvent(new CustomEvent("qm:update", { detail: { key } }))
 }
 
@@ -271,6 +297,7 @@ function setChecklists(v: Checklist[]) {
   const old = cache.checklists.map((c) => c.id)
   cache.checklists = v
   emitUpdate("checklists")
+  salvarCacheLocal()
   void persistJson("checklists", "id", (c: Checklist) => c.id, old, v)
 }
 
@@ -346,11 +373,29 @@ async function seedInicial() {
   ])
 }
 
-/** Carrega todos os dados do Supabase para o cache. Faz seed se vazio. */
-async function hydrate(): Promise<void> {
+  /** Carrega os dados persistidos no navegador, usando os seeds apenas no primeiro acesso. */
+  async function hydrate(): Promise<void> {
   if (hydrated) return
   if (hydrating) return hydrating
   hydrating = (async () => {
+    if (carregarCacheLocal()) {
+      hydrated = true
+      emitUpdate("hydrate")
+      return
+    }
+    cache.carteiras = []
+    cache.checklists = []
+    cache.operadores = []
+    cache.monitorias = []
+    cache.feedbacks = []
+    cache.recebimentos = []
+    cache.vinculos = []
+    cache.tabulacoes = []
+    salvarCacheLocal()
+    hydrated = true
+    emitUpdate("hydrate")
+    return
+  /*
     const [
       checklists,
       operadores,
@@ -395,6 +440,7 @@ async function hydrate(): Promise<void> {
 
     hydrated = true
     emitUpdate("hydrate")
+  */
   })()
   return hydrating
 }
