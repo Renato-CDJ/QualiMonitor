@@ -17,11 +17,14 @@ import {
   ShieldCheck,
   Download,
   Search,
+  CalendarDays,
+  Filter,
 } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { CardTitleHint } from "@/components/card-title-hint"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import {
   Table,
   TableBody,
@@ -102,6 +105,9 @@ export function HistoricoOperador() {
   const { monitorias, operadores, checklists, feedbacks, recebimentos, ready } = useQualityData()
   const [operadorId, setOperadorId] = useState<string | null>(null)
   const [periodicidade, setPeriodicidade] = useState<Periodicidade>("mensal")
+  const [historicoAberto, setHistoricoAberto] = useState(false)
+  const [mesHistorico, setMesHistorico] = useState("")
+  const [faixaHistorico, setFaixaHistorico] = useState("todas")
 
   const operadorSelecionado = useMemo(
     () => operadores.find((o) => o.id === operadorId) ?? null,
@@ -229,6 +235,31 @@ export function HistoricoOperador() {
     }
   }, [operadorSelecionado, monitorias, checklists, feedbacks, recebimentos, periodicidade])
 
+  const historicoMensal = useMemo(() => {
+    if (!dados || dados.vazio) return null
+    const meses = Array.from(new Set(dados.minhas.map((item) => item.data.slice(0, 7)))).sort().reverse()
+    const mes = mesHistorico || meses[0] || ""
+    const [ano, mesNumero] = mes.split("-").map(Number)
+    const diasNoMes = ano && mesNumero ? new Date(Date.UTC(ano, mesNumero, 0)).getUTCDate() : 0
+    const primeiroDia = ano && mesNumero ? new Date(Date.UTC(ano, mesNumero - 1, 1)).getUTCDay() : 0
+    const notasPorDia = new Map<string, number[]>()
+    for (const monitoria of dados.minhas) {
+      if (monitoria.data.slice(0, 7) !== mes) continue
+      const faixa = faixaNota(monitoria.nota)
+      if (faixaHistorico !== "todas" && faixa !== faixaHistorico) continue
+      const notas = notasPorDia.get(monitoria.data) ?? []
+      notas.push(monitoria.nota)
+      notasPorDia.set(monitoria.data, notas)
+    }
+    const dias = Array.from({ length: diasNoMes }, (_, index) => {
+      const dia = String(index + 1).padStart(2, "0")
+      const data = `${mes}-${dia}`
+      const notas = notasPorDia.get(data) ?? []
+      return { dia: index + 1, data, media: notas.length ? Math.round(media(notas) * 10) / 10 : null, quantidade: notas.length }
+    })
+    return { meses, mes, primeiroDia, dias, monitorias: dias.reduce((total, dia) => total + dia.quantidade, 0), diasComDados: dias.filter((dia) => dia.media !== null).length }
+  }, [dados, mesHistorico, faixaHistorico])
+
   function exportarExcel() {
     if (!dados || dados.vazio || !operadorSelecionado) return
     const linhas = dados.minhas.map((m) => ({
@@ -347,10 +378,25 @@ export function HistoricoOperador() {
                 <Badge variant="outline" className={cn("text-sm", notaBadgeClass(dados.notaMedia))}>
                   Média {dados.notaMedia} · {faixaNota(dados.notaMedia)}
                 </Badge>
-                <Button variant="outline" size="sm" onClick={exportarExcel}>
-                  <Download className="size-4" />
-                  Exportar
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Dialog open={historicoAberto} onOpenChange={setHistoricoAberto}>
+                    <DialogTrigger asChild>
+                      <Button variant="secondary" size="sm"><CalendarDays data-icon="inline-start" />Histórico mensal</Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl">
+                      <DialogHeader><DialogTitle>Histórico de notas · {operadorSelecionado.nome}</DialogTitle><DialogDescription>Consulte a evolução diária das notas e filtre por mês ou faixa de desempenho.</DialogDescription></DialogHeader>
+                      {historicoMensal && <div className="flex flex-col gap-5">
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <label className="flex flex-col gap-1.5 text-xs text-muted-foreground">Mês de referência<select value={historicoMensal.mes} onChange={(event) => setMesHistorico(event.target.value)} className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"><option value="" disabled>Selecione o mês</option>{historicoMensal.meses.map((mes) => <option key={mes} value={mes}>{new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${mes}-01T00:00:00Z`))}</option>)}</select></label>
+                          <label className="flex flex-col gap-1.5 text-xs text-muted-foreground"><span className="flex items-center gap-1"><Filter className="size-3.5" />Faixa da nota</span><select value={faixaHistorico} onChange={(event) => setFaixaHistorico(event.target.value)} className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"><option value="todas">Todas as faixas</option><option value="Excelente">Excelente</option><option value="Bom">Bom</option><option value="Regular">Regular</option><option value="Crítico">Crítico</option></select></label>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3"><div className="rounded-lg border bg-secondary/40 p-3"><p className="text-xs text-muted-foreground">Média do mês</p><p className="mt-1 text-xl font-semibold">{historicoMensal.dias.filter((dia) => dia.media !== null).length ? Math.round(media(historicoMensal.dias.flatMap((dia) => dia.media === null ? [] : [dia.media])) * 10) / 10 : "—"}</p></div><div className="rounded-lg border bg-secondary/40 p-3"><p className="text-xs text-muted-foreground">Monitorias</p><p className="mt-1 text-xl font-semibold">{historicoMensal.monitorias}</p></div><div className="rounded-lg border bg-secondary/40 p-3"><p className="text-xs text-muted-foreground">Dias avaliados</p><p className="mt-1 text-xl font-semibold">{historicoMensal.diasComDados}</p></div></div>
+                        <div className="grid grid-cols-7 gap-1.5 text-center text-xs"><div className="pb-1 font-medium text-muted-foreground">Dom</div><div className="pb-1 font-medium text-muted-foreground">Seg</div><div className="pb-1 font-medium text-muted-foreground">Ter</div><div className="pb-1 font-medium text-muted-foreground">Qua</div><div className="pb-1 font-medium text-muted-foreground">Qui</div><div className="pb-1 font-medium text-muted-foreground">Sex</div><div className="pb-1 font-medium text-muted-foreground">Sáb</div>{Array.from({ length: historicoMensal.primeiroDia }).map((_, index) => <div key={`empty-${index}`} />)}{historicoMensal.dias.map((dia) => <div key={dia.data} title={dia.media === null ? "Sem monitorias" : `${dia.media} pontos · ${dia.quantidade} monitoria(s)`} className={cn("flex min-h-14 flex-col items-center justify-center rounded-lg border transition-colors", dia.media === null ? "border-border/50 bg-background text-muted-foreground/40" : dia.media >= 90 ? "border-chart-5/40 bg-chart-5/20 text-chart-5" : dia.media >= 75 ? "border-chart-1/40 bg-chart-1/20 text-chart-1" : dia.media >= 60 ? "border-chart-3/40 bg-chart-3/20 text-chart-3" : "border-destructive/40 bg-destructive/20 text-destructive")}><span className="font-medium">{dia.dia}</span>{dia.media !== null && <span className="mt-0.5 font-semibold">{dia.media}</span>}</div>)}</div>
+                      </div>}
+                    </DialogContent>
+                  </Dialog>
+                  <Button variant="outline" size="sm" onClick={exportarExcel}><Download className="size-4" />Exportar</Button>
+                </div>
               </div>
             </CardContent>
           </Card>
