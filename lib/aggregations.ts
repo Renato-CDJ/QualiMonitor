@@ -297,7 +297,7 @@ export function paretoItens(monitorias: Monitoria[], checklists: Checklist[]) {
       mapa.set(texto, atual)
     }
   }
-  const ordenado = Array.from(mapa.values()).sort((a, b) => b.qtd - a.qtd).slice(0, 8)
+  const ordenado = Array.from(mapa.values()).sort((a, b) => b.qtd - a.qtd || a.texto.localeCompare(b.texto, "pt-BR"))
   const total = ordenado.reduce((s, x) => s + x.qtd, 0)
   let acum = 0
   return ordenado.map((x) => {

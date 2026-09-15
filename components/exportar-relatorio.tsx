@@ -673,6 +673,14 @@ export function ExportarRelatorio() {
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-end justify-between gap-4 rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-sm">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Central de relatórios</p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight">Exportações analíticas</h1>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Gere planilhas atualizadas com os indicadores da plataforma, usando um único recorte de carteira e período.</p>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground"><span className="size-2 rounded-full bg-chart-5" />Dados prontos para exportação</div>
+      </div>
       {/* Filtros globais */}
       <div className="rounded-xl border border-border bg-card">
         <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-medium">

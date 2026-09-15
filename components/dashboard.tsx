@@ -6,14 +6,13 @@ import {
   AlertOctagon,
   ClipboardList,
   TrendingUp,
-  RotateCcw,
   CalendarDays,
   Eye,
   EyeOff,
 } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { CardTitleHint } from "@/components/card-title-hint"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -23,16 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import { useQualityData } from "@/lib/use-quality-data"
-import { store } from "@/lib/store"
 import { useAuth } from "@/lib/auth"
 import { useNotasGlobais } from "@/lib/notas-context"
 import {
@@ -49,6 +39,7 @@ import {
   FaixasPieChart,
   TabulacaoPieChart,
   ParetoChart,
+  ChartFullscreen,
 } from "@/components/dashboard-charts"
 import { OperadoresResumoDialog } from "@/components/operadores-resumo-dialog"
 import { cn } from "@/lib/utils"
@@ -104,7 +95,7 @@ function Kpi({
 
 export function Dashboard() {
   const { monitorias, checklists, ready } = useQualityData()
-  const { carteira: carteiraSelecionada, isVisitante } = useAuth()
+  const { carteira: carteiraSelecionada } = useAuth()
   const { mostrarTodas, setMostrarTodas } = useNotasGlobais()
   const periodo: Periodicidade = "diario"
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>(carteiraSelecionada ?? "todas")
@@ -192,33 +183,6 @@ export function Dashboard() {
             {mostrarTodas ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             {mostrarTodas ? "Ocultar notas" : "Exibir notas"}
           </Button>
-          {!isVisitante && (
-            <Dialog>
-              <DialogTrigger
-                className={buttonVariants({
-                  variant: "ghost",
-                  size: "sm",
-                  className: "gap-2 text-muted-foreground",
-                })}
-              >
-                <RotateCcw className="size-4" /> Resetar dados
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Resetar dados de demonstração?</DialogTitle>
-                </DialogHeader>
-                <p className="text-sm text-muted-foreground">
-                  Isso apaga todas as monitorias e checklists do banco de dados e recria os
-                  dados de exemplo.
-                </p>
-                <DialogFooter>
-                  <Button variant="destructive" onClick={() => store.resetAll()}>
-                    Resetar agora
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
           </div>
         </div>
 
@@ -227,7 +191,7 @@ export function Dashboard() {
           {/* Carteira */}
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs text-muted-foreground">Carteira</Label>
-            <Select value={carteiraFiltro} onValueChange={setCarteiraFiltro}>
+            <Select value={carteiraFiltro} onValueChange={(value) => value && setCarteiraFiltro(value)}>
               <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
@@ -326,7 +290,7 @@ export function Dashboard() {
             />
           </CardHeader>
           <CardContent>
-            <TendenciaChart data={serie} />
+            <ChartFullscreen title="Evolução da Nota Média"><TendenciaChart data={serie} /></ChartFullscreen>
           </CardContent>
         </Card>
         <Card>
@@ -337,7 +301,7 @@ export function Dashboard() {
             />
           </CardHeader>
           <CardContent>
-            <VolumeNotaChart data={serie} />
+            <ChartFullscreen title="Volume vs Nota"><VolumeNotaChart data={serie} /></ChartFullscreen>
           </CardContent>
         </Card>
       </div>
@@ -348,11 +312,11 @@ export function Dashboard() {
           <CardHeader>
             <CardTitleHint
               title="Distribuição por Faixa"
-              description="Gráfico de pizza"
+              description="Pizza ou barras"
             />
           </CardHeader>
           <CardContent>
-            <FaixasPieChart data={faixaData} />
+            <ChartFullscreen title="Distribuição por Faixa"><FaixasPieChart data={faixaData} /></ChartFullscreen>
           </CardContent>
         </Card>
         <Card>
@@ -363,7 +327,7 @@ export function Dashboard() {
             />
           </CardHeader>
           <CardContent>
-            <TabulacaoPieChart data={tabData} />
+            <ChartFullscreen title="Monitorias por Tabulação"><TabulacaoPieChart data={tabData} /></ChartFullscreen>
           </CardContent>
         </Card>
       </div>
@@ -378,7 +342,7 @@ export function Dashboard() {
         </CardHeader>
         <CardContent>
           {pareto.length ? (
-            <ParetoChart data={pareto} />
+            <ChartFullscreen title="Pareto de Inconformidades"><ParetoChart data={pareto} /></ChartFullscreen>
           ) : (
             <p className="py-16 text-center text-sm text-muted-foreground">
               Sem inconformidades no período.

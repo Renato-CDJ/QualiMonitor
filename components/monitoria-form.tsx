@@ -247,7 +247,7 @@ export function MonitoriaForm() {
           </Card>
         )}
 
-        <Card className={cn(dadosColapsados && checklistVisivel && "hidden")}>
+        <Card className={cn("overflow-visible", dadosColapsados && checklistVisivel && "hidden")}>
           <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
             <CardTitle className="text-base">Dados da Monitoria</CardTitle>
             {checklistVisivel && (
@@ -261,13 +261,13 @@ export function MonitoriaForm() {
               </Button>
             )}
           </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
+          <CardContent className="grid gap-4 overflow-visible sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label>Carteira</Label>
               <Select
                 value={carteira}
                 onValueChange={(v) => {
-                  setCarteira(v)
+                  setCarteira(v ?? "")
                   setOperadorId(null)
                   setTabulacao("")
                   setStatusMap({})
@@ -363,7 +363,7 @@ export function MonitoriaForm() {
               <Select
                 value={tabulacao}
                 onValueChange={(v) => {
-                  setTabulacao(v)
+                  setTabulacao(v ?? "")
                   // o checklist pode mudar conforme a tabulação vinculada
                   setStatusMap({})
                   // recolhe o bloco de dados para dar foco ao checklist

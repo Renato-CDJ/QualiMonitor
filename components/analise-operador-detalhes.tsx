@@ -117,7 +117,7 @@ export function AnalisOperadorDetalhes({
               <Label htmlFor="operador-filtro" className="text-xs text-muted-foreground">
                 Operador
               </Label>
-              <Select value={operadorAtivo} onValueChange={setOperadorSelecionado}>
+              <Select value={operadorAtivo} onValueChange={(value) => setOperadorSelecionado(value ?? "")}>
                 <SelectTrigger id="operador-filtro" className="w-56">
                   <SelectValue>{operadorNome}</SelectValue>
                 </SelectTrigger>
@@ -199,7 +199,7 @@ export function AnalisOperadorDetalhes({
                     bloco.itens.map((item) => (
                       <div
                         key={item.itemId}
-                        className="grid grid-cols-[1fr_80px_104px_104px] items-center gap-2 border-t border-border/60 bg-background px-3 py-2 text-sm"
+                        className="grid h-10 grid-cols-[minmax(0,1fr)_80px_104px_104px] items-center gap-2 border-t border-border/70 bg-background px-3 text-sm leading-none"
                       >
                         <span className="flex items-center gap-1.5 pl-6 text-muted-foreground">
                           <span className="truncate">{item.texto}</span>

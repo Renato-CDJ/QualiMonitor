@@ -205,6 +205,23 @@ export function Quadrante() {
     setDialogAberto(true)
   }
 
+  function exportarResultadoExcel() {
+    const linhas = dadosOrdenados.map((o) => ({
+      Operador: o.operador,
+      Carteira: o.carteira,
+      Monitorias: o.volume,
+      "Nota Média": o.nota,
+      Performance: o.recebimento === "alto" ? "Alta" : o.recebimento === "baixo" ? "Baixa" : "Pendente",
+      Qualidade: o.qualidade === "alta" ? "Alta" : "Baixa",
+      Quadrante: o.sigla ? `${o.sigla} · ${o.info?.quadrante ?? ""}` : "Não classificado",
+    }))
+    const ws = XLSX.utils.json_to_sheet(linhas)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, "Resultado por Operador")
+    XLSX.writeFile(wb, `resultado-quadrante-${dataInicio}-${dataFim}.xlsx`)
+    toast.success("Resultado por operador exportado para Excel")
+  }
+
   function salvarRecebimento() {
     if (!operadorSel) {
       toast.error("Selecione um operador")
@@ -311,7 +328,7 @@ export function Quadrante() {
       <div className="flex flex-wrap items-end gap-4">
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs text-muted-foreground">Carteira</Label>
-          <Select value={carteiraFiltro} onValueChange={setCarteiraFiltro}>
+          <Select value={carteiraFiltro} onValueChange={(value) => setCarteiraFiltro(value ?? "todas")}>
             <SelectTrigger className="w-44">
               <SelectValue />
             </SelectTrigger>
@@ -422,7 +439,7 @@ export function Quadrante() {
               <div className="flex flex-col gap-4 py-1">
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-xs text-muted-foreground">Operador</Label>
-                  <Select value={operadorSel} onValueChange={setOperadorSel}>
+                  <Select value={operadorSel} onValueChange={(value) => setOperadorSel(value ?? "")}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um operador" />
                     </SelectTrigger>
@@ -582,7 +599,7 @@ export function Quadrante() {
 
       {/* Tabela detalhada */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-start justify-between gap-4">
           <CardTitleHint
             title="Resultado por Operador"
             description={
@@ -593,6 +610,10 @@ export function Quadrante() {
               </>
             }
           />
+          <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={exportarResultadoExcel}>
+            <Download data-icon="inline-start" />
+            Exportar Excel
+          </Button>
         </CardHeader>
         <CardContent>
           <Table>

@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react"
 import { toast } from "sonner"
-import { Plus, Trash2, Save, AlertTriangle, FolderPlus } from "lucide-react"
+import { Plus, Trash2, Save, AlertTriangle, FolderPlus, Download, Upload, FileSpreadsheet } from "lucide-react"
+import * as XLSX from "xlsx"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -30,6 +31,8 @@ export function ChecklistEditor() {
   const [carteiraSelecionada, setCarteiraSelecionada] = useState("")
   const [novoNome, setNovoNome] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [modeloOpen, setModeloOpen] = useState(false)
+  const arquivoInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!ready) return
@@ -171,6 +174,85 @@ export function ChecklistEditor() {
     return critico ? "var(--destructive)" : null
   }
 
+  function baixarArquivo(conteudo: BlobPart, nome: string, tipo: string) {
+    const url = URL.createObjectURL(new Blob([conteudo], { type: tipo }))
+    const link = document.createElement("a")
+    link.href = url
+    link.download = nome
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function exportarChecklist() {
+    if (!rascunho) return
+    const linhas = rascunho.itens.map((item) => ({
+      bloco: item.bloco ?? "",
+      texto: item.texto,
+      descricao: item.descricao ?? "",
+      peso: item.peso,
+      critico: item.critico ? "sim" : "não",
+    }))
+    const planilha = XLSX.utils.json_to_sheet(linhas)
+    planilha["!cols"] = [{ wch: 24 }, { wch: 48 }, { wch: 64 }, { wch: 10 }, { wch: 12 }]
+    const pasta = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(pasta, planilha, "Checklist")
+    const arquivo = XLSX.write(pasta, { bookType: "xlsx", type: "array" })
+    baixarArquivo(arquivo, `${rascunho.nome.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "checklist"}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    toast.success("Checklist exportado.")
+  }
+
+  function baixarModelo() {
+    const linhas = [
+      { bloco: "Abertura", texto: "Exemplo de item", descricao: "Orientação para o monitor", peso: 5, critico: "não" },
+      { bloco: "", texto: "Outro item", descricao: "", peso: 10, critico: "não" },
+    ]
+    const planilha = XLSX.utils.json_to_sheet(linhas)
+    planilha["!cols"] = [{ wch: 24 }, { wch: 48 }, { wch: 64 }, { wch: 10 }, { wch: 12 }]
+    const pasta = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(pasta, planilha, "Checklist")
+    const arquivo = XLSX.write(pasta, { bookType: "xlsx", type: "array" })
+    baixarArquivo(arquivo, "modelo-checklist-qualimonitor.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    toast.success("Modelo baixado.")
+  }
+
+  function importarChecklist(event: ChangeEvent<HTMLInputElement>) {
+    const arquivo = event.target.files?.[0]
+    event.target.value = ""
+    if (!arquivo || !rascunho) return
+    const leitor = new FileReader()
+    leitor.onload = (evento) => {
+      try {
+        const dados = new Uint8Array(evento.target?.result as ArrayBuffer)
+        const pasta = XLSX.read(dados, { type: "array" })
+        const primeiraAba = pasta.Sheets[pasta.SheetNames[0]]
+        const linhas = XLSX.utils.sheet_to_json<Record<string, unknown>>(primeiraAba, { defval: "" })
+        const itens = linhas
+          .map((linha) => {
+            const valor = (nome: string) => linha[nome] ?? linha[nome.toLowerCase()] ?? ""
+            const texto = String(valor("texto") || valor("item")).trim()
+            if (!texto) return null
+            const critico = ["sim", "s", "true", "1", "x"].includes(String(valor("critico")).trim().toLowerCase())
+            const peso = Number(valor("peso"))
+            return {
+              id: store.uid(),
+              texto,
+              descricao: String(valor("descricao") || "").trim() || undefined,
+              bloco: String(valor("bloco") || "").trim() || undefined,
+              peso: Number.isFinite(peso) ? Math.max(0, peso) : 0,
+              critico,
+            }
+          })
+          .filter((item): item is NonNullable<typeof item> => item !== null)
+        if (!itens.length) return toast.error("Não encontramos itens válidos na planilha.")
+        setRascunho({ ...rascunho, itens })
+        toast.success(`${itens.length} itens importados. Revise e salve as alterações.`)
+      } catch {
+        toast.error("Não foi possível ler o arquivo. Use o modelo do QualiMonitor.")
+      }
+    }
+    leitor.readAsArrayBuffer(arquivo)
+  }
+
   function salvar() {
     if (!rascunho) return
     if (!rascunho.itens.length) return toast.error("Adicione ao menos um item.")
@@ -268,6 +350,64 @@ export function ChecklistEditor() {
                 disabled={!carteiras.some((carteira) => carteira.ativa)}
               >
                 <Plus className="size-4" /> Criar checklist
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <input
+          ref={arquivoInputRef}
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          onChange={importarChecklist}
+          className="sr-only"
+          aria-label="Importar checklist"
+        />
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="gap-2"
+            onClick={() => arquivoInputRef.current?.click()}
+            disabled={!rascunho}
+          >
+            <Upload className="size-4" /> Importar
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="gap-2"
+            onClick={exportarChecklist}
+            disabled={!rascunho}
+          >
+            <Download className="size-4" /> Exportar
+          </Button>
+        </div>
+
+        <Dialog open={modeloOpen} onOpenChange={setModeloOpen}>
+          <DialogTrigger
+            className={buttonVariants({ variant: "ghost", className: "w-full justify-start gap-2 text-muted-foreground" })}
+          >
+            <FileSpreadsheet className="size-4" /> Ver modelo de importação
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Modelo de importação</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-3 text-sm text-muted-foreground">
+              <p>Baixe o modelo e preencha uma linha para cada item do checklist.</p>
+              <div className="rounded-lg border bg-muted/30 p-3 font-mono text-xs">
+                bloco · texto · descricao · peso · critico
+              </div>
+              <ul className="list-disc space-y-1 pl-5 text-xs">
+                <li><strong>bloco</strong> e <strong>descricao</strong> são opcionais.</li>
+                <li><strong>peso</strong> deve ser um número. Use 0 para itens sem desconto.</li>
+                <li>Para <strong>critico</strong>, use “sim” ou “não”.</li>
+              </ul>
+            </div>
+            <DialogFooter>
+              <Button onClick={baixarModelo} className="gap-2">
+                <Download className="size-4" /> Baixar modelo .xlsx
               </Button>
             </DialogFooter>
           </DialogContent>

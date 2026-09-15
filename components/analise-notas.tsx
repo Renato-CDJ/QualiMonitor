@@ -268,7 +268,7 @@ export function AnaliseNotas() {
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex min-w-[11rem] flex-1 flex-col gap-1.5 sm:flex-none">
             <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Carteira</Label>
-            <Select value={carteiraFiltro} onValueChange={setCarteiraFiltro}>
+            <Select value={carteiraFiltro} onValueChange={(value) => setCarteiraFiltro(value ?? "todas")}>
               <SelectTrigger className="h-10 w-full bg-background sm:w-48">
                 <SelectValue />
               </SelectTrigger>
@@ -284,7 +284,7 @@ export function AnaliseNotas() {
           </div>
           <div className="flex min-w-[11rem] flex-1 flex-col gap-1.5 sm:flex-none">
             <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Faixa</Label>
-            <Select value={faixaFiltro} onValueChange={setFaixaFiltro}>
+            <Select value={faixaFiltro} onValueChange={(value) => setFaixaFiltro(value ?? "todas")}>
               <SelectTrigger className="h-10 w-full bg-background sm:w-52">
               <SelectValue />
             </SelectTrigger>

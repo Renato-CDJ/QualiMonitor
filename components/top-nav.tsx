@@ -91,6 +91,7 @@ const MENU_ADMIN = {
     { href: "/admin/usuarios", label: "Usuários", icon: Users },
     { href: "/admin/operadores", label: "Operadores", icon: Headset },
     { href: "/admin/checklists-operadores", label: "Checklists & Operadores", icon: ClipboardList },
+    { href: "/admin/checklists", label: "Visualizar Checklists", icon: ListChecks },
     { href: "/admin/carteiras", label: "Carteiras", icon: Wallet },
     { href: "/admin/tabulacoes", label: "Tabulações", icon: Layers },
     { href: "/resultado-monitor", label: "Resultado Monitor", icon: UserCheck },

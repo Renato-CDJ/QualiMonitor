@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import {
   Area,
   AreaChart,
@@ -31,7 +31,8 @@ import type { Monitoria } from "@/lib/types"
 import { resumoQuartis } from "@/lib/analytics"
 import { porOperador } from "@/lib/aggregations"
 import { Button } from "@/components/ui/button"
-import { Eye, EyeOff } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Expand, Eye, EyeOff } from "lucide-react"
 import { useNotasGlobais } from "@/lib/notas-context"
 
   const CHART_BLUE = "#0875dc"
@@ -114,6 +115,26 @@ function makeLeaderLabel(corResolver: (name: string, index: number) => string, m
 }
 
 /* ---------- Botão reutilizável: exibir/ocultar notas ---------- */
+export function ChartFullscreen({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="relative">
+      {children}
+      <Dialog>
+        <DialogTrigger render={<Button variant="ghost" size="icon" className="absolute right-10 -top-11 z-10 size-8 text-muted-foreground" aria-label={`Ampliar ${title}`} title={`Ampliar ${title}`} />}>
+          <Expand data-icon="inline-start" />
+        </DialogTrigger>
+        <DialogContent className="h-[90vh] !w-[90vw] !max-w-[90vw] overflow-hidden p-8">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>Visualização ampliada do gráfico.</DialogDescription>
+          </DialogHeader>
+          <div className="min-h-0 flex-1 overflow-auto rounded-xl border bg-card/30 p-4 [&_.h-\[260px\]]:h-[calc(90vh-12rem)]">{children}</div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
 function ToggleNotasButton({
   mostrar,
   onToggle,
@@ -138,8 +159,10 @@ function ToggleNotasButton({
 /* ---------- Tendência (linha/área) ---------- */
 export function TendenciaChart({
   data,
+  controls,
 }: {
   data: { rotulo: string; nota: number; volume: number }[]
+  controls?: ReactNode
 }) {
   const config = {
     nota: { label: "Nota média", color: CHART_BLUE },
@@ -149,7 +172,10 @@ export function TendenciaChart({
   const mostrarNotas = mostrarTodas || mostrarLocal
   return (
     <div className="relative">
-      <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
+      {controls && <div className="absolute right-10 -top-11 z-10">{controls}</div>}
+      <div className="absolute right-0 top-0 z-20">
+        <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
+      </div>
       <ChartContainer config={config} className="h-[260px] w-full">
         <AreaChart data={data} margin={{ left: -16, right: 8, top: 24 }}>
           <defs>
@@ -255,28 +281,33 @@ export function FaixasPieChart({
   }, {} as ChartConfig)
   const { mostrarTodas } = useNotasGlobais()
   const [mostrarLocal, setMostrarNotas] = useState(false)
+  const [tipoGrafico, setTipoGrafico] = useState<"pizza" | "barras">("pizza")
   const mostrarNotas = mostrarTodas || mostrarLocal
+  const total = data.reduce((sum, item) => sum + item.qtd, 0)
+  const dadosComPercentual = data.map((item) => ({ ...item, percentual: total > 0 ? Number(((item.qtd / total) * 100).toFixed(1)) : 0 }))
   return (
     <div className="relative">
+      <div className="absolute right-20 -top-11 z-10 flex items-center gap-1 rounded-md border bg-background/80 p-0.5 backdrop-blur">
+        <Button type="button" variant={tipoGrafico === "pizza" ? "secondary" : "ghost"} size="sm" className="h-7 px-2 text-xs" onClick={() => setTipoGrafico("pizza")}>Pizza</Button>
+        <Button type="button" variant={tipoGrafico === "barras" ? "secondary" : "ghost"} size="sm" className="h-7 px-2 text-xs" onClick={() => setTipoGrafico("barras")}>Barras</Button>
+      </div>
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
-      <ChartContainer config={config} className="mx-auto h-[300px] w-full">
-        <PieChart margin={{ top: 24, right: 110, bottom: 24, left: 110 }}>
+      <ChartContainer config={config} className="mx-auto h-[340px] w-full">
+        {tipoGrafico === "pizza" ? <PieChart margin={{ top: 28, right: 130, bottom: 28, left: 130 }}>
           <ChartTooltip content={<ChartTooltipContent nameKey="faixa" />} />
-          <Pie
-            data={data}
-            dataKey="qtd"
-            nameKey="faixa"
-            innerRadius={48}
-            outerRadius={78}
-            paddingAngle={2}
-            labelLine={false}
-            label={makeLeaderLabel((name, i) => corFaixa(name, PIE_COLORS[i % PIE_COLORS.length]), mostrarNotas)}
-          >
-            {data.map((d, i) => (
-              <Cell key={i} fill={corFaixa(d.faixa, PIE_COLORS[i % PIE_COLORS.length])} />
-            ))}
+          <Pie data={data} dataKey="qtd" nameKey="faixa" innerRadius={62} outerRadius={108} paddingAngle={2} labelLine={false} label={makeLeaderLabel((name, i) => corFaixa(name, PIE_COLORS[i % PIE_COLORS.length]), mostrarNotas)}>
+            {data.map((d, i) => <Cell key={i} fill={corFaixa(d.faixa, PIE_COLORS[i % PIE_COLORS.length])} />)}
           </Pie>
-        </PieChart>
+        </PieChart> : <BarChart data={dadosComPercentual} margin={{ top: 28, right: 24, left: 0, bottom: 12 }}>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis dataKey="faixa" tickLine={false} axisLine={false} fontSize={12} />
+          <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} tickLine={false} axisLine={false} fontSize={12} width={42} />
+          <ChartTooltip content={<ChartTooltipContent nameKey="faixa" />} />
+          <Bar dataKey="percentual" name="Percentual" radius={[6, 6, 0, 0]}>
+            {data.map((d, i) => <Cell key={i} fill={corFaixa(d.faixa, PIE_COLORS[i % PIE_COLORS.length])} />)}
+            <LabelList dataKey="percentual" position="top" offset={8} fontSize={12} fontWeight={600} fill="var(--foreground)" formatter={(value) => `${value ?? 0}%`} />
+          </Bar>
+        </BarChart>}
       </ChartContainer>
     </div>
   )
@@ -298,8 +329,8 @@ export function TabulacaoPieChart({
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
-      <ChartContainer config={config} className="mx-auto h-[300px] w-full">
-        <PieChart margin={{ top: 24, right: 120, bottom: 24, left: 120 }}>
+      <ChartContainer config={config} className="mx-auto h-[340px] w-full">
+        <PieChart margin={{ top: 28, right: 130, bottom: 28, left: 130 }}>
           <ChartTooltip content={<ChartTooltipContent nameKey="tabulacao" />} />
           <Pie
             data={data}
@@ -397,12 +428,12 @@ export function ConformidadeCarteiraChart({
           <ChartTooltip content={<ChartTooltipContent />} />
           <Bar dataKey="pctConforme" fill="var(--color-pctConforme)" radius={[0, 4, 4, 0]}>
             {mostrarNotas && (
-              <LabelList dataKey="pctConforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v: number) => `${v}%`} />
+              <LabelList dataKey="pctConforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v) => `${v ?? 0}%`} />
             )}
           </Bar>
           <Bar dataKey="pctInconforme" fill="var(--color-pctInconforme)" radius={[0, 4, 4, 0]}>
             {mostrarNotas && (
-              <LabelList dataKey="pctInconforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v: number) => `${v}%`} />
+              <LabelList dataKey="pctInconforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v) => `${v ?? 0}%`} />
             )}
           </Bar>
         </BarChart>
@@ -529,12 +560,12 @@ export function MonitorConformidadeChart({
           <ChartTooltip content={<ChartTooltipContent />} />
           <Bar dataKey="pctConforme" fill="var(--color-pctConforme)" radius={[0, 4, 4, 0]}>
             {mostrarNotas && (
-              <LabelList dataKey="pctConforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v: number) => `${v}%`} />
+              <LabelList dataKey="pctConforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v) => `${v ?? 0}%`} />
             )}
           </Bar>
           <Bar dataKey="pctInconforme" fill="var(--color-pctInconforme)" radius={[0, 4, 4, 0]}>
             {mostrarNotas && (
-              <LabelList dataKey="pctInconforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v: number) => `${v}%`} />
+              <LabelList dataKey="pctInconforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v) => `${v ?? 0}%`} />
             )}
           </Bar>
         </BarChart>
@@ -585,7 +616,7 @@ export function MonitorContagemChart({
 export function ParetoChart({
   data,
 }: {
-  data: { item: string; qtd: number; acumulado: number }[]
+  data: { item: string; itemCompleto?: string; qtd: number; acumulado: number }[]
 }) {
   const config = {
   qtd: { label: "Inconformidades", color: "var(--chart-pareto-bars)" },
@@ -594,19 +625,34 @@ export function ParetoChart({
   const { mostrarTodas } = useNotasGlobais()
   const [mostrarLocal, setMostrarNotas] = useState(false)
   const mostrarNotas = mostrarTodas || mostrarLocal
+  const tickPareto = ({ x, y, payload }: any) => {
+    const texto = data[payload?.index ?? 0]?.itemCompleto ?? payload?.value ?? ""
+    const palavras = texto.split(" ")
+    const linhas: string[] = []
+    let linha = ""
+    for (const palavra of palavras) {
+      if (`${linha} ${palavra}`.trim().length > 22 && linha) {
+        linhas.push(linha)
+        linha = palavra
+      } else {
+        linha = `${linha} ${palavra}`.trim()
+      }
+    }
+    if (linha) linhas.push(linha)
+    return <text x={x} y={y} dy={18} textAnchor="end" transform={`rotate(-32 ${x} ${y})`} fill="var(--muted-foreground)" fontSize={9}>{linhas.slice(0, 3).map((item, index) => <tspan key={`${item}-${index}`} x={x} dy={index === 0 ? 0 : 10}>{item}</tspan>)}</text>
+  }
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
       <ChartContainer config={config} className="h-[300px] w-full">
         <ComposedChart data={data} margin={{ left: -16, right: 8, top: 24, bottom: 60 }}>
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+          <ReferenceLine yAxisId="right" y={80} stroke="var(--color-acumulado)" strokeDasharray="5 5" strokeOpacity={0.75} label={{ value: "80%", position: "insideTopRight", fontSize: 10, fill: "var(--muted-foreground)" }} />
           <XAxis
             dataKey="item"
+            tick={tickPareto}
             tickLine={false}
             axisLine={false}
-            fontSize={11}
-            angle={-35}
-            textAnchor="end"
             interval={0}
             height={60}
           />
@@ -621,7 +667,7 @@ export function ParetoChart({
             width={36}
             unit="%"
           />
-          <ChartTooltip content={<ChartTooltipContent />} />
+          <ChartTooltip content={<ChartTooltipContent labelFormatter={(_label, payload) => String(payload?.[0]?.payload?.itemCompleto ?? _label)} />} />
           <Bar yAxisId="left" dataKey="qtd" fill="var(--color-qtd)" radius={[4, 4, 0, 0]}>
             {mostrarNotas && (
               <LabelList
@@ -650,7 +696,7 @@ export function ParetoChart({
                 fontSize={11}
                 fontWeight={600}
                 fill="var(--color-acumulado)"
-                formatter={(v: number) => `${Math.round(v)}%`}
+                formatter={(v) => `${Math.round(Number(v) || 0)}%`}
               />
             )}
           </Line>
@@ -695,11 +741,10 @@ export function QuartilCarteiraChart({
   data: { carteira: string; min: number; q1: number; mediana: number; q3: number; max: number; media: number }[]
 }) {
   const linha = data.map((d) => ({
+    ...d,
     operador: d.carteira,
-    media: d.media,
     base: d.min,
     span: d.max - d.min,
-    ...d,
   }))
   const config = {
     span: { label: "Distribuição", color: CHART_TEAL },
@@ -1083,7 +1128,7 @@ export function AderenciaItensChart({
             fontSize={11}
             fontWeight={600}
             fill="var(--foreground)"
-            formatter={(v: number) => `${v}%`}
+            formatter={(v) => `${v ?? 0}%`}
           />
         </Bar>
       </BarChart>

@@ -29,7 +29,7 @@ export function JornadaOperadorView() {
           <Label htmlFor="carteira-filtro" className="text-xs text-muted-foreground">
             Carteira
           </Label>
-          <Select value={carteiraFiltro} onValueChange={setCarteiraFiltro}>
+          <Select value={carteiraFiltro} onValueChange={(value) => setCarteiraFiltro(value ?? "todas")}>
             <SelectTrigger id="carteira-filtro" className="w-56">
               <span className="flex items-center gap-2">
                 <Wallet className="size-4 text-muted-foreground" />
