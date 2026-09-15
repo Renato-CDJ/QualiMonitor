@@ -606,7 +606,7 @@ export function MonitorContagemChart({
 export function ParetoChart({
   data,
 }: {
-  data: { item: string; qtd: number; acumulado: number }[]
+  data: { item: string; itemCompleto?: string; qtd: number; acumulado: number }[]
 }) {
   const config = {
   qtd: { label: "Inconformidades", color: "var(--chart-pareto-bars)" },
@@ -643,7 +643,7 @@ export function ParetoChart({
             width={36}
             unit="%"
           />
-          <ChartTooltip content={<ChartTooltipContent />} />
+          <ChartTooltip content={<ChartTooltipContent labelFormatter={(_label, payload) => String(payload?.[0]?.payload?.itemCompleto ?? _label)} />} />
           <Bar yAxisId="left" dataKey="qtd" fill="var(--color-qtd)" radius={[4, 4, 0, 0]}>
             {mostrarNotas && (
               <LabelList
