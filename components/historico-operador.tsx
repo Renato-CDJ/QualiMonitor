@@ -383,7 +383,7 @@ export function HistoricoOperador() {
                     <DialogTrigger asChild>
                       <Button variant="secondary" size="sm"><CalendarDays data-icon="inline-start" />Histórico mensal</Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-4xl">
+                    <DialogContent className="w-[60vw] max-w-[60vw] min-w-[720px]">
                       <DialogHeader className="border-b border-border/60 pb-5"><div className="flex items-start gap-3"><div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><CalendarDays className="size-5" /></div><div><DialogTitle className="text-xl tracking-tight">Histórico de notas</DialogTitle><DialogDescription className="mt-1">{operadorSelecionado.nome} · evolução diária e desempenho mensal.</DialogDescription></div></div></DialogHeader>
                       {historicoMensal && <div className="flex flex-col gap-5">
                         <div className="grid gap-3 rounded-xl border border-border/60 bg-secondary/20 p-4 sm:grid-cols-2">
