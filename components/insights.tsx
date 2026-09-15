@@ -286,9 +286,9 @@ export function Insights() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Kpi
           icon={ListChecks}
-          label="Itens avaliados"
-          value={String(resumo.total)}
-          sub={`${itens.length} itens distintos`}
+          label="Monitorias"
+          value={String(filtradas.length)}
+          sub={`${itens.length} itens distintos avaliados`}
         />
         <Kpi
           icon={CheckCircle2}
