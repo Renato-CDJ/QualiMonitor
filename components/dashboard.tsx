@@ -312,7 +312,7 @@ export function Dashboard() {
           <CardHeader>
             <CardTitleHint
               title="Distribuição por Faixa"
-              description="Gráfico de pizza"
+              description="Pizza ou barras"
             />
           </CardHeader>
           <CardContent>
