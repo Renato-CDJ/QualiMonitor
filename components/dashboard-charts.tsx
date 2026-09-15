@@ -282,7 +282,7 @@ export function FaixasPieChart({
   const dadosComPercentual = data.map((item) => ({ ...item, percentual: total > 0 ? Number(((item.qtd / total) * 100).toFixed(1)) : 0 }))
   return (
     <div className="relative">
-      <div className="absolute -right-24 top-0 z-10 flex items-center gap-1 rounded-md border bg-background/80 p-0.5 backdrop-blur">
+      <div className="absolute right-20 -top-11 z-10 flex items-center gap-1 rounded-md border bg-background/80 p-0.5 backdrop-blur">
         <Button type="button" variant={tipoGrafico === "pizza" ? "secondary" : "ghost"} size="sm" className="h-7 px-2 text-xs" onClick={() => setTipoGrafico("pizza")}>Pizza</Button>
         <Button type="button" variant={tipoGrafico === "barras" ? "secondary" : "ghost"} size="sm" className="h-7 px-2 text-xs" onClick={() => setTipoGrafico("barras")}>Barras</Button>
       </div>
@@ -300,7 +300,7 @@ export function FaixasPieChart({
           <ChartTooltip content={<ChartTooltipContent nameKey="faixa" />} />
           <Bar dataKey="percentual" name="Percentual" radius={[6, 6, 0, 0]}>
             {data.map((d, i) => <Cell key={i} fill={corFaixa(d.faixa, PIE_COLORS[i % PIE_COLORS.length])} />)}
-            <LabelList dataKey="percentual" position="top" offset={8} fontSize={12} fontWeight={600} fill="var(--foreground)" formatter={(value: number) => `${value}%`} />
+            <LabelList dataKey="percentual" position="top" offset={8} fontSize={12} fontWeight={600} fill="var(--foreground)" formatter={(value) => `${value ?? 0}%`} />
           </Bar>
         </BarChart>}
       </ChartContainer>
