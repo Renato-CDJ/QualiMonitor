@@ -461,21 +461,21 @@ export function HistoricoOperador() {
 
           {/* Evolução temporal */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0">
               <div>
                 <CardTitleHint
                   title="Evolução da Nota"
                   description="Tendência da nota média do operador ao longo do tempo"
                 />
               </div>
-              <div className="flex gap-1 rounded-md bg-secondary p-0.5">
+              <div className="ml-auto flex shrink-0 flex-nowrap items-center gap-1 rounded-md bg-secondary p-0.5">
                 {PERIODICIDADES.map((p) => (
                   <button
                     key={p.value}
                     type="button"
                     onClick={() => setPeriodicidade(p.value)}
                     className={cn(
-                      "rounded px-2.5 py-1 text-xs font-medium transition-colors",
+                      "whitespace-nowrap rounded px-2.5 py-1 text-xs font-medium transition-colors",
                       periodicidade === p.value
                         ? "bg-background text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground",
