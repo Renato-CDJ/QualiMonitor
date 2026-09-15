@@ -278,9 +278,11 @@ export function FaixasPieChart({
   const [mostrarLocal, setMostrarNotas] = useState(false)
   const [tipoGrafico, setTipoGrafico] = useState<"pizza" | "barras">("pizza")
   const mostrarNotas = mostrarTodas || mostrarLocal
+  const total = data.reduce((sum, item) => sum + item.qtd, 0)
+  const dadosComPercentual = data.map((item) => ({ ...item, percentual: total > 0 ? Number(((item.qtd / total) * 100).toFixed(1)) : 0 }))
   return (
     <div className="relative">
-      <div className="absolute right-10 top-0 z-10 flex items-center gap-1 rounded-md border bg-background/80 p-0.5 backdrop-blur">
+      <div className="absolute -right-24 top-0 z-10 flex items-center gap-1 rounded-md border bg-background/80 p-0.5 backdrop-blur">
         <Button type="button" variant={tipoGrafico === "pizza" ? "secondary" : "ghost"} size="sm" className="h-7 px-2 text-xs" onClick={() => setTipoGrafico("pizza")}>Pizza</Button>
         <Button type="button" variant={tipoGrafico === "barras" ? "secondary" : "ghost"} size="sm" className="h-7 px-2 text-xs" onClick={() => setTipoGrafico("barras")}>Barras</Button>
       </div>
@@ -291,14 +293,14 @@ export function FaixasPieChart({
           <Pie data={data} dataKey="qtd" nameKey="faixa" innerRadius={62} outerRadius={108} paddingAngle={2} labelLine={false} label={makeLeaderLabel((name, i) => corFaixa(name, PIE_COLORS[i % PIE_COLORS.length]), mostrarNotas)}>
             {data.map((d, i) => <Cell key={i} fill={corFaixa(d.faixa, PIE_COLORS[i % PIE_COLORS.length])} />)}
           </Pie>
-        </PieChart> : <BarChart data={data} margin={{ top: 28, right: 24, left: 0, bottom: 12 }}>
+        </PieChart> : <BarChart data={dadosComPercentual} margin={{ top: 28, right: 24, left: 0, bottom: 12 }}>
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey="faixa" tickLine={false} axisLine={false} fontSize={12} />
-          <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={12} width={32} />
+          <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} tickLine={false} axisLine={false} fontSize={12} width={42} />
           <ChartTooltip content={<ChartTooltipContent nameKey="faixa" />} />
-          <Bar dataKey="qtd" radius={[6, 6, 0, 0]}>
+          <Bar dataKey="percentual" name="Percentual" radius={[6, 6, 0, 0]}>
             {data.map((d, i) => <Cell key={i} fill={corFaixa(d.faixa, PIE_COLORS[i % PIE_COLORS.length])} />)}
-            {mostrarNotas && <LabelList dataKey="qtd" position="top" offset={8} fontSize={12} fontWeight={600} fill="var(--foreground)" />}
+            <LabelList dataKey="percentual" position="top" offset={8} fontSize={12} fontWeight={600} fill="var(--foreground)" formatter={(value: number) => `${value}%`} />
           </Bar>
         </BarChart>}
       </ChartContainer>
@@ -322,8 +324,8 @@ export function TabulacaoPieChart({
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
-      <ChartContainer config={config} className="mx-auto h-[300px] w-full">
-        <PieChart margin={{ top: 24, right: 120, bottom: 24, left: 120 }}>
+      <ChartContainer config={config} className="mx-auto h-[340px] w-full">
+        <PieChart margin={{ top: 28, right: 130, bottom: 28, left: 130 }}>
           <ChartTooltip content={<ChartTooltipContent nameKey="tabulacao" />} />
           <Pie
             data={data}
