@@ -212,7 +212,7 @@ const cache: Cache = {
 
 let hydrated = false
 let hydrating: Promise<void> | null = null
-const LOCAL_CACHE_KEY = "qualimonitor.data.v1"
+const LOCAL_CACHE_KEY = "qualimonitor.data.v2"
 
 function salvarCacheLocal() {
   if (typeof window === "undefined") return
@@ -383,7 +383,14 @@ async function seedInicial() {
       emitUpdate("hydrate")
       return
     }
-    await seedInicial()
+    cache.carteiras = []
+    cache.checklists = []
+    cache.operadores = []
+    cache.monitorias = []
+    cache.feedbacks = []
+    cache.recebimentos = []
+    cache.vinculos = []
+    cache.tabulacoes = []
     salvarCacheLocal()
     hydrated = true
     emitUpdate("hydrate")
