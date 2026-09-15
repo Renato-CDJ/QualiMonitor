@@ -80,5 +80,28 @@ function ChecklistCard({ checklist, operadores, onOpen }: { checklist: Checklist
 
 function ChecklistReadOnly({ checklist, onClose }: { checklist: Checklist | null; onClose: () => void }) {
   const grupos = useMemo(() => { if (!checklist) return []; const mapa = new Map<string, typeof checklist.itens>(); for (const item of checklist.itens) { const grupo = item.bloco?.trim() || SEM_BLOCO; mapa.set(grupo, [...(mapa.get(grupo) ?? []), item]) } return Array.from(mapa.entries()) }, [checklist])
-  return <Dialog open={Boolean(checklist)} onOpenChange={(open) => !open && onClose()}><DialogContent className="max-h-[88vh] max-w-3xl overflow-y-auto"><DialogHeader><DialogTitle>{checklist?.nome}</DialogTitle><DialogDescription className="flex items-center gap-2"><span>{checklist?.carteira}</span><span>·</span><span className="inline-flex items-center gap-1"><CalendarDays className="size-3.5" />Atualizado em {checklist && formatarData(checklist.atualizadoEm)}</span></DialogDescription></DialogHeader><div className="flex flex-col gap-5">{grupos.map(([grupo, itens]) => <section key={grupo}><div className="mb-2 flex items-center justify-between"><h3 className="text-sm font-semibold">{grupo}</h3><Badge variant="secondary">{itens.length} {itens.length === 1 ? "item" : "itens"}</Badge></div><div className="divide-y rounded-xl border">{itens.map((item, index) => <div key={item.id} className="flex gap-3 p-4"><span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-secondary text-xs font-semibold text-muted-foreground">{index + 1}</span><div className="min-w-0 flex-1"><p className="font-medium">{item.texto}</p>{item.descricao && <p className="mt-1 text-sm text-muted-foreground">{item.descricao}</p>}<div className="mt-2 flex flex-wrap gap-1.5">{item.critico && <Badge variant="destructive">Crítico</Badge>}<Badge variant="outline">Peso {item.peso}</Badge></div></div></div>)}</div></section>)}</div></DialogContent></Dialog>
+  const totalCriticos = checklist?.itens.filter((item) => item.critico).length ?? 0
+  const totalPeso = checklist?.itens.reduce((total, item) => total + item.peso, 0) ?? 0
+
+  return (
+    <Dialog open={Boolean(checklist)} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-hidden border-border/70 bg-background/95 p-0 shadow-2xl backdrop-blur-xl">
+        <div className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="border-b border-border/60 bg-gradient-to-br from-primary/10 via-background to-background px-6 py-6 pr-14">
+            <div className="flex items-start gap-4">
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary shadow-sm"><ClipboardList className="size-6" /></div>
+              <div className="min-w-0">
+                <DialogTitle className="text-xl tracking-tight">{checklist?.nome}</DialogTitle>
+                <DialogDescription className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm"><Badge variant="secondary">{checklist?.carteira}</Badge><span className="text-border">•</span><span className="inline-flex items-center gap-1"><CalendarDays className="size-3.5" />Atualizado em {checklist && formatarData(checklist.atualizadoEm)}</span></DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="flex flex-col gap-6 p-6">
+            <div className="grid gap-3 sm:grid-cols-3"><div className="rounded-xl border border-border/60 bg-card/60 p-4"><p className="text-xs font-medium text-muted-foreground">Itens avaliáveis</p><p className="mt-1 text-2xl font-semibold tracking-tight">{checklist?.itens.length ?? 0}</p></div><div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4"><p className="text-xs font-medium text-muted-foreground">Itens críticos</p><p className="mt-1 text-2xl font-semibold tracking-tight text-amber-500">{totalCriticos}</p></div><div className="rounded-xl border border-border/60 bg-card/60 p-4"><p className="text-xs font-medium text-muted-foreground">Peso total</p><p className="mt-1 text-2xl font-semibold tracking-tight">{totalPeso}</p></div></div>
+            <div className="flex flex-col gap-6">{grupos.map(([grupo, itens], grupoIndex) => <section key={grupo}><div className="mb-3 flex items-center gap-3"><span className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-xs font-semibold text-primary">{String(grupoIndex + 1).padStart(2, "0")}</span><div className="min-w-0 flex-1"><h3 className="font-semibold tracking-tight">{grupo}</h3><p className="text-xs text-muted-foreground">Itens deste bloco de avaliação</p></div><Badge variant="secondary" className="shrink-0">{itens.length} {itens.length === 1 ? "item" : "itens"}</Badge></div><div className="overflow-hidden rounded-xl border border-border/60 bg-card/30">{itens.map((item, index) => <div key={item.id} className="flex gap-3 border-b border-border/50 p-4 last:border-0 transition-colors hover:bg-secondary/20"><span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-xs font-semibold text-muted-foreground">{String(index + 1).padStart(2, "0")}</span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-start justify-between gap-2"><p className="font-medium leading-5">{item.texto}</p>{item.critico && <Badge variant="destructive" className="shrink-0">Crítico</Badge>}</div>{item.descricao && <p className="mt-1.5 max-w-2xl text-sm leading-5 text-muted-foreground">{item.descricao}</p>}<div className="mt-3"><Badge variant="outline" className="bg-background/60">Peso {item.peso}</Badge></div></div></div>)}</div></section>)}</div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
 }
