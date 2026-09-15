@@ -173,7 +173,7 @@ export function TendenciaChart({
   return (
     <div className="relative">
       {controls && <div className="absolute right-10 -top-11 z-10">{controls}</div>}
-      <div className="absolute right-0 -top-11 z-10">
+      <div className="absolute right-10 top-0 z-10">
         <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
       </div>
       <ChartContainer config={config} className="h-[260px] w-full">
