@@ -85,7 +85,7 @@ function ChecklistReadOnly({ checklist, onClose }: { checklist: Checklist | null
 
   return (
     <Dialog open={Boolean(checklist)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-4xl overflow-hidden border-border/70 bg-background/95 p-0 shadow-2xl backdrop-blur-xl">
+      <DialogContent className="max-h-[90vh] w-[70vw] max-w-[70vw] min-w-[860px] overflow-hidden border-border/70 bg-background/95 p-0 shadow-2xl backdrop-blur-xl">
         <div className="max-h-[90vh] overflow-y-auto">
           <DialogHeader className="border-b border-border/60 bg-gradient-to-br from-primary/10 via-background to-background px-6 py-6 pr-14">
             <div className="flex items-start gap-4">
