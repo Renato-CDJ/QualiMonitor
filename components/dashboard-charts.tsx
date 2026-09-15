@@ -120,15 +120,15 @@ export function ChartFullscreen({ title, children }: { title: string; children: 
     <div className="relative">
       {children}
       <Dialog>
-        <DialogTrigger render={<Button variant="ghost" size="icon" className="absolute right-0 top-0 z-10 size-8 text-muted-foreground" aria-label={`Ampliar ${title}`} title={`Ampliar ${title}`} />}>
+        <DialogTrigger render={<Button variant="ghost" size="icon" className="absolute right-0 -top-11 z-10 size-8 text-muted-foreground" aria-label={`Ampliar ${title}`} title={`Ampliar ${title}`} />}>
           <Expand data-icon="inline-start" />
         </DialogTrigger>
-        <DialogContent className="h-[92vh] w-[96vw] max-w-none overflow-hidden p-6">
+        <DialogContent className="h-[90vh] !w-[90vw] !max-w-[90vw] overflow-hidden p-8">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>Visualização ampliada do gráfico.</DialogDescription>
           </DialogHeader>
-          <div className="min-h-0 flex-1 overflow-auto rounded-xl border bg-card/30 p-4">{children}</div>
+          <div className="min-h-0 flex-1 overflow-auto rounded-xl border bg-card/30 p-4 [&_.h-\[260px\]]:h-[calc(90vh-12rem)]">{children}</div>
         </DialogContent>
       </Dialog>
     </div>
@@ -147,7 +147,7 @@ function ToggleNotasButton({
       variant="outline"
       size="icon"
       onClick={onToggle}
-      className="absolute right-0 -top-11 z-10 size-8"
+      className="absolute right-10 -top-11 z-10 size-8"
       title={mostrar ? "Ocultar notas" : "Exibir notas"}
       aria-label={mostrar ? "Ocultar notas" : "Exibir notas"}
     >
