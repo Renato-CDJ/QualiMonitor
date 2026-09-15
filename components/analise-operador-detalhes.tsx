@@ -199,7 +199,7 @@ export function AnalisOperadorDetalhes({
                     bloco.itens.map((item) => (
                       <div
                         key={item.itemId}
-                        className="grid grid-cols-[1fr_80px_104px_104px] items-center gap-2 border-t border-border/70 bg-background px-3 py-0.5 text-sm leading-4"
+                        className="grid min-h-9 grid-cols-[1fr_80px_104px_104px] items-center gap-2 border-t border-border/70 bg-background px-3 py-1 text-sm leading-5"
                       >
                         <span className="flex items-center gap-1.5 pl-6 text-muted-foreground">
                           <span className="truncate">{item.texto}</span>
