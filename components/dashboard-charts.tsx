@@ -120,7 +120,7 @@ export function ChartFullscreen({ title, children }: { title: string; children: 
     <div className="relative">
       {children}
       <Dialog>
-        <DialogTrigger render={<Button variant="ghost" size="icon" className="absolute right-0 -top-11 z-10 size-8 text-muted-foreground" aria-label={`Ampliar ${title}`} title={`Ampliar ${title}`} />}>
+        <DialogTrigger render={<Button variant="ghost" size="icon" className="absolute right-10 -top-11 z-10 size-8 text-muted-foreground" aria-label={`Ampliar ${title}`} title={`Ampliar ${title}`} />}>
           <Expand data-icon="inline-start" />
         </DialogTrigger>
         <DialogContent className="h-[90vh] !w-[90vw] !max-w-[90vw] overflow-hidden p-8">
