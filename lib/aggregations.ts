@@ -519,8 +519,9 @@ export function analiseCategoria(
   // meta: itemId -> { texto, bloco, critico, carteira }
   const meta = new Map<
     string,
-    { texto: string; bloco: string; critico: boolean; carteira: string }
+    { texto: string; bloco: string; critico: boolean; carteira: string; ordem: number }
   >()
+  let ordem = 0
   for (const c of checklists) {
     for (const it of c.itens) {
       if (!meta.has(it.id)) {
@@ -529,6 +530,7 @@ export function analiseCategoria(
           bloco: it.bloco?.trim() || SEM_BLOCO,
           critico: !!it.critico,
           carteira: c.carteira,
+          ordem: ordem++,
         })
       }
     }
@@ -550,6 +552,7 @@ export function analiseCategoria(
 
   // agrupa por bloco
   const blocos = new Map<string, ItemCategoria[]>()
+  const ordemBlocos = new Map<string, number>()
   for (const [itemId, c] of contagem.entries()) {
     const info = meta.get(itemId)
     if (carteira && carteira !== "todas" && info && info.carteira !== carteira) continue
@@ -566,7 +569,10 @@ export function analiseCategoria(
       pctConforme: qtd ? round1((c.conforme / qtd) * 100) : 0,
       pctInconforme: qtd ? round1((c.inconforme / qtd) * 100) : 0,
     }
-    if (!blocos.has(bloco)) blocos.set(bloco, [])
+    if (!blocos.has(bloco)) {
+      blocos.set(bloco, [])
+      ordemBlocos.set(bloco, info?.ordem ?? Number.MAX_SAFE_INTEGER)
+    }
     blocos.get(bloco)!.push(item)
   }
 
@@ -584,10 +590,14 @@ export function analiseCategoria(
         qtd,
         pctConforme: qtd ? round1((conforme / qtd) * 100) : 0,
         pctInconforme: qtd ? round1((inconforme / qtd) * 100) : 0,
-        itens: itens.sort((a, b) => a.texto.localeCompare(b.texto, "pt-BR")),
+        itens: itens.sort((a, b) => {
+          const ordemA = meta.get(a.itemId)?.ordem ?? Number.MAX_SAFE_INTEGER
+          const ordemB = meta.get(b.itemId)?.ordem ?? Number.MAX_SAFE_INTEGER
+          return ordemA - ordemB
+        }),
       }
     })
-    .sort((a, b) => a.bloco.localeCompare(b.bloco, "pt-BR"))
+    .sort((a, b) => (ordemBlocos.get(a.bloco) ?? Number.MAX_SAFE_INTEGER) - (ordemBlocos.get(b.bloco) ?? Number.MAX_SAFE_INTEGER))
 }
 
 /** Totais consolidados de conforme/inconforme/N.A. para todos os apontamentos */
@@ -610,13 +620,15 @@ export function analiseCategoriaPorOperador(
   checklists: Checklist[],
   carteira?: string,
 ): OperadorItemCategoria[] {
-  const meta = new Map<string, { texto: string; bloco: string; carteira: string }>()
+  const meta = new Map<string, { texto: string; bloco: string; carteira: string; ordem: number }>()
+  let ordem = 0
   for (const checklist of checklists) {
     for (const item of checklist.itens) {
       meta.set(item.id, {
         texto: item.texto,
         bloco: item.bloco?.trim() || SEM_BLOCO,
         carteira: checklist.carteira,
+        ordem: ordem++,
       })
     }
   }
@@ -652,7 +664,8 @@ export function analiseCategoriaPorOperador(
     }
   }
   return Array.from(grupos.values()).sort((a, b) =>
-    a.operador.localeCompare(b.operador, "pt-BR") || a.bloco.localeCompare(b.bloco, "pt-BR") || a.texto.localeCompare(b.texto, "pt-BR"),
+    (meta.get(a.itemId)?.ordem ?? Number.MAX_SAFE_INTEGER) - (meta.get(b.itemId)?.ordem ?? Number.MAX_SAFE_INTEGER) ||
+    a.operador.localeCompare(b.operador, "pt-BR"),
   )
 }
 
