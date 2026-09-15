@@ -621,6 +621,7 @@ export function ParetoChart({
       <ChartContainer config={config} className="h-[300px] w-full">
         <ComposedChart data={data} margin={{ left: -16, right: 8, top: 24, bottom: 60 }}>
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+          <ReferenceLine yAxisId="right" y={80} stroke="var(--color-acumulado)" strokeDasharray="5 5" strokeOpacity={0.75} label={{ value: "80%", position: "insideTopRight", fontSize: 10, fill: "var(--muted-foreground)" }} />
           <XAxis
             dataKey="item"
             tickLine={false}
