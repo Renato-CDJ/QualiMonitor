@@ -629,13 +629,13 @@ export function ParetoChart({
       }
     }
     if (linha) linhas.push(linha)
-    return <text x={x} y={y} dy={12} textAnchor="end" transform={`rotate(-28 ${x} ${y})`} fill="var(--muted-foreground)" fontSize={10}>{linhas.slice(0, 4).map((item, index) => <tspan key={`${item}-${index}`} x={x} dy={index === 0 ? 0 : 12}>{item}</tspan>)}</text>
+    return <text x={x} y={y} dy={18} textAnchor="end" transform={`rotate(-32 ${x} ${y})`} fill="var(--muted-foreground)" fontSize={9}>{linhas.slice(0, 3).map((item, index) => <tspan key={`${item}-${index}`} x={x} dy={index === 0 ? 0 : 10}>{item}</tspan>)}</text>
   }
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
-      <ChartContainer config={config} className="h-[360px] w-full">
-        <ComposedChart data={data} margin={{ left: -16, right: 8, top: 24, bottom: 112 }}>
+      <ChartContainer config={config} className="h-[300px] w-full">
+        <ComposedChart data={data} margin={{ left: -16, right: 8, top: 24, bottom: 60 }}>
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
           <ReferenceLine yAxisId="right" y={80} stroke="var(--color-acumulado)" strokeDasharray="5 5" strokeOpacity={0.75} label={{ value: "80%", position: "insideTopRight", fontSize: 10, fill: "var(--muted-foreground)" }} />
           <XAxis
@@ -644,7 +644,7 @@ export function ParetoChart({
             tickLine={false}
             axisLine={false}
             interval={0}
-            height={112}
+            height={60}
           />
           <YAxis yAxisId="left" tickLine={false} axisLine={false} fontSize={12} width={32} />
           <YAxis
