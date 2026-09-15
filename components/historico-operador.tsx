@@ -468,26 +468,20 @@ export function HistoricoOperador() {
                   description="Tendência da nota média do operador ao longo do tempo"
                 />
               </div>
-              <div className="ml-auto flex shrink-0 flex-nowrap items-center gap-1 rounded-md bg-secondary p-0.5">
-                {PERIODICIDADES.map((p) => (
-                  <button
-                    key={p.value}
-                    type="button"
-                    onClick={() => setPeriodicidade(p.value)}
-                    className={cn(
-                      "whitespace-nowrap rounded px-2.5 py-1 text-xs font-medium transition-colors",
-                      periodicidade === p.value
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
             </CardHeader>
             <CardContent>
-              <TendenciaChart data={dados.serie} />
+              <TendenciaChart
+                data={dados.serie}
+                controls={
+                  <div className="flex shrink-0 flex-nowrap items-center gap-1 rounded-md bg-secondary p-0.5">
+                    {PERIODICIDADES.map((p) => (
+                      <button key={p.value} type="button" onClick={() => setPeriodicidade(p.value)} className={cn("whitespace-nowrap rounded px-2.5 py-1 text-xs font-medium transition-colors", periodicidade === p.value ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                }
+              />
             </CardContent>
           </Card>
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import {
   Area,
   AreaChart,
@@ -159,8 +159,10 @@ function ToggleNotasButton({
 /* ---------- Tendência (linha/área) ---------- */
 export function TendenciaChart({
   data,
+  controls,
 }: {
   data: { rotulo: string; nota: number; volume: number }[]
+  controls?: ReactNode
 }) {
   const config = {
     nota: { label: "Nota média", color: CHART_BLUE },
@@ -170,6 +172,7 @@ export function TendenciaChart({
   const mostrarNotas = mostrarTodas || mostrarLocal
   return (
     <div className="relative">
+      {controls && <div className="absolute right-10 top-0 z-10">{controls}</div>}
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
       <ChartContainer config={config} className="h-[260px] w-full">
         <AreaChart data={data} margin={{ left: -16, right: 8, top: 24 }}>
