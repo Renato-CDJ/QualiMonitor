@@ -220,7 +220,7 @@ export function JornadaOperador({
                       fontSize={13}
                       fontWeight={600}
                       fill="var(--foreground)"
-                      formatter={(v: number) => v.toFixed(1)}
+                      formatter={(v) => Number(v ?? 0).toFixed(1)}
                     />
                   </Bar>
                 </BarChart>
@@ -253,7 +253,7 @@ export function JornadaOperador({
                         fontSize={11}
                         fontWeight={600}
                         fill="var(--foreground)"
-                        formatter={(v: number) => (v > 0 ? `${v}%` : "")}
+                        formatter={(v) => (Number(v) > 0 ? `${v}%` : "")}
                       />
                     </Bar>
                   ))}

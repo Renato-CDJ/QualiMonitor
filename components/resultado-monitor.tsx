@@ -263,7 +263,7 @@ export function ResultadoMonitor({ escopo = "admin" }: { escopo?: "admin" | "pro
               <Label htmlFor="rm-monitor" className="text-xs text-muted-foreground">
                 Monitor
               </Label>
-              <Select value={monitorFiltro} onValueChange={setMonitorFiltro}>
+              <Select value={monitorFiltro} onValueChange={(value) => setMonitorFiltro(value ?? "todos")}>
                 <SelectTrigger id="rm-monitor" className="w-52">
                   <SelectValue placeholder="Todos os monitores" />
                 </SelectTrigger>

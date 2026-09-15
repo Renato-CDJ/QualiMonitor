@@ -267,7 +267,7 @@ export function MonitoriaForm() {
               <Select
                 value={carteira}
                 onValueChange={(v) => {
-                  setCarteira(v)
+                  setCarteira(v ?? "")
                   setOperadorId(null)
                   setTabulacao("")
                   setStatusMap({})
@@ -363,7 +363,7 @@ export function MonitoriaForm() {
               <Select
                 value={tabulacao}
                 onValueChange={(v) => {
-                  setTabulacao(v)
+                  setTabulacao(v ?? "")
                   // o checklist pode mudar conforme a tabulação vinculada
                   setStatusMap({})
                   // recolhe o bloco de dados para dar foco ao checklist

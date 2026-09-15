@@ -204,7 +204,7 @@ export function Insights() {
         <div className="flex flex-wrap items-end gap-x-6 gap-y-4 p-4">
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs text-muted-foreground">Carteira</Label>
-            <Select value={carteiraFiltro} onValueChange={setCarteiraFiltro}>
+            <Select value={carteiraFiltro} onValueChange={(value) => setCarteiraFiltro(value ?? "todas")}>
               <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
@@ -220,7 +220,7 @@ export function Insights() {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs text-muted-foreground">Operador</Label>
-            <Select value={operadorFiltro} onValueChange={setOperadorFiltro}>
+            <Select value={operadorFiltro} onValueChange={(value) => setOperadorFiltro(value ?? "todos")}>
               <SelectTrigger className="w-52">
                 <SelectValue />
               </SelectTrigger>

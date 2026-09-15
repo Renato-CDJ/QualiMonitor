@@ -236,13 +236,13 @@ export function ChecklistEditor() {
             return {
               id: store.uid(),
               texto,
-              descricao: String(valor("descricao") || "").trim(),
+              descricao: String(valor("descricao") || "").trim() || undefined,
               bloco: String(valor("bloco") || "").trim() || undefined,
               peso: Number.isFinite(peso) ? Math.max(0, peso) : 0,
               critico,
             }
           })
-          .filter((item): item is ChecklistItem => item !== null)
+          .filter((item): item is NonNullable<typeof item> => item !== null)
         if (!itens.length) return toast.error("Não encontramos itens válidos na planilha.")
         setRascunho({ ...rascunho, itens })
         toast.success(`${itens.length} itens importados. Revise e salve as alterações.`)

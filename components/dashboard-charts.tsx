@@ -428,12 +428,12 @@ export function ConformidadeCarteiraChart({
           <ChartTooltip content={<ChartTooltipContent />} />
           <Bar dataKey="pctConforme" fill="var(--color-pctConforme)" radius={[0, 4, 4, 0]}>
             {mostrarNotas && (
-              <LabelList dataKey="pctConforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v: number) => `${v}%`} />
+              <LabelList dataKey="pctConforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v) => `${v ?? 0}%`} />
             )}
           </Bar>
           <Bar dataKey="pctInconforme" fill="var(--color-pctInconforme)" radius={[0, 4, 4, 0]}>
             {mostrarNotas && (
-              <LabelList dataKey="pctInconforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v: number) => `${v}%`} />
+              <LabelList dataKey="pctInconforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v) => `${v ?? 0}%`} />
             )}
           </Bar>
         </BarChart>
@@ -560,12 +560,12 @@ export function MonitorConformidadeChart({
           <ChartTooltip content={<ChartTooltipContent />} />
           <Bar dataKey="pctConforme" fill="var(--color-pctConforme)" radius={[0, 4, 4, 0]}>
             {mostrarNotas && (
-              <LabelList dataKey="pctConforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v: number) => `${v}%`} />
+              <LabelList dataKey="pctConforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v) => `${v ?? 0}%`} />
             )}
           </Bar>
           <Bar dataKey="pctInconforme" fill="var(--color-pctInconforme)" radius={[0, 4, 4, 0]}>
             {mostrarNotas && (
-              <LabelList dataKey="pctInconforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v: number) => `${v}%`} />
+              <LabelList dataKey="pctInconforme" position="right" offset={6} fontSize={11} fontWeight={600} fill="var(--foreground)" formatter={(v) => `${v ?? 0}%`} />
             )}
           </Bar>
         </BarChart>
@@ -696,7 +696,7 @@ export function ParetoChart({
                 fontSize={11}
                 fontWeight={600}
                 fill="var(--color-acumulado)"
-                formatter={(v: number) => `${Math.round(v)}%`}
+                formatter={(v) => `${Math.round(Number(v) || 0)}%`}
               />
             )}
           </Line>
@@ -741,11 +741,10 @@ export function QuartilCarteiraChart({
   data: { carteira: string; min: number; q1: number; mediana: number; q3: number; max: number; media: number }[]
 }) {
   const linha = data.map((d) => ({
+    ...d,
     operador: d.carteira,
-    media: d.media,
     base: d.min,
     span: d.max - d.min,
-    ...d,
   }))
   const config = {
     span: { label: "Distribuição", color: CHART_TEAL },
@@ -1129,7 +1128,7 @@ export function AderenciaItensChart({
             fontSize={11}
             fontWeight={600}
             fill="var(--foreground)"
-            formatter={(v: number) => `${v}%`}
+            formatter={(v) => `${v ?? 0}%`}
           />
         </Bar>
       </BarChart>

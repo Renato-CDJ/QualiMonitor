@@ -284,7 +284,7 @@ export function VinculosEditor() {
             <Select
               value={carteira}
               onValueChange={(v) => {
-                setCarteira(v)
+                setCarteira(v ?? "")
                 setChecklistId("")
                 setTabulacao("")
               }}
@@ -308,7 +308,7 @@ export function VinculosEditor() {
             </Label>
             <Select
               value={checklistId}
-              onValueChange={setChecklistId}
+              onValueChange={(value) => setChecklistId(value ?? "")}
               disabled={!carteira}
             >
               <SelectTrigger>
@@ -341,7 +341,7 @@ export function VinculosEditor() {
             </Label>
             <Select
               value={tabulacao}
-              onValueChange={setTabulacao}
+              onValueChange={(value) => setTabulacao(value ?? "")}
               disabled={!carteira}
             >
               <SelectTrigger>

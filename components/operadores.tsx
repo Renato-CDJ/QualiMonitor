@@ -148,7 +148,7 @@ export function Operadores() {
       <div className="flex flex-wrap items-end gap-4">
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs text-muted-foreground">Carteira</Label>
-          <Select value={carteiraFiltro} onValueChange={setCarteiraFiltro}>
+          <Select value={carteiraFiltro} onValueChange={(value) => setCarteiraFiltro(value ?? "todas")}>
             <SelectTrigger className="w-44">
               <SelectValue />
             </SelectTrigger>
