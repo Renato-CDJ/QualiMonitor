@@ -615,22 +615,36 @@ export function ParetoChart({
   const { mostrarTodas } = useNotasGlobais()
   const [mostrarLocal, setMostrarNotas] = useState(false)
   const mostrarNotas = mostrarTodas || mostrarLocal
+  const tickPareto = ({ x, y, payload }: any) => {
+    const texto = data[payload?.index ?? 0]?.itemCompleto ?? payload?.value ?? ""
+    const palavras = texto.split(" ")
+    const linhas: string[] = []
+    let linha = ""
+    for (const palavra of palavras) {
+      if (`${linha} ${palavra}`.trim().length > 22 && linha) {
+        linhas.push(linha)
+        linha = palavra
+      } else {
+        linha = `${linha} ${palavra}`.trim()
+      }
+    }
+    if (linha) linhas.push(linha)
+    return <text x={x} y={y} dy={12} textAnchor="end" transform={`rotate(-28 ${x} ${y})`} fill="var(--muted-foreground)" fontSize={10}>{linhas.slice(0, 4).map((item, index) => <tspan key={`${item}-${index}`} x={x} dy={index === 0 ? 0 : 12}>{item}</tspan>)}</text>
+  }
   return (
     <div className="relative">
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
-      <ChartContainer config={config} className="h-[300px] w-full">
-        <ComposedChart data={data} margin={{ left: -16, right: 8, top: 24, bottom: 60 }}>
+      <ChartContainer config={config} className="h-[360px] w-full">
+        <ComposedChart data={data} margin={{ left: -16, right: 8, top: 24, bottom: 112 }}>
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
           <ReferenceLine yAxisId="right" y={80} stroke="var(--color-acumulado)" strokeDasharray="5 5" strokeOpacity={0.75} label={{ value: "80%", position: "insideTopRight", fontSize: 10, fill: "var(--muted-foreground)" }} />
           <XAxis
             dataKey="item"
+            tick={tickPareto}
             tickLine={false}
             axisLine={false}
-            fontSize={11}
-            angle={-35}
-            textAnchor="end"
             interval={0}
-            height={60}
+            height={112}
           />
           <YAxis yAxisId="left" tickLine={false} axisLine={false} fontSize={12} width={32} />
           <YAxis
