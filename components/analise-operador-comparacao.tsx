@@ -45,6 +45,8 @@ export function AnalisOperadorComparacao({ monitorias, checklists, carteira }: {
   const [operadorFiltro, setOperadorFiltro] = useState("todos")
   const [dataInicio, setDataInicio] = useState("")
   const [dataFim, setDataFim] = useState("")
+  const [itensFiltro, setItensFiltro] = useState<Set<string>>(new Set())
+  const [statusFiltro, setStatusFiltro] = useState<"todos" | "conforme" | "inconforme">("todos")
 
   const blocos = useMemo(() => {
     const mapa = new Map<string, typeof dadosVisiveis>()
@@ -70,7 +72,9 @@ export function AnalisOperadorComparacao({ monitorias, checklists, carteira }: {
     return { operador, monitorias: totalMonitorias, media: avaliados ? Math.round((conforme / avaliados) * 100) : 0 }
   }), [dados, operadores, monitorias])
 
-  const historico = useMemo(() => historicoApontamentos(monitorias, checklists, operadorFiltro === "todos" ? undefined : operadorFiltro).filter((item) => (!dataInicio || item.data >= dataInicio) && (!dataFim || item.data <= dataFim)), [monitorias, checklists, operadorFiltro, dataInicio, dataFim])
+  const historicoBase = useMemo(() => historicoApontamentos(monitorias, checklists, operadorFiltro === "todos" ? undefined : operadorFiltro).filter((item) => (!dataInicio || item.data >= dataInicio) && (!dataFim || item.data <= dataFim)), [monitorias, checklists, operadorFiltro, dataInicio, dataFim])
+  const itensDisponiveis = useMemo(() => Array.from(new Map(historicoBase.map((item) => [item.itemId, { itemId: item.itemId, texto: item.texto, bloco: item.bloco }])).values()).sort((a, b) => a.bloco.localeCompare(b.bloco, "pt-BR") || a.texto.localeCompare(b.texto, "pt-BR")), [historicoBase])
+  const historico = useMemo(() => historicoBase.filter((item) => (itensFiltro.size === 0 || itensFiltro.has(item.itemId)) && (statusFiltro === "todos" || item.status === statusFiltro)), [historicoBase, itensFiltro, statusFiltro])
   const agrupado = useMemo(() => {
     const mapa = new Map<string, typeof historico>()
     for (const item of historico) {
@@ -180,12 +184,14 @@ export function AnalisOperadorComparacao({ monitorias, checklists, carteira }: {
           <TabsContent value="historico" className="mt-0 flex flex-col gap-4">
             <div className="rounded-xl border bg-secondary/20 p-4">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                <div className="grid flex-1 gap-3 sm:grid-cols-3">
+                <div className="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
                   <div className="flex flex-col gap-1.5"><Label htmlFor="historico-operador" className="text-xs text-muted-foreground">Quem analisar</Label><Select value={operadorFiltro} onValueChange={setOperadorFiltro}><SelectTrigger id="historico-operador"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="todos">Todos os operadores</SelectItem>{operadores.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="flex flex-col gap-1.5"><Label htmlFor="historico-status" className="text-xs text-muted-foreground">Resultado</Label><Select value={statusFiltro} onValueChange={(value) => value && setStatusFiltro(value as typeof statusFiltro)}><SelectTrigger id="historico-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="todos">Todos</SelectItem><SelectItem value="conforme">Apenas conformes</SelectItem><SelectItem value="inconforme">Apenas inconformes</SelectItem></SelectContent></Select></div>
                   <div className="flex flex-col gap-1.5"><Label htmlFor="historico-inicio" className="text-xs text-muted-foreground">Data inicial</Label><div className="relative"><CalendarDays className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" /><Input id="historico-inicio" type="date" value={dataInicio} max={dataFim || undefined} onChange={(e) => setDataInicio(e.target.value)} className="pl-9" /></div></div>
                   <div className="flex flex-col gap-1.5"><Label htmlFor="historico-fim" className="text-xs text-muted-foreground">Data final</Label><div className="relative"><CalendarDays className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" /><Input id="historico-fim" type="date" value={dataFim} min={dataInicio || undefined} onChange={(e) => setDataFim(e.target.value)} className="pl-9" /></div></div>
+                  <div className="flex flex-col gap-1.5 sm:col-span-2 lg:col-span-1"><Label htmlFor="historico-itens" className="text-xs text-muted-foreground">Itens do checklist</Label><select id="historico-itens" multiple value={Array.from(itensFiltro)} onChange={(event) => setItensFiltro(new Set(Array.from(event.target.selectedOptions, (option) => option.value)))} className="h-10 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground outline-none focus:ring-2 focus:ring-ring" aria-label="Filtrar itens do checklist"><option value="" disabled>{itensDisponiveis.length ? "Selecione um ou mais itens" : "Nenhum item disponível"}</option>{itensDisponiveis.map((item) => <option key={item.itemId} value={item.itemId}>{item.texto}</option>)}</select></div>
                 </div>
-                {(operadorFiltro !== "todos" || dataInicio || dataFim) && <Button type="button" variant="ghost" size="sm" onClick={() => { setOperadorFiltro("todos"); setDataInicio(""); setDataFim("") }}><RotateCcw data-icon="inline-start" />Limpar filtros</Button>}
+                {(operadorFiltro !== "todos" || dataInicio || dataFim || itensFiltro.size > 0 || statusFiltro !== "todos") && <Button type="button" variant="ghost" size="sm" onClick={() => { setOperadorFiltro("todos"); setDataInicio(""); setDataFim(""); setItensFiltro(new Set()); setStatusFiltro("todos") }}><RotateCcw data-icon="inline-start" />Limpar filtros</Button>}
               </div>
               <div className="mt-4 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <div><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Período exibido</p><p className="mt-1 text-sm font-semibold">{periodoLabel}</p></div>
