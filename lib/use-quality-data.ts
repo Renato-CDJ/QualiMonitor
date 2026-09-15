@@ -39,10 +39,10 @@ export function useQualityData() {
     const handler = () => refresh()
     window.addEventListener("qm:update", handler)
     window.addEventListener("storage", handler)
-    // Hidrata o cache a partir do Supabase e só então libera a UI.
+    // A fonte de dados da aplicação é o cache persistido no localStorage.
     store
       .hydrate()
-      .catch((err) => console.error("[v0] Falha ao hidratar dados:", err))
+      .catch((err) => console.error("[v0] Falha ao carregar dados locais:", err))
       .finally(() => {
         if (!ativo) return
         refresh()
