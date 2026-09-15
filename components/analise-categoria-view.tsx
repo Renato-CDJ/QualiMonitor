@@ -13,7 +13,6 @@ import {
 import { useQualityData } from "@/lib/use-quality-data"
 import { AnaliseCategoria } from "@/components/analise-categoria"
 import { AnalisOperadorComparacao } from "@/components/analise-operador-comparacao"
-import { AnalisOperadorDetalhes } from "@/components/analise-operador-detalhes"
 import { quadranteOperadores } from "@/lib/aggregations"
 
 export function AnaliseCategoriaView() {
@@ -92,11 +91,6 @@ export function AnaliseCategoriaView() {
 
       <AnaliseCategoria monitorias={filtradas} checklists={checklists} carteira={carteiraFiltro} />
       <AnalisOperadorComparacao
-        monitorias={filtradas}
-        checklists={checklists}
-        carteira={carteiraFiltro}
-      />
-      <AnalisOperadorDetalhes
         monitorias={filtradas}
         checklists={checklists}
         carteira={carteiraFiltro}
