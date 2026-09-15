@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, type CSSProperties } from "react"
 import { CalendarDays, ChevronRight, Download, History, Layers, RotateCcw, Search } from "lucide-react"
 import * as XLSX from "xlsx"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { analiseCategoriaPorOperador, historicoApontamentos } from "@/lib/aggregations"
+import type { HistoricoApontamento } from "@/lib/aggregations"
 import type { Checklist, Monitoria } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -96,6 +97,16 @@ export function AnalisOperadorComparacao({ monitorias, checklists, carteira }: {
   const totalConformes = historico.filter((item) => item.status === "conforme").length
   const totalInconformes = historico.filter((item) => item.status === "inconforme").length
   const totalNaoAplicaveis = historico.filter((item) => item.status !== "conforme" && item.status !== "inconforme").length
+  const historicoDatas = useMemo(() => Array.from(new Set(historico.map((item) => item.data))).sort((a, b) => a.localeCompare(b)), [historico])
+  const historicoItens = useMemo(() => {
+    const mapa = new Map<string, { texto: string; bloco: string; porData: Map<string, HistoricoApontamento> }>()
+    for (const item of historico) {
+      const atual = mapa.get(item.itemId) ?? { texto: item.texto, bloco: item.bloco, porData: new Map() }
+      atual.porData.set(item.data, item)
+      mapa.set(item.itemId, atual)
+    }
+    return Array.from(mapa.values()).sort((a, b) => a.bloco.localeCompare(b.bloco, "pt-BR") || a.texto.localeCompare(b.texto, "pt-BR"))
+  }, [historico])
 
   function exportarExcel() {
     if (blocos.length === 0) return
@@ -181,7 +192,7 @@ export function AnalisOperadorComparacao({ monitorias, checklists, carteira }: {
                 <div className="flex flex-wrap gap-2 text-xs"><span className="rounded-full bg-secondary px-3 py-1.5 text-muted-foreground"><strong className="text-foreground">{historico.length}</strong> apontamentos</span><span className="rounded-full bg-chart-5/15 px-3 py-1.5 text-chart-5"><strong>{totalConformes}</strong> conformes</span><span className="rounded-full bg-destructive/15 px-3 py-1.5 text-destructive"><strong>{totalInconformes}</strong> inconformes</span>{totalNaoAplicaveis > 0 && <span className="rounded-full bg-secondary px-3 py-1.5 text-muted-foreground"><strong className="text-foreground">{totalNaoAplicaveis}</strong> N.A.</span>}</div>
               </div>
             </div>
-            {agrupado.length === 0 ? <p className="py-16 text-center text-sm text-muted-foreground">Nenhum apontamento encontrado nesse período.</p> : <div className="flex flex-col gap-3">{agrupado.map(([data, itens]) => <div key={data} className="overflow-hidden rounded-lg border"><div className="flex items-center justify-between border-b bg-secondary/40 px-4 py-3"><div><p className="font-semibold">{formatDate(data)}</p><p className="text-xs text-muted-foreground">{itens[0].operador} · {itens[0].monitor}</p></div><span className="text-xs text-muted-foreground">{itens.length} apontamento{itens.length === 1 ? "" : "s"}</span></div><div className="divide-y">{itens.map((item) => <div key={`${item.monitoriaId}-${item.itemId}`} className="grid gap-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_120px_90px] sm:items-center"><div><p className="text-sm font-medium">{item.texto}</p><p className="text-xs text-muted-foreground">{item.bloco} · {item.tabulacao}</p></div><span className={cn("text-xs font-medium", item.status === "inconforme" ? "text-destructive" : item.status === "conforme" ? "text-chart-5" : "text-muted-foreground")}>{item.status === "inconforme" ? "Inconforme" : item.status === "conforme" ? "Conforme" : "N.A."}</span><span className="text-xs tabular-nums text-muted-foreground">Nota {item.nota}</span></div>)}</div></div>)}</div>}
+            {historicoItens.length === 0 ? <p className="py-16 text-center text-sm text-muted-foreground">Nenhum apontamento encontrado nesse período.</p> : <div className="overflow-x-auto rounded-xl border"><div className="min-w-[720px]"><div className="grid grid-cols-[minmax(260px,1fr)_repeat(var(--historico-datas),minmax(112px,1fr))] border-b bg-secondary/40" style={{ "--historico-datas": historicoDatas.length } as CSSProperties}><div className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Item do checklist</div>{historicoDatas.map((data) => <div key={data} className="border-l px-3 py-3 text-center text-xs font-semibold text-muted-foreground">{formatDate(data)}</div>)}</div>{historicoItens.map((item) => <div key={`${item.bloco}-${item.texto}`} className="grid grid-cols-[minmax(260px,1fr)_repeat(var(--historico-datas),minmax(112px,1fr))] border-b last:border-b-0" style={{ "--historico-datas": historicoDatas.length } as CSSProperties}><div className="flex min-h-16 flex-col justify-center px-4 py-2"><p className="text-sm font-medium">{item.texto}</p><p className="text-xs text-muted-foreground">{item.bloco}</p></div>{historicoDatas.map((data) => { const apontamento = item.porData.get(data); return <div key={data} className="flex min-h-16 items-center justify-center border-l px-2 py-2">{apontamento ? <span className={cn("rounded-full border px-2.5 py-1 text-center text-xs font-semibold", apontamento.status === "conforme" ? "border-chart-5/30 bg-chart-5/10 text-chart-5" : apontamento.status === "inconforme" ? "border-destructive/30 bg-destructive/10 text-destructive" : "border-border bg-secondary text-muted-foreground")} title={`${apontamento.monitor} · Nota ${apontamento.nota}`}>{apontamento.status === "conforme" ? "Conforme" : apontamento.status === "inconforme" ? "Inconforme" : "N.A."}</span> : <span className="text-xs text-muted-foreground/40">—</span>}</div>})}</div>)}</div></div>}
           </TabsContent>
         </Tabs>
       </CardContent>
