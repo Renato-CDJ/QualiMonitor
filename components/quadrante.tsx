@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { CardTitleHint } from "@/components/card-title-hint"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -106,10 +105,6 @@ export function Quadrante() {
   const [nivelSel, setNivelSel] = useState<NivelRecebimento>("alto")
   const arquivoPerformanceRef = useRef<HTMLInputElement>(null)
 
-  const carteiras = useMemo(
-    () => Array.from(new Set(monitorias.map((m) => m.carteira))),
-    [monitorias],
-  )
 
   const filtradas = useMemo(
     () =>
@@ -327,44 +322,8 @@ export function Quadrante() {
     <div className="flex flex-col gap-6">
       {/* Barra de ações */}
       <div className="flex flex-wrap items-end gap-4">
-        <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
+        <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} periodo={{ inicio: dataInicio, fim: dataFim, onInicioChange: setDataInicio, onFimChange: setDataFim, onTudo: () => { setDataInicio(""); setDataFim("") }, tudoLabel: "Mês atual" }} />
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="data-inicio" className="text-xs text-muted-foreground">
-            De
-          </Label>
-          <Input
-            id="data-inicio"
-            type="date"
-            value={dataInicio}
-            max={dataFim || undefined}
-            onChange={(e) => setDataInicio(e.target.value)}
-            className="w-40"
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="data-fim" className="text-xs text-muted-foreground">
-            Até
-          </Label>
-          <Input
-            id="data-fim"
-            type="date"
-            value={dataFim}
-            min={dataInicio || undefined}
-            onChange={(e) => setDataFim(e.target.value)}
-            className="w-40"
-          />
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setDataInicio(inicioDoMes())
-            setDataFim(hojeISO())
-          }}
-        >
-          Mês atual
-        </Button>
 
         {/* Toggle de visão: Siglas x Nome completo */}
         <div className="flex flex-col gap-1.5">

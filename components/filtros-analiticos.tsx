@@ -22,7 +22,7 @@ export function filtrarMonitorias(monitorias: Monitoria[], filtros: FiltrosAnali
   })
 }
 
-type PeriodoFiltro = { inicio: string; fim: string; onInicioChange: (value: string) => void; onFimChange: (value: string) => void; onTudo: () => void }
+type PeriodoFiltro = { inicio: string; fim: string; onInicioChange: (value: string) => void; onFimChange: (value: string) => void; onTudo: () => void; tudoLabel?: string }
 
 export function FiltrosAnaliticos({ value, onChange, periodo }: { value: FiltrosAnaliticosState; onChange: (value: FiltrosAnaliticosState) => void; periodo?: PeriodoFiltro }) {
   const { checklists, vinculos, monitorias } = useQualityData()
@@ -69,7 +69,7 @@ export function FiltrosAnaliticos({ value, onChange, periodo }: { value: Filtros
     {periodo && <>
       <div className="flex flex-col gap-1.5"><Label htmlFor="filtro-data-inicio" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">De</Label><input id="filtro-data-inicio" type="date" value={periodo.inicio} max={periodo.fim || undefined} onChange={(event) => periodo.onInicioChange(event.target.value)} className="h-10 w-40 rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" /></div>
       <div className="flex flex-col gap-1.5"><Label htmlFor="filtro-data-fim" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Até</Label><input id="filtro-data-fim" type="date" value={periodo.fim} min={periodo.inicio || undefined} onChange={(event) => periodo.onFimChange(event.target.value)} className="h-10 w-40 rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" /></div>
-      <div className="flex flex-col gap-1.5"><span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Atalhos</span><button type="button" onClick={periodo.onTudo} className="h-10 rounded-md border border-transparent px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/10">Tudo</button></div>
+      <div className="flex flex-col gap-1.5"><span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Atalhos</span><button type="button" onClick={periodo.onTudo} className="h-10 rounded-md border border-transparent px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/10">{periodo.tudoLabel ?? "Tudo"}</button></div>
     </>}
   </div>
 }
