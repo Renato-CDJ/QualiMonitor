@@ -328,8 +328,11 @@ export function Insights() {
           </CardHeader>
           <CardContent className="flex flex-col gap-2.5">
             {topAderencia.slice(0, 5).map((it) => (
-              <div key={it.itemId} className="flex items-center gap-2 text-sm">
+              <div key={it.itemId} className="group relative flex items-center gap-2 text-sm">
                 <span className="min-w-0 flex-1 truncate" title={it.texto}>
+                  {it.texto}
+                </span>
+                <span role="tooltip" className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden max-w-[min(28rem,calc(100vw-3rem))] rounded-md border border-border bg-popover px-3 py-2 text-xs leading-relaxed text-popover-foreground shadow-lg group-hover:block group-focus-within:block">
                   {it.texto}
                 </span>
                 <Badge className="shrink-0 border-chart-5/30 bg-chart-5/15 text-chart-5">
@@ -350,8 +353,11 @@ export function Insights() {
           </CardHeader>
           <CardContent className="flex flex-col gap-2.5">
             {topOportunidade.slice(0, 5).map((it) => (
-              <div key={it.itemId} className="flex items-center gap-2 text-sm">
+              <div key={it.itemId} className="group relative flex items-center gap-2 text-sm">
                 <span className="min-w-0 flex-1 truncate" title={it.texto}>
+                  {it.texto}
+                </span>
+                <span role="tooltip" className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden max-w-[min(28rem,calc(100vw-3rem))] rounded-md border border-border bg-popover px-3 py-2 text-xs leading-relaxed text-popover-foreground shadow-lg group-hover:block group-focus-within:block">
                   {it.texto}
                 </span>
                 <Badge className="shrink-0 border-destructive/30 bg-destructive/15 text-destructive">
