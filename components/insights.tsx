@@ -150,13 +150,15 @@ export function Insights() {
   const topAderencia = useMemo(
     () => [...itens]
       .filter((item) => item.pctConforme === 100)
-      .sort((a, b) => b.conforme - a.conforme || a.texto.localeCompare(b.texto)),
+      .sort((a, b) => b.conforme - a.conforme || a.texto.localeCompare(b.texto))
+      .slice(0, 8),
     [itens],
   )
   const topOportunidade = useMemo(
     () => [...itens]
       .filter((item) => item.pctConforme < 100)
-      .sort((a, b) => b.pctInconforme - a.pctInconforme || b.inconforme - a.inconforme || a.texto.localeCompare(b.texto)),
+      .sort((a, b) => b.pctInconforme - a.pctInconforme || b.inconforme - a.inconforme || a.texto.localeCompare(b.texto))
+      .slice(0, 8),
     [itens],
   )
   const topNa = useMemo(
@@ -325,7 +327,7 @@ export function Insights() {
             />
           </CardHeader>
           <CardContent className="flex flex-col gap-2.5">
-            {topAderencia.map((it) => (
+            {topAderencia.slice(0, 5).map((it) => (
               <div key={it.itemId} className="group relative flex items-center gap-2 text-sm">
                 <span className="min-w-0 flex-1 truncate" title={it.texto}>
                   {it.texto}
@@ -350,7 +352,7 @@ export function Insights() {
             />
           </CardHeader>
           <CardContent className="flex flex-col gap-2.5">
-            {topOportunidade.map((it) => (
+            {topOportunidade.slice(0, 5).map((it) => (
               <div key={it.itemId} className="group relative flex items-center gap-2 text-sm">
                 <span className="min-w-0 flex-1 truncate" title={it.texto}>
                   {it.texto}
