@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useRef } from "react"
+import { useAuth } from "@/lib/auth"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useQualityData } from "@/lib/use-quality-data"
@@ -25,7 +26,18 @@ type PeriodoFiltro = { inicio: string; fim: string; onInicioChange: (value: stri
 
 export function FiltrosAnaliticos({ value, onChange, periodo }: { value: FiltrosAnaliticosState; onChange: (value: FiltrosAnaliticosState) => void; periodo?: PeriodoFiltro }) {
   const { carteiras, checklists, vinculos, monitorias } = useQualityData()
+  const { carteira: carteiraSelecionada } = useAuth()
+  const ultimaCarteiraSelecionada = useRef<string | null>(null)
   const checklistSelecionado = checklists.find((checklist) => checklist.id === value.checklistId)
+
+  useEffect(() => {
+    if (!carteiraSelecionada || carteiraSelecionada === ultimaCarteiraSelecionada.current) return
+    const carteiraAnterior = ultimaCarteiraSelecionada.current
+    ultimaCarteiraSelecionada.current = carteiraSelecionada
+    if (value.carteira === "todas" || value.carteira === carteiraAnterior) {
+      onChange({ ...value, carteira: carteiraSelecionada })
+    }
+  }, [carteiraSelecionada, onChange, value])
 
   useEffect(() => {
     if (value.checklistId !== "todos" && !checklistSelecionado) {
