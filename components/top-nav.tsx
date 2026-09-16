@@ -26,11 +26,20 @@ import {
   Users,
   Headset,
   ClipboardList,
+  CircleHelp,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuth } from "@/lib/auth"
 import { useQualityData } from "@/lib/use-quality-data"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -105,6 +114,15 @@ function isItemActive(href: string, pathname: string) {
 // Menus que o perfil visitante NÃO pode acessar (somente leitura/filtros).
 const MENUS_RESTRITOS = ["monitoria", "relatorios"]
 
+const TUTORIAL_SECTIONS = [
+  { title: "Visão geral", description: "Acompanhe a qualidade dos atendimentos, identifique padrões e transforme os resultados das monitorias em ações de melhoria.", icon: BarChart3 },
+  { title: "Monitoria", description: "Crie monitorias, preencha checklists, registre feedbacks e consulte o resultado individual de cada avaliação.", icon: ClipboardCheck },
+  { title: "Analítico", description: "Explore Dashboard, Análise de Notas, Categorias, Jornada do Operador, Insights, Quadrante, Histórico e Notas da Carteira.", icon: LineChart },
+  { title: "Filtros e carteira", description: "Use Mudar carteira para atualizar toda a plataforma. Os filtros de checklist, tabulação e período refinam os dados da aba atual.", icon: Wallet },
+  { title: "Relatórios", description: "Exporte os dados filtrados para compartilhar resultados, acompanhar indicadores e apoiar decisões de gestão.", icon: FileSpreadsheet },
+  { title: "Administração", description: "Gerencie usuários, operadores, checklists, carteiras e tabulações. Esta área fica disponível para perfis administradores.", icon: ShieldCheck },
+]
+
 export function TopNav() {
   const pathname = usePathname()
   const { user, carteira, selecionarCarteira, isVisitante, isAdmin, logout } = useAuth()
@@ -171,6 +189,42 @@ export function TopNav() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
+            <Dialog>
+              <DialogTrigger
+                className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                aria-label="Abrir tutorial da plataforma"
+              >
+                <CircleHelp className="size-4 text-primary" />
+                <span className="hidden lg:inline">Tutorial</span>
+              </DialogTrigger>
+              <DialogContent className="max-h-[min(720px,calc(100vh-2rem))] max-w-2xl overflow-y-auto p-0">
+                <DialogHeader className="border-b border-border/70 bg-secondary/30 px-6 py-5 pr-12">
+                  <DialogTitle className="flex items-center gap-2 text-lg">
+                    <CircleHelp className="size-5 text-primary" />
+                    Como funciona o QualiMonitor
+                  </DialogTitle>
+                  <DialogDescription>
+                    Um guia rápido para encontrar cada recurso e aproveitar melhor a plataforma.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-3 p-6 sm:grid-cols-2">
+                  {TUTORIAL_SECTIONS.map((section) => {
+                    const SectionIcon = section.icon
+                    return (
+                      <article key={section.title} className="rounded-xl border border-border/70 bg-card/50 p-4 transition-colors hover:border-primary/40 hover:bg-secondary/30">
+                        <div className="mb-3 flex items-center gap-2">
+                          <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <SectionIcon className="size-4" />
+                          </span>
+                          <h3 className="text-sm font-semibold">{section.title}</h3>
+                        </div>
+                        <p className="text-sm leading-relaxed text-muted-foreground">{section.description}</p>
+                      </article>
+                    )
+                  })}
+                </div>
+              </DialogContent>
+            </Dialog>
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" aria-label="Mudar carteira">
                 <Wallet className="size-4 text-primary" />
