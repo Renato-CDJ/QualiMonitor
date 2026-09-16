@@ -148,17 +148,18 @@ export function Insights() {
   const resumo = useMemo(() => resumoConformidade(filtradas), [filtradas])
 
   const topAderencia = useMemo(
-  () => [...itens]
-    .sort((a, b) => b.pctConforme - a.pctConforme || b.conforme - a.conforme || a.texto.localeCompare(b.texto))
-    .slice(0, 8),
-  [itens],
+    () => [...itens]
+      .filter((item) => item.pctConforme === 100)
+      .sort((a, b) => b.conforme - a.conforme || a.texto.localeCompare(b.texto))
+      .slice(0, 8),
+    [itens],
   )
   const topOportunidade = useMemo(
-  () => itens
-    .filter((item) => item.pctInconforme > 0)
-    .sort((a, b) => b.pctInconforme - a.pctInconforme || b.inconforme - a.inconforme || a.texto.localeCompare(b.texto))
-    .slice(0, 8),
-  [itens],
+    () => [...itens]
+      .filter((item) => item.pctConforme < 100)
+      .sort((a, b) => b.pctInconforme - a.pctInconforme || b.inconforme - a.inconforme || a.texto.localeCompare(b.texto))
+      .slice(0, 8),
+    [itens],
   )
   const topNa = useMemo(
     () => [...itens].sort((a, b) => b.na - a.na).slice(0, 8),
