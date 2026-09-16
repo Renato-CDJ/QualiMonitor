@@ -178,7 +178,7 @@ export function TopNav() {
                 <ChevronDown className="size-3.5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel>Selecionar carteira</DropdownMenuLabel>
+                <div className="px-2 py-1.5 text-sm font-semibold">Selecionar carteira</div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => selecionarCarteira("todas")} className="gap-2">
                   <Wallet className="size-4" />
