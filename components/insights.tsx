@@ -180,8 +180,9 @@ export function Insights() {
     const base = visao === "aderencia" ? topAderencia : topOportunidade
     return base.map((it) => ({
       item: truncar(it.texto, 24),
-      itemCompleto: it.texto,
-      pct: visao === "aderencia" ? it.pctConforme : it.pctInconforme,
+  itemCompleto: it.texto,
+  descricao: it.descricao,
+  pct: visao === "aderencia" ? it.pctConforme : it.pctInconforme,
       qtd: visao === "aderencia" ? it.conforme : it.inconforme,
     }))
   }, [visao, topAderencia, topOportunidade])

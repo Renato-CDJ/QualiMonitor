@@ -1135,7 +1135,7 @@ export function AderenciaItensChart({
   data,
   tipo,
 }: {
-  data: { item: string; itemCompleto: string; pct: number; qtd: number }[]
+  data: { item: string; itemCompleto: string; descricao?: string; pct: number; qtd: number }[]
   tipo: "aderencia" | "oportunidade"
 }) {
   const cor = tipo === "aderencia" ? CONFORMIDADE_CORES.conforme : CONFORMIDADE_CORES.inconforme
@@ -1160,7 +1160,21 @@ export function AderenciaItensChart({
           width={150}
         />
         <ChartTooltip
-          content={<ChartTooltipContent nameKey="item" labelKey="item" />}
+          content={
+            <ChartTooltipContent
+              nameKey="item"
+              labelKey="item"
+              labelFormatter={(_, payload) => {
+                const item = payload?.[0]?.payload as { itemCompleto?: string; descricao?: string } | undefined
+                return (
+                  <div className="max-w-80 space-y-1">
+                    <p>{item?.itemCompleto}</p>
+                    {item?.descricao ? <p className="font-normal leading-relaxed text-muted-foreground">{item.descricao}</p> : null}
+                  </div>
+                )
+              }}
+            />
+          }
         />
         <Bar dataKey="pct" fill={cor} radius={[0, 4, 4, 0]}>
           <LabelList
