@@ -13,7 +13,6 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { resumoOperadores, type ResumoOperador } from "@/lib/aggregations"
 import { notaColorClass, faixaNota } from "@/lib/analytics"
-import { useNotasGlobais } from "@/lib/notas-context"
 import type { Monitoria } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -51,7 +50,6 @@ export function OperadoresResumoDialog({
   periodoLabel: string
   children: ReactNode
 }) {
-  const { mostrarTodas } = useNotasGlobais()
   const cfg = CONFIG[variante]
 
   const lista = useMemo<ResumoOperador[]>(() => {
@@ -100,16 +98,12 @@ export function OperadoresResumoDialog({
                     <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
                       Nota média
                     </span>
-                    {mostrarTodas ? (
-                      <span className={cn("text-sm font-semibold tabular-nums", notaColorClass(o.nota))}>
-                        {o.nota}{" "}
-                        <span className="text-[10px] font-normal text-muted-foreground">
-                          {faixaNota(o.nota)}
-                        </span>
+                    <span className={cn("text-sm font-semibold tabular-nums", notaColorClass(o.nota))}>
+                      {o.nota}{" "}
+                      <span className="text-[10px] font-normal text-muted-foreground">
+                        {faixaNota(o.nota)}
                       </span>
-                    ) : (
-                      <span className="text-sm font-semibold text-muted-foreground">•••</span>
-                    )}
+                    </span>
                   </div>
 
                   {/* Conformes */}
