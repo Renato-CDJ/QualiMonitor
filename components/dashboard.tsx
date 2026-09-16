@@ -43,6 +43,7 @@ import {
 } from "@/components/dashboard-charts"
 import { OperadoresResumoDialog } from "@/components/operadores-resumo-dialog"
 import { cn } from "@/lib/utils"
+import { FiltrosAnaliticos, filtrarMonitorias, type FiltrosAnaliticosState } from "@/components/filtros-analiticos"
 
 function formatBr(iso: string) {
   const [y, m, d] = iso.split("-")
@@ -98,7 +99,8 @@ export function Dashboard() {
   const { carteira: carteiraSelecionada } = useAuth()
   const { mostrarTodas, setMostrarTodas } = useNotasGlobais()
   const periodo: Periodicidade = "diario"
-  const [carteiraFiltro, setCarteiraFiltro] = useState<string>(carteiraSelecionada ?? "todas")
+  const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: carteiraSelecionada ?? "todas", checklistId: "todos", tabulacao: "todas" })
+  const carteiraFiltro = filtrosAnaliticos.carteira
   const [dataInicio, setDataInicio] = useState<string>(() => {
     const hoje = new Date()
     return new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10)
@@ -134,13 +136,12 @@ export function Dashboard() {
 
   const filtradas = useMemo(
     () =>
-      monitorias.filter((m) => {
-        if (carteiraFiltro !== "todas" && m.carteira !== carteiraFiltro) return false
-        if (dataInicio && m.data < dataInicio) return false
+      filtrarMonitorias(monitorias, filtrosAnaliticos).filter((m) => {
+    if (dataInicio && m.data < dataInicio) return false
         if (dataFim && m.data > dataFim) return false
         return true
       }),
-    [monitorias, carteiraFiltro, dataInicio, dataFim],
+    [monitorias, filtrosAnaliticos, dataInicio, dataFim],
   )
 
   const periodoLabel = useMemo(() => {
@@ -188,23 +189,8 @@ export function Dashboard() {
 
         {/* Linha de controles */}
         <div className="flex flex-wrap items-end gap-x-6 gap-y-4 p-4">
-          {/* Carteira */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-muted-foreground">Carteira</Label>
-            <Select value={carteiraFiltro} onValueChange={(value) => value && setCarteiraFiltro(value)}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">Todas as carteiras</SelectItem>
-                {carteiras.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+  <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
+
 
           {/* Período: De / Até */}
           <div className="flex flex-col gap-1.5">

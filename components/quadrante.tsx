@@ -40,6 +40,7 @@ import {
 } from "@/lib/aggregations"
 import type { NivelRecebimento, SiglaQuadrante } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { FiltrosAnaliticos, filtrarMonitorias, type FiltrosAnaliticosState } from "@/components/filtros-analiticos"
 import * as XLSX from "xlsx"
 import { toast } from "sonner"
 
@@ -90,7 +91,8 @@ function rotuloVisao(op: OperadorQuadrante, visao: Visao) {
 
 export function Quadrante() {
   const { monitorias, recebimentos, ready, store } = useQualityData()
-  const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
+  const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: "todas", checklistId: "todos", tabulacao: "todas" })
+  const carteiraFiltro = filtrosAnaliticos.carteira
   const [dataInicio, setDataInicio] = useState<string>(inicioDoMes)
   const [dataFim, setDataFim] = useState<string>(hojeISO)
   const [visao, setVisao] = useState<Visao>("sigla")
@@ -111,13 +113,12 @@ export function Quadrante() {
 
   const filtradas = useMemo(
     () =>
-      monitorias.filter((m) => {
-        if (carteiraFiltro !== "todas" && m.carteira !== carteiraFiltro) return false
-        if (dataInicio && m.data < dataInicio) return false
+  filtrarMonitorias(monitorias, filtrosAnaliticos).filter((m) => {
+  if (dataInicio && m.data < dataInicio) return false
         if (dataFim && m.data > dataFim) return false
         return true
       }),
-    [monitorias, carteiraFiltro, dataInicio, dataFim],
+    [monitorias, filtrosAnaliticos, dataInicio, dataFim],
   )
 
   const dados = useMemo(
@@ -326,22 +327,7 @@ export function Quadrante() {
     <div className="flex flex-col gap-6">
       {/* Barra de ações */}
       <div className="flex flex-wrap items-end gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label className="text-xs text-muted-foreground">Carteira</Label>
-          <Select value={carteiraFiltro} onValueChange={(value) => setCarteiraFiltro(value ?? "todas")}>
-            <SelectTrigger className="w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas as carteiras</SelectItem>
-              {carteiras.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="data-inicio" className="text-xs text-muted-foreground">
