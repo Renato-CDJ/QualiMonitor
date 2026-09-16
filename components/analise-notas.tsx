@@ -140,7 +140,6 @@ function SortHeader({
 export function AnaliseNotas() {
   const { monitorias, ready } = useQualityData()
   const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: "todas", checklistId: "todos", tabulacao: "todas" })
-  const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
   const [faixaFiltro, setFaixaFiltro] = useState<string>("todas")
   const [dataInicio, setDataInicio] = useState<string>(inicioDoMes)
   const [dataFim, setDataFim] = useState<string>(hojeISO)
@@ -155,8 +154,7 @@ export function AnaliseNotas() {
   const filtradas = useMemo(
     () =>
       filtrarMonitorias(monitorias, filtrosAnaliticos).filter((m) => {
-        if (carteiraFiltro !== "todas" && m.carteira !== carteiraFiltro) return false
-        if (dataInicio && m.data < dataInicio) return false
+            if (dataInicio && m.data < dataInicio) return false
         if (dataFim && m.data > dataFim) return false
         if (faixaFiltro === "excelente" && m.nota < 90) return false
         if (faixaFiltro === "bom" && (m.nota < 75 || m.nota >= 90)) return false
@@ -164,7 +162,7 @@ export function AnaliseNotas() {
         if (faixaFiltro === "critico" && m.nota >= 60) return false
         return true
       }),
-    [monitorias, carteiraFiltro, dataInicio, dataFim, faixaFiltro],
+    [monitorias, filtrosAnaliticos, dataInicio, dataFim, faixaFiltro],
   )
 
   const k = useMemo(() => kpis(filtradas), [filtradas])
@@ -237,7 +235,7 @@ export function AnaliseNotas() {
     const ws = XLSX.utils.json_to_sheet(linhas)
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, "Estatísticas")
-    const carteiraNome = carteiraFiltro === "todas" ? "todas" : carteiraFiltro
+    const carteiraNome = filtrosAnaliticos.carteira === "todas" ? "todas" : filtrosAnaliticos.carteira
     XLSX.writeFile(
       wb,
       `estatisticas-operadores_${carteiraNome}_${dataInicio}_a_${dataFim}.xlsx`,
@@ -269,22 +267,6 @@ export function AnaliseNotas() {
   {/* Filtros */}
       <div className="rounded-xl border border-border/70 bg-card/60 p-4 shadow-sm">
         <div className="flex flex-wrap items-end gap-3">
-          <div className="flex min-w-[11rem] flex-1 flex-col gap-1.5 sm:flex-none">
-            <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Carteira</Label>
-            <Select value={carteiraFiltro} onValueChange={(value) => setCarteiraFiltro(value ?? "todas")}>
-              <SelectTrigger className="h-10 w-full bg-background sm:w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">Todas as carteiras</SelectItem>
-                {carteiras.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           <div className="flex min-w-[11rem] flex-1 flex-col gap-1.5 sm:flex-none">
             <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Faixa</Label>
             <Select value={faixaFiltro} onValueChange={(value) => setFaixaFiltro(value ?? "todas")}>

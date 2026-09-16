@@ -76,7 +76,6 @@ function SortHeader({
 export function Operadores() {
   const { monitorias, ready } = useQualityData()
   const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: "todas", checklistId: "todos", tabulacao: "todas" })
-  const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
   const [dataInicio, setDataInicio] = useState<string>(inicioDoMes)
   const [dataFim, setDataFim] = useState<string>(hojeISO)
   const [sortKey, setSortKey] = useState<SortKey>("nota")
@@ -90,12 +89,11 @@ export function Operadores() {
   const filtradas = useMemo(
     () =>
       filtrarMonitorias(monitorias, filtrosAnaliticos).filter((m) => {
-        if (carteiraFiltro !== "todas" && m.carteira !== carteiraFiltro) return false
-        if (dataInicio && m.data < dataInicio) return false
+              if (dataInicio && m.data < dataInicio) return false
         if (dataFim && m.data > dataFim) return false
         return true
       }),
-    [monitorias, carteiraFiltro, dataInicio, dataFim],
+    [monitorias, filtrosAnaliticos, dataInicio, dataFim],
   )
 
   const operadorData = useMemo(() => porOperador(filtradas), [filtradas])
@@ -149,22 +147,6 @@ export function Operadores() {
   <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
   {/* Filtros */}
       <div className="flex flex-wrap items-end gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label className="text-xs text-muted-foreground">Carteira</Label>
-          <Select value={carteiraFiltro} onValueChange={(value) => setCarteiraFiltro(value ?? "todas")}>
-            <SelectTrigger className="w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas as carteiras</SelectItem>
-              {carteiras.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="data-inicio" className="text-xs text-muted-foreground">
             De
