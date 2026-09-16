@@ -303,7 +303,7 @@ export function FaixasPieChart({
   const { mostrarTodas } = useNotasGlobais()
   const [mostrarLocal, setMostrarNotas] = useState(false)
   const [tipoGrafico, setTipoGrafico] = useState<"pizza" | "barras">("pizza")
-  const [escalaRotulos, setEscalaRotulos] = useState(1.25)
+  const [escalaRotulos, setEscalaRotulos] = useState(1)
   const mostrarNotas = mostrarTodas || mostrarLocal
   const total = data.reduce((sum, item) => sum + item.qtd, 0)
   const dadosComPercentual = data.map((item) => ({ ...item, percentual: total > 0 ? Number(((item.qtd / total) * 100).toFixed(1)) : 0 }))
@@ -316,7 +316,7 @@ export function FaixasPieChart({
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
       <div className="absolute bottom-1 right-2 z-10 flex items-center gap-0.5 rounded-md border bg-background/85 p-0.5 shadow-sm backdrop-blur" aria-label="Tamanho dos rótulos">
         <Button type="button" variant="ghost" size="icon" className="size-7" onClick={() => setEscalaRotulos((valor) => Math.max(0.8, Number((valor - 0.1).toFixed(1))))} aria-label="Diminuir textos"><Minus className="size-3.5" /></Button>
-        <Button type="button" variant="ghost" size="icon" className="size-7" onClick={() => setEscalaRotulos(1.25)} aria-label="Restaurar tamanho padrão"><RotateCcw className="size-3.5" /></Button>
+        <Button type="button" variant="ghost" size="icon" className="size-7" onClick={() => setEscalaRotulos(1)} aria-label="Restaurar tamanho padrão"><RotateCcw className="size-3.5" /></Button>
         <Button type="button" variant="ghost" size="icon" className="size-7" onClick={() => setEscalaRotulos((valor) => Math.min(1.5, Number((valor + 0.1).toFixed(1))))} aria-label="Aumentar textos"><Plus className="size-3.5" /></Button>
       </div>
       <ChartContainer config={config} className="mx-auto h-[340px] w-full">
