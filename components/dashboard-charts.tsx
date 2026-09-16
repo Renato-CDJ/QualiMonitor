@@ -32,7 +32,7 @@ import { resumoQuartis, faixaNota } from "@/lib/analytics"
 import { porOperador } from "@/lib/aggregations"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Expand, Eye, EyeOff } from "lucide-react"
+import { Expand, Eye, EyeOff, Minus, Plus, RotateCcw } from "lucide-react"
 import { useNotasGlobais } from "@/lib/notas-context"
 
   const CHART_BLUE = "#0875dc"
@@ -67,7 +67,7 @@ function corFaixa(faixa: string, fallback: string) {
 const RADIAN = Math.PI / 180
 
 /* Rótulo externo com linha de conexão (leader line) ligada à fatia */
-function makeLeaderLabel(corResolver: (name: string, index: number) => string, mostrarValor: boolean) {
+function makeLeaderLabel(corResolver: (name: string, index: number) => string, mostrarValor: boolean, escala = 1) {
   return function LeaderLabel(props: any) {
     const { cx, cy, midAngle, outerRadius, percent, name, value, index } = props
     const cor = corResolver(name, index)
@@ -91,7 +91,7 @@ function makeLeaderLabel(corResolver: (name: string, index: number) => string, m
           y={ey - (mostrarValor ? 6 : 0)}
           textAnchor={anchor}
           dominantBaseline="central"
-          fontSize={11}
+          fontSize={11 * escala}
           fontWeight={600}
           fill="var(--foreground)"
         >
@@ -103,7 +103,8 @@ function makeLeaderLabel(corResolver: (name: string, index: number) => string, m
             y={ey + 8}
             textAnchor={anchor}
             dominantBaseline="central"
-            fontSize={10}
+            fontSize={10 * escala}
+            fontWeight={500}
             fill="var(--muted-foreground)"
           >
             {`${value} (${Math.round((percent ?? 0) * 100)}%)`}
@@ -302,6 +303,7 @@ export function FaixasPieChart({
   const { mostrarTodas } = useNotasGlobais()
   const [mostrarLocal, setMostrarNotas] = useState(false)
   const [tipoGrafico, setTipoGrafico] = useState<"pizza" | "barras">("pizza")
+  const [escalaRotulos, setEscalaRotulos] = useState(1.25)
   const mostrarNotas = mostrarTodas || mostrarLocal
   const total = data.reduce((sum, item) => sum + item.qtd, 0)
   const dadosComPercentual = data.map((item) => ({ ...item, percentual: total > 0 ? Number(((item.qtd / total) * 100).toFixed(1)) : 0 }))
@@ -312,10 +314,15 @@ export function FaixasPieChart({
         <Button type="button" variant={tipoGrafico === "barras" ? "secondary" : "ghost"} size="sm" className="h-7 px-2 text-xs" onClick={() => setTipoGrafico("barras")}>Barras</Button>
       </div>
       <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
+      <div className="absolute bottom-1 right-2 z-10 flex items-center gap-0.5 rounded-md border bg-background/85 p-0.5 shadow-sm backdrop-blur" aria-label="Tamanho dos rótulos">
+        <Button type="button" variant="ghost" size="icon" className="size-7" onClick={() => setEscalaRotulos((valor) => Math.max(0.8, Number((valor - 0.1).toFixed(1))))} aria-label="Diminuir textos"><Minus className="size-3.5" /></Button>
+        <Button type="button" variant="ghost" size="icon" className="size-7" onClick={() => setEscalaRotulos(1.25)} aria-label="Restaurar tamanho padrão"><RotateCcw className="size-3.5" /></Button>
+        <Button type="button" variant="ghost" size="icon" className="size-7" onClick={() => setEscalaRotulos((valor) => Math.min(1.5, Number((valor + 0.1).toFixed(1))))} aria-label="Aumentar textos"><Plus className="size-3.5" /></Button>
+      </div>
       <ChartContainer config={config} className="mx-auto h-[340px] w-full">
         {tipoGrafico === "pizza" ? <PieChart margin={{ top: 28, right: 130, bottom: 28, left: 130 }}>
           <ChartTooltip content={<ChartTooltipContent nameKey="faixa" />} />
-          <Pie data={data} dataKey="qtd" nameKey="faixa" innerRadius={62} outerRadius={108} paddingAngle={2} labelLine={false} onClick={(_, index) => abrirFaixa(data[index])} label={makeLeaderLabel((name, i) => corFaixa(name, PIE_COLORS[i % PIE_COLORS.length]), mostrarNotas)}>
+          <Pie data={data} dataKey="qtd" nameKey="faixa" innerRadius={62} outerRadius={108} paddingAngle={2} labelLine={false} onClick={(_, index) => abrirFaixa(data[index])} label={makeLeaderLabel((name, i) => corFaixa(name, PIE_COLORS[i % PIE_COLORS.length]), mostrarNotas, escalaRotulos)}>
             {data.map((d, i) => <Cell key={i} fill={corFaixa(d.faixa, PIE_COLORS[i % PIE_COLORS.length])} />)}
           </Pie>
         </PieChart> : <BarChart data={dadosComPercentual} onClick={(evento) => { const faixa = evento?.activeLabel; if (typeof faixa === "string") abrirFaixa({ faixa }) }} margin={{ top: 28, right: 24, left: 0, bottom: 12 }}>
@@ -724,12 +731,12 @@ export function ParetoChart({
             dot={{ r: 3 }}
           >
             {mostrarNotas && (
-              <LabelList
-                dataKey="acumulado"
-                position="top"
-                offset={10}
-                fontSize={11}
-                fontWeight={600}
+          <LabelList
+            dataKey="conforme"
+            position="top"
+            offset={10}
+            fontSize={12}
+            fontWeight={600}
                 fill="var(--color-acumulado)"
                 formatter={(v) => `${Math.round(Number(v) || 0)}%`}
               />
