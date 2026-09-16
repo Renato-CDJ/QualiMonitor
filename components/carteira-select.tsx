@@ -11,24 +11,30 @@ import { cn } from "@/lib/utils"
 export function CarteiraSelect() {
   const router = useRouter()
   const { user, selecionarCarteira, logout } = useAuth()
-  const { monitorias, ready } = useQualityData()
+  const { carteiras: carteirasCadastradas, checklists, monitorias, ready } = useQualityData()
 
   const carteiras = useMemo(() => {
-    const mapa = new Map<string, { total: number; soma: number }>()
-    for (const m of monitorias) {
-      const atual = mapa.get(m.carteira) ?? { total: 0, soma: 0 }
-      atual.total += 1
-      atual.soma += m.nota
-      mapa.set(m.carteira, atual)
+    const resumo = new Map<string, { total: number; soma: number }>()
+    for (const carteira of carteirasCadastradas) {
+      resumo.set(carteira.nome, { total: 0, soma: 0 })
     }
-    return Array.from(mapa.entries())
-      .map(([nome, v]) => ({
+    for (const checklist of checklists) {
+      if (!resumo.has(checklist.carteira)) resumo.set(checklist.carteira, { total: 0, soma: 0 })
+    }
+    for (const monitoria of monitorias) {
+      const atual = resumo.get(monitoria.carteira) ?? { total: 0, soma: 0 }
+      atual.total += 1
+      atual.soma += monitoria.nota
+      resumo.set(monitoria.carteira, atual)
+    }
+    return Array.from(resumo.entries())
+      .map(([nome, valores]) => ({
         nome,
-        total: v.total,
-        media: v.total ? Math.round(v.soma / v.total) : 0,
+        total: valores.total,
+        media: valores.total ? Math.round(valores.soma / valores.total) : 0,
       }))
       .sort((a, b) => a.nome.localeCompare(b.nome))
-  }, [monitorias])
+  }, [carteirasCadastradas, checklists, monitorias])
 
   function escolher(c: string) {
     selecionarCarteira(c)

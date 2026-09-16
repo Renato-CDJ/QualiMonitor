@@ -35,6 +35,7 @@ import { useQualityData } from "@/lib/use-quality-data"
 import { aderenciaItens, resumoConformidade, type ItemAderencia } from "@/lib/aggregations"
 import { ConformidadePieChart, AderenciaItensChart } from "@/components/dashboard-charts"
 import { cn } from "@/lib/utils"
+import { FiltrosAnaliticos, filtrarMonitorias, type FiltrosAnaliticosState } from "@/components/filtros-analiticos"
 
 function formatBr(iso: string) {
   const [y, m, d] = iso.split("-")
@@ -104,7 +105,7 @@ function ProporcaoBar({ item }: { item: ItemAderencia }) {
 
 export function Insights() {
   const { monitorias, checklists, ready } = useQualityData()
-  const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
+  const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: "todas", checklistId: "todos", tabulacao: "todas" })
   const [operadorFiltro, setOperadorFiltro] = useState<string>("todos")
   const [visao, setVisao] = useState<"aderencia" | "oportunidade">("aderencia")
   const [dataInicio, setDataInicio] = useState<string>("")
@@ -121,14 +122,13 @@ export function Insights() {
 
   const filtradas = useMemo(
     () =>
-      monitorias.filter((m) => {
-        if (carteiraFiltro !== "todas" && m.carteira !== carteiraFiltro) return false
-        if (operadorFiltro !== "todos" && m.operadorNome !== operadorFiltro) return false
+      filtrarMonitorias(monitorias, filtrosAnaliticos).filter((m) => {
+            if (operadorFiltro !== "todos" && m.operadorNome !== operadorFiltro) return false
         if (dataInicio && m.data < dataInicio) return false
         if (dataFim && m.data > dataFim) return false
         return true
       }),
-    [monitorias, carteiraFiltro, operadorFiltro, dataInicio, dataFim],
+    [monitorias, filtrosAnaliticos, operadorFiltro, dataInicio, dataFim],
   )
 
   const periodoLabel = useMemo(() => {
@@ -148,11 +148,17 @@ export function Insights() {
   const resumo = useMemo(() => resumoConformidade(filtradas), [filtradas])
 
   const topAderencia = useMemo(
-    () => [...itens].sort((a, b) => b.pctConforme - a.pctConforme).slice(0, 8),
+    () => [...itens]
+      .filter((item) => item.pctConforme === 100)
+      .sort((a, b) => b.conforme - a.conforme || a.texto.localeCompare(b.texto))
+      .slice(0, 8),
     [itens],
   )
   const topOportunidade = useMemo(
-    () => [...itens].sort((a, b) => b.pctInconforme - a.pctInconforme).slice(0, 8),
+    () => [...itens]
+      .filter((item) => item.pctConforme < 100)
+      .sort((a, b) => b.pctInconforme - a.pctInconforme || b.inconforme - a.inconforme || a.texto.localeCompare(b.texto))
+      .slice(0, 8),
     [itens],
   )
   const topNa = useMemo(
@@ -162,11 +168,11 @@ export function Insights() {
 
   const tabelaOrdenada = useMemo(
     () =>
-      [...itens].sort((a, b) =>
-        visao === "aderencia"
-          ? b.pctConforme - a.pctConforme
-          : b.pctInconforme - a.pctInconforme,
-      ),
+  [...itens].sort((a, b) =>
+  visao === "aderencia"
+  ? b.pctConforme - a.pctConforme || b.conforme - a.conforme || a.texto.localeCompare(b.texto)
+  : b.pctInconforme - a.pctInconforme || b.inconforme - a.inconforme || a.texto.localeCompare(b.texto),
+  ),
     [itens, visao],
   )
 
@@ -174,8 +180,9 @@ export function Insights() {
     const base = visao === "aderencia" ? topAderencia : topOportunidade
     return base.map((it) => ({
       item: truncar(it.texto, 24),
-      itemCompleto: it.texto,
-      pct: visao === "aderencia" ? it.pctConforme : it.pctInconforme,
+  itemCompleto: it.texto,
+  descricao: it.descricao,
+  pct: visao === "aderencia" ? it.pctConforme : it.pctInconforme,
       qtd: visao === "aderencia" ? it.conforme : it.inconforme,
     }))
   }, [visao, topAderencia, topOportunidade])
@@ -194,30 +201,15 @@ export function Insights() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Filtros */}
+  <div className="flex flex-col gap-6">
+  <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
+  {/* Filtros */}
       <div className="rounded-xl border border-border bg-card">
         <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-medium">
           <CalendarDays className="size-4 text-primary" />
           Filtros
         </div>
         <div className="flex flex-wrap items-end gap-x-6 gap-y-4 p-4">
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-muted-foreground">Carteira</Label>
-            <Select value={carteiraFiltro} onValueChange={(value) => setCarteiraFiltro(value ?? "todas")}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">Todas as carteiras</SelectItem>
-                {carteiras.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs text-muted-foreground">Operador</Label>
             <Select value={operadorFiltro} onValueChange={(value) => setOperadorFiltro(value ?? "todos")}>
@@ -337,9 +329,12 @@ export function Insights() {
           </CardHeader>
           <CardContent className="flex flex-col gap-2.5">
             {topAderencia.slice(0, 5).map((it) => (
-              <div key={it.itemId} className="flex items-center gap-2 text-sm">
+              <div key={it.itemId} className="group relative flex items-center gap-2 text-sm">
                 <span className="min-w-0 flex-1 truncate" title={it.texto}>
                   {it.texto}
+                </span>
+                <span role="tooltip" className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden max-w-[min(28rem,calc(100vw-3rem))] rounded-md border border-border bg-popover px-3 py-2 text-xs leading-relaxed text-popover-foreground shadow-lg group-hover:block group-focus-within:block">
+                  {it.descricao || "Descrição não cadastrada para este item."}
                 </span>
                 <Badge className="shrink-0 border-chart-5/30 bg-chart-5/15 text-chart-5">
                   {it.pctConforme}%
@@ -359,9 +354,12 @@ export function Insights() {
           </CardHeader>
           <CardContent className="flex flex-col gap-2.5">
             {topOportunidade.slice(0, 5).map((it) => (
-              <div key={it.itemId} className="flex items-center gap-2 text-sm">
+              <div key={it.itemId} className="group relative flex items-center gap-2 text-sm">
                 <span className="min-w-0 flex-1 truncate" title={it.texto}>
                   {it.texto}
+                </span>
+                <span role="tooltip" className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden max-w-[min(28rem,calc(100vw-3rem))] rounded-md border border-border bg-popover px-3 py-2 text-xs leading-relaxed text-popover-foreground shadow-lg group-hover:block group-focus-within:block">
+                  {it.descricao || "Descrição não cadastrada para este item."}
                 </span>
                 <Badge className="shrink-0 border-destructive/30 bg-destructive/15 text-destructive">
                   {it.pctInconforme}%

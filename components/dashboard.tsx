@@ -5,23 +5,14 @@ import {
   Activity,
   AlertOctagon,
   ClipboardList,
-  TrendingUp,
   CalendarDays,
+  TrendingUp,
   Eye,
   EyeOff,
 } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { CardTitleHint } from "@/components/card-title-hint"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useQualityData } from "@/lib/use-quality-data"
 import { useAuth } from "@/lib/auth"
 import { useNotasGlobais } from "@/lib/notas-context"
@@ -43,6 +34,7 @@ import {
 } from "@/components/dashboard-charts"
 import { OperadoresResumoDialog } from "@/components/operadores-resumo-dialog"
 import { cn } from "@/lib/utils"
+import { FiltrosAnaliticos, filtrarMonitorias, type FiltrosAnaliticosState } from "@/components/filtros-analiticos"
 
 function formatBr(iso: string) {
   const [y, m, d] = iso.split("-")
@@ -98,7 +90,7 @@ export function Dashboard() {
   const { carteira: carteiraSelecionada } = useAuth()
   const { mostrarTodas, setMostrarTodas } = useNotasGlobais()
   const periodo: Periodicidade = "diario"
-  const [carteiraFiltro, setCarteiraFiltro] = useState<string>(carteiraSelecionada ?? "todas")
+  const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: carteiraSelecionada ?? "todas", checklistId: "todos", tabulacao: "todas" })
   const [dataInicio, setDataInicio] = useState<string>(() => {
     const hoje = new Date()
     return new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10)
@@ -108,10 +100,6 @@ export function Dashboard() {
     return new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().slice(0, 10)
   })
 
-  const carteiras = useMemo(
-    () => Array.from(new Set(monitorias.map((m) => m.carteira))),
-    [monitorias],
-  )
 
   function aplicarPreset(dias: number | "tudo" | "hoje") {
     if (dias === "tudo") {
@@ -134,13 +122,12 @@ export function Dashboard() {
 
   const filtradas = useMemo(
     () =>
-      monitorias.filter((m) => {
-        if (carteiraFiltro !== "todas" && m.carteira !== carteiraFiltro) return false
-        if (dataInicio && m.data < dataInicio) return false
+      filtrarMonitorias(monitorias, filtrosAnaliticos).filter((m) => {
+    if (dataInicio && m.data < dataInicio) return false
         if (dataFim && m.data > dataFim) return false
         return true
       }),
-    [monitorias, carteiraFiltro, dataInicio, dataFim],
+    [monitorias, filtrosAnaliticos, dataInicio, dataFim],
   )
 
   const periodoLabel = useMemo(() => {
@@ -188,61 +175,7 @@ export function Dashboard() {
 
         {/* Linha de controles */}
         <div className="flex flex-wrap items-end gap-x-6 gap-y-4 p-4">
-          {/* Carteira */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-muted-foreground">Carteira</Label>
-            <Select value={carteiraFiltro} onValueChange={(value) => value && setCarteiraFiltro(value)}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">Todas as carteiras</SelectItem>
-                {carteiras.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Período: De / Até */}
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="data-inicio" className="text-xs text-muted-foreground">
-              De
-            </Label>
-            <Input
-              id="data-inicio"
-              type="date"
-              value={dataInicio}
-              max={dataFim || undefined}
-              onChange={(e) => setDataInicio(e.target.value)}
-              className="w-40"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="data-fim" className="text-xs text-muted-foreground">
-              Até
-            </Label>
-            <Input
-              id="data-fim"
-              type="date"
-              value={dataFim}
-              min={dataInicio || undefined}
-              onChange={(e) => setDataFim(e.target.value)}
-              className="w-40"
-            />
-          </div>
-
-          {/* Atalhos */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-muted-foreground">Atalhos</Label>
-            <div className="flex items-center gap-1.5">
-              <Button variant="ghost" size="sm" onClick={() => aplicarPreset("tudo")}>
-                Tudo
-              </Button>
-            </div>
-          </div>
+  <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} periodo={{ inicio: dataInicio, fim: dataFim, onInicioChange: setDataInicio, onFimChange: setDataFim, onTudo: () => aplicarPreset("tudo") }} />
         </div>
 
         {/* Rodapé: período ativo */}
@@ -316,7 +249,7 @@ export function Dashboard() {
             />
           </CardHeader>
           <CardContent>
-            <ChartFullscreen title="Distribuição por Faixa"><FaixasPieChart data={faixaData} /></ChartFullscreen>
+            <ChartFullscreen title="Distribuição por Faixa"><FaixasPieChart data={faixaData} monitorias={filtradas} /></ChartFullscreen>
           </CardContent>
         </Card>
         <Card>

@@ -39,6 +39,7 @@ import { store } from "@/lib/store"
 import { notaColorClass } from "@/lib/analytics"
 import type { Monitoria } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { FiltrosAnaliticos, filtrarMonitorias, type FiltrosAnaliticosState } from "@/components/filtros-analiticos"
 
 function formatBr(iso: string) {
   const [y, m, d] = iso.split("-")
@@ -61,13 +62,14 @@ export function MinhasMonitorias() {
   const { monitorias, ready } = useQualityData()
   const { user } = useAuth()
   const monitorSelecionado = user?.nome ?? ""
+  const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: "todas", checklistId: "todos", tabulacao: "todas" })
   const [busca, setBusca] = useState("")
   const [alvoExclusao, setAlvoExclusao] = useState<Monitoria | null>(null)
 
   const minhas = useMemo(() => {
     if (!monitorSelecionado) return []
     const termo = busca.trim().toLowerCase()
-    return monitorias
+    return filtrarMonitorias(monitorias, filtrosAnaliticos)
       .filter((m) => m.monitor.trim().toLowerCase() === monitorSelecionado.trim().toLowerCase())
       .filter((m) => {
         if (!termo) return true
@@ -79,7 +81,7 @@ export function MinhasMonitorias() {
         )
       })
       .sort((a, b) => (a.data < b.data ? 1 : a.data > b.data ? -1 : 0))
-  }, [monitorias, monitorSelecionado, busca])
+  }, [monitorias, monitorSelecionado, filtrosAnaliticos, busca])
 
   function confirmarExclusao() {
     if (!alvoExclusao) return
@@ -101,8 +103,9 @@ export function MinhasMonitorias() {
           description="Busque as monitorias que você realizou, visualize os detalhes e exclua quando necessário"
         />
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        {/* Filtros de busca */}
+  <CardContent className="flex flex-col gap-4">
+  <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
+  {/* Filtros de busca */}
         <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="mm-monitor" className="text-xs text-muted-foreground">

@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useQualityData } from "@/lib/use-quality-data"
+import { FiltrosAnaliticos, filtrarMonitorias, type FiltrosAnaliticosState } from "@/components/filtros-analiticos"
 import type {
   Checklist,
   FeedbackInvertido,
@@ -582,7 +583,8 @@ function formatBr(iso: string) {
 
 export function ExportarRelatorio() {
   const { monitorias, checklists, recebimentos, feedbacks, ready } = useQualityData()
-  const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
+  const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: "todas", checklistId: "todos", tabulacao: "todas" })
+  const carteiraFiltro = filtrosAnaliticos.carteira
   const [dataInicio, setDataInicio] = useState<string>("")
   const [dataFim, setDataFim] = useState<string>("")
 
@@ -593,13 +595,12 @@ export function ExportarRelatorio() {
 
   const monitoriasFiltradas = useMemo(
     () =>
-      monitorias.filter((m) => {
-        if (carteiraFiltro !== "todas" && m.carteira !== carteiraFiltro) return false
-        if (dataInicio && m.data < dataInicio) return false
+  filtrarMonitorias(monitorias, filtrosAnaliticos).filter((m) => {
+  if (dataInicio && m.data < dataInicio) return false
         if (dataFim && m.data > dataFim) return false
         return true
       }),
-    [monitorias, carteiraFiltro, dataInicio, dataFim],
+    [monitorias, filtrosAnaliticos, dataInicio, dataFim],
   )
 
   const feedbacksFiltrados = useMemo(
@@ -688,22 +689,7 @@ export function ExportarRelatorio() {
           Filtros aplicados a todas as exportações
         </div>
         <div className="flex flex-wrap items-end gap-x-6 gap-y-4 p-4">
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-muted-foreground">Carteira</Label>
-            <Select value={carteiraFiltro} onValueChange={(v) => setCarteiraFiltro(v ?? "todas")}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">Todas as carteiras</SelectItem>
-                {carteiras.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="exp-inicio" className="text-xs text-muted-foreground">
               De
@@ -736,7 +722,7 @@ export function ExportarRelatorio() {
               variant="ghost"
               size="sm"
               onClick={() => {
-                setCarteiraFiltro("todas")
+                setFiltrosAnaliticos({ carteira: "todas", checklistId: "todos", tabulacao: "todas" })
                 setDataInicio("")
                 setDataFim("")
               }}

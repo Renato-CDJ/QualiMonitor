@@ -54,6 +54,7 @@ import {
 } from "@/components/dashboard-charts"
 import { cn } from "@/lib/utils"
 import type { SiglaQuadrante } from "@/lib/types"
+import { FiltrosAnaliticos, filtrarMonitorias, type FiltrosAnaliticosState } from "@/components/filtros-analiticos"
 import * as XLSX from "xlsx"
 
 function Stat({
@@ -103,6 +104,7 @@ const PERIODICIDADES: { value: Periodicidade; label: string }[] = [
 
 export function HistoricoOperador() {
   const { monitorias, operadores, checklists, feedbacks, recebimentos, ready } = useQualityData()
+  const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: "todas", checklistId: "todos", tabulacao: "todas" })
   const [operadorId, setOperadorId] = useState<string | null>(null)
   const [periodicidade, setPeriodicidade] = useState<Periodicidade>("mensal")
   const [historicoAberto, setHistoricoAberto] = useState(false)
@@ -119,7 +121,7 @@ export function HistoricoOperador() {
     if (!operadorSelecionado) return null
 
     // Filtra monitorias por id ou por nome (fallback para dados sem id consistente).
-    const minhas = monitorias
+    const minhas = filtrarMonitorias(monitorias, filtrosAnaliticos)
       .filter(
         (m) =>
           m.operadorId === operadorSelecionado.id ||
@@ -233,7 +235,7 @@ export function HistoricoOperador() {
       gapMedio,
       monitoresSet,
     }
-  }, [operadorSelecionado, monitorias, checklists, feedbacks, recebimentos, periodicidade])
+  }, [operadorSelecionado, monitorias, filtrosAnaliticos, checklists, feedbacks, recebimentos, periodicidade])
 
   const historicoMensal = useMemo(() => {
     if (!dados || dados.vazio) return null
@@ -287,6 +289,7 @@ export function HistoricoOperador() {
 
   return (
     <div className="flex flex-col gap-6">
+      <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
       {/* Barra de pesquisa */}
       <Card className="overflow-visible">
         <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-end">

@@ -1,66 +1,29 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { Wallet } from "lucide-react"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { useState } from "react"
+import { FiltrosAnaliticos, filtrarMonitorias, type FiltrosAnaliticosState } from "@/components/filtros-analiticos"
 import { useQualityData } from "@/lib/use-quality-data"
 import { AnaliseCategoria } from "@/components/analise-categoria"
 import { AnalisOperadorComparacao } from "@/components/analise-operador-comparacao"
 
 export function AnaliseCategoriaView() {
   const { monitorias, checklists } = useQualityData()
-  const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
-  const carteiras = useMemo(
-    () => Array.from(new Set(monitorias.map((m) => m.carteira))).sort(),
-    [monitorias],
-  )
-
-  const monitoriasCarteira = useMemo(
-    () =>
-      carteiraFiltro === "todas"
-        ? monitorias
-        : monitorias.filter((m) => m.carteira === carteiraFiltro),
-    [monitorias, carteiraFiltro],
-  )
+  const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({
+    carteira: "todas",
+    checklistId: "todos",
+    tabulacao: "todas",
+  })
+  const monitoriasFiltradas = filtrarMonitorias(monitorias, filtrosAnaliticos)
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="carteira-filtro" className="text-xs text-muted-foreground">
-            Carteira
-          </Label>
-          <Select value={carteiraFiltro} onValueChange={(value) => setCarteiraFiltro(value ?? "todas")}>
-            <SelectTrigger id="carteira-filtro" className="w-56">
-              <span className="flex items-center gap-2">
-                <Wallet className="size-4 text-muted-foreground" />
-                <SelectValue placeholder="Todas as carteiras" />
-              </span>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas as carteiras</SelectItem>
-              {carteiras.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
 
-      <AnaliseCategoria monitorias={monitoriasCarteira} checklists={checklists} carteira={carteiraFiltro} />
+      <AnaliseCategoria monitorias={monitoriasFiltradas} checklists={checklists} carteira={filtrosAnaliticos.carteira} />
       <AnalisOperadorComparacao
-        monitorias={monitoriasCarteira}
+        monitorias={monitoriasFiltradas}
         checklists={checklists}
-        carteira={carteiraFiltro}
+        carteira={filtrosAnaliticos.carteira}
       />
     </div>
   )

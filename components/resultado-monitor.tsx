@@ -8,8 +8,6 @@ import {
   CheckCircle2,
   AlertOctagon,
   CalendarDays,
-  ChevronDown,
-  Wallet,
   Trophy,
   Lightbulb,
 } from "lucide-react"
@@ -25,16 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuCheckboxItem,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
 import {
   Table,
   TableBody,
@@ -62,6 +50,7 @@ import { CardTitleHint } from "@/components/card-title-hint"
 import { AnaliseCategoria } from "@/components/analise-categoria"
 import { MinhasMonitorias } from "@/components/minhas-monitorias"
 import { cn } from "@/lib/utils"
+import { FiltrosAnaliticos, filtrarMonitorias, type FiltrosAnaliticosState } from "@/components/filtros-analiticos"
 
 function formatBr(iso: string) {
   const [y, m, d] = iso.split("-")
@@ -114,6 +103,7 @@ function Kpi({
 
 export function ResultadoMonitor({ escopo = "admin" }: { escopo?: "admin" | "proprio" }) {
   const { monitorias, checklists, ready } = useQualityData()
+  const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: "todas", checklistId: "todos", tabulacao: "todas" })
   const { user } = useAuth()
 
   const minhasMonitorias = useMemo(() => {
@@ -127,27 +117,10 @@ export function ResultadoMonitor({ escopo = "admin" }: { escopo?: "admin" | "pro
     () => Array.from(new Set(minhasMonitorias.map((m) => m.monitor))).sort(),
     [minhasMonitorias],
   )
-  const carteiras = useMemo(
-    () => Array.from(new Set(monitorias.map((m) => m.carteira))).sort(),
-    [monitorias],
-  )
-
   const [monitorFiltro, setMonitorFiltro] = useState("todos")
-  // Conjunto vazio = todas as carteiras
-  const [selecionadas, setSelecionadas] = useState<Set<string>>(new Set())
   const [dataInicio, setDataInicio] = useState<string>("")
   const [dataFim, setDataFim] = useState<string>("")
 
-  const todasCarteiras = selecionadas.size === 0
-
-  function toggleCarteira(c: string) {
-    setSelecionadas((prev) => {
-      const next = new Set(prev)
-      if (next.has(c)) next.delete(c)
-      else next.add(c)
-      return next
-    })
-  }
 
   function aplicarPreset(dias: number | "tudo") {
     if (dias === "tudo") {
@@ -165,14 +138,13 @@ export function ResultadoMonitor({ escopo = "admin" }: { escopo?: "admin" | "pro
 
   const filtradas = useMemo(
     () =>
-      minhasMonitorias.filter((m) => {
+      filtrarMonitorias(minhasMonitorias, filtrosAnaliticos).filter((m) => {
         if (monitorFiltro !== "todos" && m.monitor !== monitorFiltro) return false
-        if (!todasCarteiras && !selecionadas.has(m.carteira)) return false
         if (dataInicio && m.data < dataInicio) return false
         if (dataFim && m.data > dataFim) return false
         return true
       }),
-    [minhasMonitorias, monitorFiltro, selecionadas, todasCarteiras, dataInicio, dataFim],
+    [minhasMonitorias, filtrosAnaliticos, monitorFiltro, dataInicio, dataFim],
   )
 
   const rankMonitores = useMemo(() => porMonitor(filtradas), [filtradas])
@@ -237,12 +209,6 @@ export function ResultadoMonitor({ escopo = "admin" }: { escopo?: "admin" | "pro
     return "Todo o período"
   }, [dataInicio, dataFim])
 
-  const labelCarteiras = todasCarteiras
-    ? "Todas as carteiras"
-    : selecionadas.size === 1
-      ? Array.from(selecionadas)[0]
-      : `${selecionadas.size} carteiras`
-
   const monitorLabel = user?.nome || user?.usuario || "Meu resultado"
 
   if (!ready) {
@@ -250,8 +216,9 @@ export function ResultadoMonitor({ escopo = "admin" }: { escopo?: "admin" | "pro
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Filtros */}
+  <div className="flex flex-col gap-6">
+  <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
+  {/* Filtros */}
       <div className="rounded-xl border border-border bg-card">
         <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-medium">
           <CalendarDays className="size-4 text-primary" />
@@ -276,46 +243,6 @@ export function ResultadoMonitor({ escopo = "admin" }: { escopo?: "admin" | "pro
               </Select>
             </div>
           )}
-          {/* Carteiras (multi) */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-muted-foreground">Carteiras</Label>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button variant="outline" size="sm" className="h-9 w-52 justify-between gap-2 font-normal">
-                    {labelCarteiras}
-                    <ChevronDown className="size-4 shrink-0" />
-                  </Button>
-                }
-              />
-              <DropdownMenuContent align="start" className="w-56">
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel>Selecionar carteiras</DropdownMenuLabel>
-                </DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setSelecionadas(new Set())
-                  }}
-                >
-                  <span className={cn(todasCarteiras && "font-medium text-primary")}>
-                    Todas as carteiras
-                  </span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {carteiras.map((c) => (
-                  <DropdownMenuCheckboxItem
-                    key={c}
-                    checked={selecionadas.has(c)}
-                    onCheckedChange={() => toggleCarteira(c)}
-                    closeOnClick={false}
-                  >
-                    {c}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
 
           {/* Período */}
           <div className="flex flex-col gap-1.5">
@@ -368,10 +295,6 @@ export function ResultadoMonitor({ escopo = "admin" }: { escopo?: "admin" | "pro
             <span className="font-medium text-foreground">{monitorLabel}</span>
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <Wallet className="size-3.5" />
-            {labelCarteiras}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
             <CalendarDays className="size-3.5" />
             {periodoLabel}
           </span>
@@ -394,7 +317,7 @@ export function ResultadoMonitor({ escopo = "admin" }: { escopo?: "admin" | "pro
         />
         <Kpi
           icon={TrendingUp}
-          label="Nota média"
+          label="Nota m��dia"
           value={String(resumo.notaMedia)}
           tone={resumo.notaMedia >= 75 ? "good" : "bad"}
         />
@@ -631,7 +554,7 @@ export function ResultadoMonitor({ escopo = "admin" }: { escopo?: "admin" | "pro
       <AnaliseCategoria
         monitorias={filtradas}
         checklists={checklists}
-        carteira={selecionadas.size === 1 ? Array.from(selecionadas)[0] : "todas"}
+        carteira={filtrosAnaliticos.carteira}
       />
     </div>
   )
