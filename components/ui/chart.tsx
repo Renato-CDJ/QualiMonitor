@@ -58,10 +58,27 @@ function ChartContainer({
 }) {
   const uniqueId = React.useId()
   const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const [hasSize, setHasSize] = React.useState(false)
+
+  React.useEffect(() => {
+    const element = containerRef.current
+    if (!element) return
+
+    const updateSize = () => {
+      setHasSize(element.clientWidth > 0 && element.clientHeight > 0)
+    }
+    updateSize()
+
+    const observer = new ResizeObserver(updateSize)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <ChartContext.Provider value={{ config }}>
       <div
+        ref={containerRef}
         data-slot="chart"
         data-chart={chartId}
         className={cn(
@@ -71,11 +88,15 @@ function ChartContainer({
         {...props}
       >
         <ChartStyle id={chartId} config={config} />
-        <RechartsPrimitive.ResponsiveContainer
-          initialDimension={initialDimension}
-        >
-          {children}
-        </RechartsPrimitive.ResponsiveContainer>
+        {hasSize ? (
+          <RechartsPrimitive.ResponsiveContainer
+            initialDimension={initialDimension}
+            minWidth={1}
+            minHeight={1}
+          >
+            {children}
+          </RechartsPrimitive.ResponsiveContainer>
+        ) : null}
       </div>
     </ChartContext.Provider>
   )

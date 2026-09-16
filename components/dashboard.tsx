@@ -91,7 +91,6 @@ export function Dashboard() {
   const { mostrarTodas, setMostrarTodas } = useNotasGlobais()
   const periodo: Periodicidade = "diario"
   const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: carteiraSelecionada ?? "todas", checklistId: "todos", tabulacao: "todas" })
-  const carteiraFiltro = filtrosAnaliticos.carteira
   const [dataInicio, setDataInicio] = useState<string>(() => {
     const hoje = new Date()
     return new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10)
@@ -101,10 +100,6 @@ export function Dashboard() {
     return new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().slice(0, 10)
   })
 
-  const carteiras = useMemo(
-    () => Array.from(new Set(monitorias.map((m) => m.carteira))),
-    [monitorias],
-  )
 
   function aplicarPreset(dias: number | "tudo" | "hoje") {
     if (dias === "tudo") {

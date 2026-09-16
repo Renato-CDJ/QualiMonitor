@@ -81,7 +81,7 @@ export function MinhasMonitorias() {
         )
       })
       .sort((a, b) => (a.data < b.data ? 1 : a.data > b.data ? -1 : 0))
-  }, [monitorias, monitorSelecionado, busca])
+  }, [monitorias, monitorSelecionado, filtrosAnaliticos, busca])
 
   function confirmarExclusao() {
     if (!alvoExclusao) return

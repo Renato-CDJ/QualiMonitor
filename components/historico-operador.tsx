@@ -235,7 +235,7 @@ export function HistoricoOperador() {
       gapMedio,
       monitoresSet,
     }
-  }, [operadorSelecionado, monitorias, checklists, feedbacks, recebimentos, periodicidade])
+  }, [operadorSelecionado, monitorias, filtrosAnaliticos, checklists, feedbacks, recebimentos, periodicidade])
 
   const historicoMensal = useMemo(() => {
     if (!dados || dados.vazio) return null
