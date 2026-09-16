@@ -278,10 +278,11 @@ export function FaixasPieChart({
   monitorias?: Monitoria[]
 }) {
   const [faixaSelecionada, setFaixaSelecionada] = useState<string | null>(null)
-  const operadoresDaFaixa = faixaSelecionada
+  const faixaBase = faixaSelecionada?.split(" (")[0]
+  const operadoresDaFaixa = faixaBase
     ? Array.from(
         monitorias
-          .filter((monitoria) => faixaNota(monitoria.nota) === faixaSelecionada)
+          .filter((monitoria) => faixaNota(monitoria.nota) === faixaBase)
           .reduce((mapa, monitoria) => {
             const atual = mapa.get(monitoria.operadorNome) ?? { operador: monitoria.operadorNome, notas: [] as number[] }
             atual.notas.push(monitoria.nota)
