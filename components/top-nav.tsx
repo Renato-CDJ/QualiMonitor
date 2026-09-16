@@ -22,7 +22,6 @@ import {
   FileDown,
   ChevronDown,
   LogOut,
-  RefreshCw,
   ShieldCheck,
   Users,
   Headset,
@@ -31,6 +30,7 @@ import {
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuth } from "@/lib/auth"
+import { useQualityData } from "@/lib/use-quality-data"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -107,7 +107,8 @@ const MENUS_RESTRITOS = ["monitoria", "relatorios"]
 
 export function TopNav() {
   const pathname = usePathname()
-  const { user, carteira, isVisitante, isAdmin, limparCarteira, logout } = useAuth()
+  const { user, carteira, selecionarCarteira, isVisitante, isAdmin, logout } = useAuth()
+  const { carteiras } = useQualityData()
 
   // Visitante só enxerga os menus liberados (sem Monitoria e Relatórios).
   // Admin enxerga todos os menus + a área de Administração.
@@ -170,6 +171,29 @@ export function TopNav() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" aria-label="Mudar carteira">
+                <Wallet className="size-4 text-primary" />
+                <span className="hidden md:inline">Mudar carteira</span>
+                <ChevronDown className="size-3.5" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel>Selecionar carteira</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => selecionarCarteira("todas")} className="gap-2">
+                  <Wallet className="size-4" />
+                  <span className="flex-1">Todas as carteiras</span>
+                  {carteira === "todas" && <span className="text-xs text-primary">Ativa</span>}
+                </DropdownMenuItem>
+                {carteiras.map((item) => (
+                  <DropdownMenuItem key={item.id} onClick={() => selecionarCarteira(item.nome)} className="gap-2">
+                    <Wallet className="size-4" />
+                    <span className="flex-1 truncate">{item.nome}</span>
+                    {carteira === item.nome && <span className="text-xs text-primary">Ativa</span>}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             {carteira && (
               <span className="hidden items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs text-foreground md:inline-flex">
                 <Wallet className="size-3.5 text-primary" />
@@ -199,10 +223,6 @@ export function TopNav() {
                     </DropdownMenuLabel>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={limparCarteira} className="gap-2">
-                    <RefreshCw className="size-4" />
-                    Trocar carteira
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={logout} className="gap-2 text-destructive focus:text-destructive">
                     <LogOut className="size-4" />
                     Sair
