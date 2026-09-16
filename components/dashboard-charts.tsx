@@ -28,7 +28,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import type { Monitoria } from "@/lib/types"
-import { resumoQuartis } from "@/lib/analytics"
+import { resumoQuartis, faixaNota } from "@/lib/analytics"
 import { porOperador } from "@/lib/aggregations"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -272,9 +272,28 @@ export function VolumeNotaChart({
 /* ---------- Pizza: distribuição por faixa ---------- */
 export function FaixasPieChart({
   data,
+  monitorias = [],
 }: {
   data: { faixa: string; qtd: number }[]
+  monitorias?: Monitoria[]
 }) {
+  const [faixaSelecionada, setFaixaSelecionada] = useState<string | null>(null)
+  const operadoresDaFaixa = faixaSelecionada
+    ? Array.from(
+        monitorias
+          .filter((monitoria) => faixaNota(monitoria.nota) === faixaSelecionada)
+          .reduce((mapa, monitoria) => {
+            const atual = mapa.get(monitoria.operadorNome) ?? { operador: monitoria.operadorNome, notas: [] as number[] }
+            atual.notas.push(monitoria.nota)
+            mapa.set(monitoria.operadorNome, atual)
+            return mapa
+          }, new Map<string, { operador: string; notas: number[] }>()),
+      ).map(([, item]) => ({ operador: item.operador, quantidade: item.notas.length, nota: item.notas.reduce((soma, nota) => soma + nota, 0) / item.notas.length }))
+        .sort((a, b) => b.nota - a.nota)
+    : []
+  const abrirFaixa = (item: { faixa?: string }) => {
+    if (item.faixa) setFaixaSelecionada(item.faixa)
+  }
   const config: ChartConfig = data.reduce((acc, d, i) => {
     acc[d.faixa] = { label: d.faixa, color: corFaixa(d.faixa, PIE_COLORS[i % PIE_COLORS.length]) }
     return acc
@@ -295,10 +314,10 @@ export function FaixasPieChart({
       <ChartContainer config={config} className="mx-auto h-[340px] w-full">
         {tipoGrafico === "pizza" ? <PieChart margin={{ top: 28, right: 130, bottom: 28, left: 130 }}>
           <ChartTooltip content={<ChartTooltipContent nameKey="faixa" />} />
-          <Pie data={data} dataKey="qtd" nameKey="faixa" innerRadius={62} outerRadius={108} paddingAngle={2} labelLine={false} label={makeLeaderLabel((name, i) => corFaixa(name, PIE_COLORS[i % PIE_COLORS.length]), mostrarNotas)}>
+          <Pie data={data} dataKey="qtd" nameKey="faixa" innerRadius={62} outerRadius={108} paddingAngle={2} labelLine={false} onClick={(_, index) => abrirFaixa(data[index])} label={makeLeaderLabel((name, i) => corFaixa(name, PIE_COLORS[i % PIE_COLORS.length]), mostrarNotas)}>
             {data.map((d, i) => <Cell key={i} fill={corFaixa(d.faixa, PIE_COLORS[i % PIE_COLORS.length])} />)}
           </Pie>
-        </PieChart> : <BarChart data={dadosComPercentual} margin={{ top: 28, right: 24, left: 0, bottom: 12 }}>
+        </PieChart> : <BarChart data={dadosComPercentual} onClick={(evento) => { const faixa = evento?.activeLabel; if (typeof faixa === "string") abrirFaixa({ faixa }) }} margin={{ top: 28, right: 24, left: 0, bottom: 12 }}>
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey="faixa" tickLine={false} axisLine={false} fontSize={12} />
           <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} tickLine={false} axisLine={false} fontSize={12} width={42} />
@@ -309,6 +328,21 @@ export function FaixasPieChart({
           </Bar>
         </BarChart>}
       </ChartContainer>
+      <Dialog open={faixaSelecionada !== null} onOpenChange={(aberto) => !aberto && setFaixaSelecionada(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Operadores — {faixaSelecionada}</DialogTitle>
+            <DialogDescription>Notas dos operadores incluídos nesta faixa.</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[420px] overflow-auto rounded-lg border">
+            <table className="w-full text-sm">
+              <thead className="border-b bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground"><tr><th className="px-4 py-3">Operador</th><th className="px-4 py-3 text-right">Monitorias</th><th className="px-4 py-3 text-right">Nota média</th></tr></thead>
+              <tbody>{operadoresDaFaixa.map((item) => <tr key={item.operador} className="border-b last:border-0"><td className="px-4 py-3 font-medium">{item.operador}</td><td className="px-4 py-3 text-right tabular-nums">{item.quantidade}</td><td className="px-4 py-3 text-right font-semibold tabular-nums">{item.nota.toFixed(1)}</td></tr>)}</tbody>
+            </table>
+            {!operadoresDaFaixa.length && <p className="p-8 text-center text-sm text-muted-foreground">Nenhum operador encontrado nesta faixa.</p>}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

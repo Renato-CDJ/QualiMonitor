@@ -254,7 +254,7 @@ export function Dashboard() {
             />
           </CardHeader>
           <CardContent>
-            <ChartFullscreen title="Distribuição por Faixa"><FaixasPieChart data={faixaData} /></ChartFullscreen>
+            <ChartFullscreen title="Distribuição por Faixa"><FaixasPieChart data={faixaData} monitorias={filtradas} /></ChartFullscreen>
           </CardContent>
         </Card>
         <Card>
