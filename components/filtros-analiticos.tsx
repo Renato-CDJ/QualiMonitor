@@ -21,7 +21,9 @@ export function filtrarMonitorias(monitorias: Monitoria[], filtros: FiltrosAnali
   })
 }
 
-export function FiltrosAnaliticos({ value, onChange }: { value: FiltrosAnaliticosState; onChange: (value: FiltrosAnaliticosState) => void }) {
+type PeriodoFiltro = { inicio: string; fim: string; onInicioChange: (value: string) => void; onFimChange: (value: string) => void; onTudo: () => void }
+
+export function FiltrosAnaliticos({ value, onChange, periodo }: { value: FiltrosAnaliticosState; onChange: (value: FiltrosAnaliticosState) => void; periodo?: PeriodoFiltro }) {
   const { carteiras, checklists, vinculos, monitorias } = useQualityData()
   const checklistSelecionado = checklists.find((checklist) => checklist.id === value.checklistId)
 
@@ -47,5 +49,10 @@ export function FiltrosAnaliticos({ value, onChange }: { value: FiltrosAnalitico
     <div className="flex flex-col gap-1.5"><Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Checklist</Label><Select value={value.checklistId} onValueChange={(checklistId) => update({ checklistId: checklistId ?? "todos" })}><SelectTrigger className="w-56"><SelectValue placeholder="Todos os checklists">{value.checklistId === "todos" ? "Todos os checklists" : checklistSelecionado?.nome ?? "Todos os checklists"}</SelectValue></SelectTrigger><SelectContent><SelectItem value="todos">Todos os checklists</SelectItem>{checklists.map((checklist) => <SelectItem key={checklist.id} value={checklist.id}>{checklist.nome}</SelectItem>)}</SelectContent></Select></div>
     <div className="flex flex-col gap-1.5"><Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tabulação</Label><Select value={value.tabulacao} onValueChange={(tabulacao) => update({ tabulacao: tabulacao ?? "todas" })}><SelectTrigger className="w-48"><SelectValue placeholder="Todas as tabulações" /></SelectTrigger><SelectContent><SelectItem value="todas">Todas as tabulações</SelectItem>{tabulacoes.map((tabulacao) => <SelectItem key={tabulacao} value={tabulacao}>{tabulacao}</SelectItem>)}</SelectContent></Select></div>
     <div className="flex flex-col gap-1.5"><Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Carteira</Label><Select value={value.carteira} onValueChange={(carteira) => update({ carteira: carteira ?? "todas" })}><SelectTrigger className="w-48"><SelectValue placeholder="Todas as carteiras" /></SelectTrigger><SelectContent><SelectItem value="todas">Todas as carteiras</SelectItem>{carteiras.map((carteira) => <SelectItem key={carteira.id} value={carteira.nome}>{carteira.nome}</SelectItem>)}</SelectContent></Select></div>
+    {periodo && <>
+      <div className="flex flex-col gap-1.5"><Label htmlFor="filtro-data-inicio" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">De</Label><input id="filtro-data-inicio" type="date" value={periodo.inicio} max={periodo.fim || undefined} onChange={(event) => periodo.onInicioChange(event.target.value)} className="h-10 w-40 rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" /></div>
+      <div className="flex flex-col gap-1.5"><Label htmlFor="filtro-data-fim" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Até</Label><input id="filtro-data-fim" type="date" value={periodo.fim} min={periodo.inicio || undefined} onChange={(event) => periodo.onFimChange(event.target.value)} className="h-10 w-40 rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" /></div>
+      <div className="flex flex-col gap-1.5"><span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Atalhos</span><button type="button" onClick={periodo.onTudo} className="h-10 rounded-md border border-transparent px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/10">Tudo</button></div>
+    </>}
   </div>
 }

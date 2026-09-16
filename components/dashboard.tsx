@@ -5,23 +5,14 @@ import {
   Activity,
   AlertOctagon,
   ClipboardList,
-  TrendingUp,
   CalendarDays,
+  TrendingUp,
   Eye,
   EyeOff,
 } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { CardTitleHint } from "@/components/card-title-hint"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useQualityData } from "@/lib/use-quality-data"
 import { useAuth } from "@/lib/auth"
 import { useNotasGlobais } from "@/lib/notas-context"
@@ -189,46 +180,7 @@ export function Dashboard() {
 
         {/* Linha de controles */}
         <div className="flex flex-wrap items-end gap-x-6 gap-y-4 p-4">
-  <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
-
-
-          {/* Período: De / Até */}
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="data-inicio" className="text-xs text-muted-foreground">
-              De
-            </Label>
-            <Input
-              id="data-inicio"
-              type="date"
-              value={dataInicio}
-              max={dataFim || undefined}
-              onChange={(e) => setDataInicio(e.target.value)}
-              className="w-40"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="data-fim" className="text-xs text-muted-foreground">
-              Até
-            </Label>
-            <Input
-              id="data-fim"
-              type="date"
-              value={dataFim}
-              min={dataInicio || undefined}
-              onChange={(e) => setDataFim(e.target.value)}
-              className="w-40"
-            />
-          </div>
-
-          {/* Atalhos */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-muted-foreground">Atalhos</Label>
-            <div className="flex items-center gap-1.5">
-              <Button variant="ghost" size="sm" onClick={() => aplicarPreset("tudo")}>
-                Tudo
-              </Button>
-            </div>
-          </div>
+  <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} periodo={{ inicio: dataInicio, fim: dataFim, onInicioChange: setDataInicio, onFimChange: setDataFim, onTudo: () => aplicarPreset("tudo") }} />
         </div>
 
         {/* Rodapé: período ativo */}
