@@ -364,6 +364,7 @@ export function historicoApontamentos(
 export interface ItemAderencia {
   itemId: string
   texto: string
+  descricao: string
   carteira: string
   critico: boolean
   conforme: number
@@ -383,11 +384,11 @@ export interface ItemAderencia {
  * - % N.A. usa como base o total de apontamentos do item
  */
 export function aderenciaItens(monitorias: Monitoria[], checklists: Checklist[]): ItemAderencia[] {
-  const meta = new Map<string, { texto: string; carteira: string; critico: boolean }>()
+  const meta = new Map<string, { texto: string; descricao: string; carteira: string; critico: boolean }>()
   for (const c of checklists) {
     for (const it of c.itens) {
       if (!meta.has(it.id)) {
-        meta.set(it.id, { texto: it.texto, carteira: c.carteira, critico: !!it.critico })
+        meta.set(it.id, { texto: it.texto, descricao: it.descricao ?? "", carteira: c.carteira, critico: !!it.critico })
       }
     }
   }
@@ -412,6 +413,7 @@ export function aderenciaItens(monitorias: Monitoria[], checklists: Checklist[])
       return {
         itemId,
         texto: info?.texto ?? itemId,
+        descricao: info?.descricao ?? "Descrição não cadastrada para este item.",
         carteira: info?.carteira ?? "—",
         critico: info?.critico ?? false,
         conforme: c.conforme,
@@ -796,7 +798,7 @@ export function quadranteOperadores(
       const rec = recMap.get(operador) ?? null
       let sigla: SiglaQuadrante | null = null
       if (rec) {
-        // 1ª letra = Performance (Recebimento), 2ª letra = Qualidade
+        // 1�� letra = Performance (Recebimento), 2ª letra = Qualidade
         const p = rec === "alto" ? "A" : "B"
         const q = qualidade === "alta" ? "A" : "B"
         sigla = `${p}${q}` as SiglaQuadrante
