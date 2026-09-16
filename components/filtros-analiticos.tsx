@@ -34,9 +34,15 @@ export function FiltrosAnaliticos({ value, onChange, periodo }: { value: Filtros
   }, [checklistSelecionado, onChange, value])
 
   const tabulacoes = useMemo(() => {
-    const vinculadas = value.checklistId === "todos" ? vinculos : vinculos.filter((vinculo) => vinculo.checklistId === value.checklistId)
-    const nomes = vinculadas.map((vinculo) => vinculo.tabulacao)
-    return Array.from(new Set((nomes.length ? nomes : monitorias.map((monitoria) => monitoria.tabulacao)).filter(Boolean))).sort()
+    const monitoriasDoChecklist = value.checklistId === "todos"
+      ? monitorias
+      : monitorias.filter((monitoria) => monitoria.checklistId === value.checklistId)
+    const vinculadas = value.checklistId === "todos"
+      ? vinculos
+      : vinculos.filter((vinculo) => vinculo.checklistId === value.checklistId)
+    const nomesMonitorias = monitoriasDoChecklist.map((monitoria) => monitoria.tabulacao)
+    const nomesVinculos = vinculadas.map((vinculo) => vinculo.tabulacao)
+    return Array.from(new Set([...nomesMonitorias, ...nomesVinculos].filter(Boolean))).sort()
   }, [monitorias, value.checklistId, vinculos])
 
   function update(patch: Partial<FiltrosAnaliticosState>) {
