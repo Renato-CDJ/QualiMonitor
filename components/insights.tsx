@@ -35,6 +35,7 @@ import { useQualityData } from "@/lib/use-quality-data"
 import { aderenciaItens, resumoConformidade, type ItemAderencia } from "@/lib/aggregations"
 import { ConformidadePieChart, AderenciaItensChart } from "@/components/dashboard-charts"
 import { cn } from "@/lib/utils"
+import { FiltrosAnaliticos, filtrarMonitorias, type FiltrosAnaliticosState } from "@/components/filtros-analiticos"
 
 function formatBr(iso: string) {
   const [y, m, d] = iso.split("-")
@@ -104,6 +105,7 @@ function ProporcaoBar({ item }: { item: ItemAderencia }) {
 
 export function Insights() {
   const { monitorias, checklists, ready } = useQualityData()
+  const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: "todas", checklistId: "todos", tabulacao: "todas" })
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
   const [operadorFiltro, setOperadorFiltro] = useState<string>("todos")
   const [visao, setVisao] = useState<"aderencia" | "oportunidade">("aderencia")
@@ -121,7 +123,7 @@ export function Insights() {
 
   const filtradas = useMemo(
     () =>
-      monitorias.filter((m) => {
+      filtrarMonitorias(monitorias, filtrosAnaliticos).filter((m) => {
         if (carteiraFiltro !== "todas" && m.carteira !== carteiraFiltro) return false
         if (operadorFiltro !== "todos" && m.operadorNome !== operadorFiltro) return false
         if (dataInicio && m.data < dataInicio) return false
@@ -194,8 +196,9 @@ export function Insights() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Filtros */}
+  <div className="flex flex-col gap-6">
+  <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
+  {/* Filtros */}
       <div className="rounded-xl border border-border bg-card">
         <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-medium">
           <CalendarDays className="size-4 text-primary" />

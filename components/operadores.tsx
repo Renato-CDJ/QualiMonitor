@@ -26,6 +26,7 @@ import {
 import { useQualityData } from "@/lib/use-quality-data"
 import { porOperador } from "@/lib/aggregations"
 import { notaBadgeClass, faixaNota } from "@/lib/analytics"
+import { FiltrosAnaliticos, filtrarMonitorias, type FiltrosAnaliticosState } from "@/components/filtros-analiticos"
 
 type SortKey = "operador" | "volume" | "nota" | "min" | "mediana" | "max" | "faixa"
 type SortDir = "asc" | "desc"
@@ -74,6 +75,7 @@ function SortHeader({
 
 export function Operadores() {
   const { monitorias, ready } = useQualityData()
+  const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: "todas", checklistId: "todos", tabulacao: "todas" })
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
   const [dataInicio, setDataInicio] = useState<string>(inicioDoMes)
   const [dataFim, setDataFim] = useState<string>(hojeISO)
@@ -87,7 +89,7 @@ export function Operadores() {
 
   const filtradas = useMemo(
     () =>
-      monitorias.filter((m) => {
+      filtrarMonitorias(monitorias, filtrosAnaliticos).filter((m) => {
         if (carteiraFiltro !== "todas" && m.carteira !== carteiraFiltro) return false
         if (dataInicio && m.data < dataInicio) return false
         if (dataFim && m.data > dataFim) return false
@@ -143,8 +145,9 @@ export function Operadores() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Filtros */}
+  <div className="flex flex-col gap-6">
+  <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
+  {/* Filtros */}
       <div className="flex flex-wrap items-end gap-4">
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs text-muted-foreground">Carteira</Label>

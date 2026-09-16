@@ -62,6 +62,7 @@ import { CardTitleHint } from "@/components/card-title-hint"
 import { AnaliseCategoria } from "@/components/analise-categoria"
 import { MinhasMonitorias } from "@/components/minhas-monitorias"
 import { cn } from "@/lib/utils"
+import { FiltrosAnaliticos, filtrarMonitorias, type FiltrosAnaliticosState } from "@/components/filtros-analiticos"
 
 function formatBr(iso: string) {
   const [y, m, d] = iso.split("-")
@@ -114,6 +115,7 @@ function Kpi({
 
 export function ResultadoMonitor({ escopo = "admin" }: { escopo?: "admin" | "proprio" }) {
   const { monitorias, checklists, ready } = useQualityData()
+  const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: "todas", checklistId: "todos", tabulacao: "todas" })
   const { user } = useAuth()
 
   const minhasMonitorias = useMemo(() => {
@@ -165,7 +167,7 @@ export function ResultadoMonitor({ escopo = "admin" }: { escopo?: "admin" | "pro
 
   const filtradas = useMemo(
     () =>
-      minhasMonitorias.filter((m) => {
+      filtrarMonitorias(minhasMonitorias, filtrosAnaliticos).filter((m) => {
         if (monitorFiltro !== "todos" && m.monitor !== monitorFiltro) return false
         if (!todasCarteiras && !selecionadas.has(m.carteira)) return false
         if (dataInicio && m.data < dataInicio) return false
@@ -250,8 +252,9 @@ export function ResultadoMonitor({ escopo = "admin" }: { escopo?: "admin" | "pro
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Filtros */}
+  <div className="flex flex-col gap-6">
+  <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
+  {/* Filtros */}
       <div className="rounded-xl border border-border bg-card">
         <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-medium">
           <CalendarDays className="size-4 text-primary" />

@@ -39,6 +39,7 @@ import { kpis, porOperador } from "@/lib/aggregations"
 import { notaBadgeClass, faixaNota } from "@/lib/analytics"
 import { DispersaoOperadoresChart } from "@/components/dashboard-charts"
 import { cn } from "@/lib/utils"
+import { FiltrosAnaliticos, filtrarMonitorias, type FiltrosAnaliticosState } from "@/components/filtros-analiticos"
 import * as XLSX from "xlsx"
 
 function Stat({
@@ -138,6 +139,7 @@ function SortHeader({
 
 export function AnaliseNotas() {
   const { monitorias, ready } = useQualityData()
+  const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: "todas", checklistId: "todos", tabulacao: "todas" })
   const [carteiraFiltro, setCarteiraFiltro] = useState<string>("todas")
   const [faixaFiltro, setFaixaFiltro] = useState<string>("todas")
   const [dataInicio, setDataInicio] = useState<string>(inicioDoMes)
@@ -152,7 +154,7 @@ export function AnaliseNotas() {
 
   const filtradas = useMemo(
     () =>
-      monitorias.filter((m) => {
+      filtrarMonitorias(monitorias, filtrosAnaliticos).filter((m) => {
         if (carteiraFiltro !== "todas" && m.carteira !== carteiraFiltro) return false
         if (dataInicio && m.data < dataInicio) return false
         if (dataFim && m.data > dataFim) return false
@@ -262,8 +264,9 @@ export function AnaliseNotas() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Filtros */}
+  <div className="flex flex-col gap-6">
+  <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
+  {/* Filtros */}
       <div className="rounded-xl border border-border/70 bg-card/60 p-4 shadow-sm">
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex min-w-[11rem] flex-1 flex-col gap-1.5 sm:flex-none">
