@@ -248,6 +248,59 @@ export function NotaMensalChart({
   )
 }
 
+/* ---------- Comparativos mensais de distribuição ---------- */
+export function DistribuicaoMensalChart({
+  data,
+  categorias,
+  chave,
+}: {
+  data: Record<string, string | number>[]
+  categorias: string[]
+  chave: "faixa" | "tabulacao"
+}) {
+  const config = categorias.reduce((acc, categoria, index) => {
+    acc[`c${index}`] = { label: categoria, color: PIE_COLORS[index % PIE_COLORS.length] }
+    return acc
+  }, {} as ChartConfig)
+  const chartData = data.map((item) => Object.fromEntries([
+    ["mes", item.mes],
+    ...categorias.map((categoria, index) => [`c${index}`, item[categoria] ?? 0]),
+  ]))
+  return (
+    <ChartContainer config={config} className="h-[340px] w-full">
+      <BarChart data={chartData} margin={{ top: 20, right: 12, left: 0, bottom: 8 }}>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis dataKey="mes" tickLine={false} axisLine={false} fontSize={12} />
+        <YAxis tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} width={34} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        {categorias.map((categoria, index) => (
+          <Bar key={categoria} dataKey={`c${index}`} stackId="total" fill={`var(--color-c${index})`} name={categoria} radius={index === categorias.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]} />
+        ))}
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function ParetoMensalChart({ data }: { data: { mes: string; inconformidades: number; acumulado: number }[] }) {
+  const config = {
+    inconformidades: { label: "Inconformidades", color: CHART_RED },
+    acumulado: { label: "Acumulado", color: CHART_ORANGE },
+  } satisfies ChartConfig
+  return (
+    <ChartContainer config={config} className="h-[340px] w-full">
+      <ComposedChart data={data} margin={{ top: 20, right: 12, left: 0, bottom: 8 }}>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis dataKey="mes" tickLine={false} axisLine={false} fontSize={12} />
+        <YAxis yAxisId="qtd" tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} width={34} />
+        <YAxis yAxisId="pct" orientation="right" domain={[0, 100]} tickLine={false} axisLine={false} fontSize={12} width={38} unit="%" />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar yAxisId="qtd" dataKey="inconformidades" fill="var(--color-inconformidades)" radius={[4, 4, 0, 0]} />
+        <Line yAxisId="pct" type="monotone" dataKey="acumulado" stroke="var(--color-acumulado)" strokeWidth={2} dot={{ r: 3 }} />
+      </ComposedChart>
+    </ChartContainer>
+  )
+}
+
 /* ---------- Comparativo de volume vs nota (composto) ---------- */
 export function VolumeNotaChart({
   data,
