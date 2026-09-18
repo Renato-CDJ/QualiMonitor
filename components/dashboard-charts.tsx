@@ -301,6 +301,28 @@ export function ParetoMensalChart({ data }: { data: { mes: string; inconformidad
   )
 }
 
+/* ---------- Comparativo mensal de conformidade ---------- */
+export function ConformidadeMensalChart({ data }: { data: { mes: string; conforme: number; inconforme: number; na: number }[] }) {
+  const config = {
+    conforme: { label: "Conforme", color: CHART_GREEN },
+    inconforme: { label: "Inconforme", color: CHART_RED },
+    na: { label: "Não se aplica", color: "var(--muted-foreground)" },
+  } satisfies ChartConfig
+  return (
+    <ChartContainer config={config} className="h-[280px] w-full">
+      <BarChart data={data} margin={{ top: 20, right: 12, left: 0, bottom: 8 }}>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis dataKey="mes" tickLine={false} axisLine={false} fontSize={12} />
+        <YAxis tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} width={34} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="conforme" stackId="conformidade" fill="var(--color-conforme)" radius={[0, 0, 0, 0]} />
+        <Bar dataKey="inconforme" stackId="conformidade" fill="var(--color-inconforme)" radius={[0, 0, 0, 0]} />
+        <Bar dataKey="na" stackId="conformidade" fill="var(--color-na)" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
 /* ---------- Comparativo de volume vs nota (composto) ---------- */
 export function VolumeNotaChart({
   data,

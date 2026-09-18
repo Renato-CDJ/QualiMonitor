@@ -8,6 +8,7 @@ import {
   MinusCircle,
   TrendingUp,
   ListChecks,
+  BarChart3,
 } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { CardTitleHint } from "@/components/card-title-hint"
@@ -33,7 +34,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useQualityData } from "@/lib/use-quality-data"
 import { aderenciaItens, resumoConformidade, type ItemAderencia } from "@/lib/aggregations"
-import { ConformidadePieChart, AderenciaItensChart } from "@/components/dashboard-charts"
+import { ConformidadePieChart, ConformidadeMensalChart, AderenciaItensChart } from "@/components/dashboard-charts"
 import { cn } from "@/lib/utils"
 import { FiltrosAnaliticos, filtrarMonitorias, type FiltrosAnaliticosState } from "@/components/filtros-analiticos"
 
@@ -108,6 +109,7 @@ export function Insights() {
   const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: "todas", checklistId: "todos", tabulacao: "todas" })
   const [operadorFiltro, setOperadorFiltro] = useState<string>("todos")
   const [visao, setVisao] = useState<"aderencia" | "oportunidade">("aderencia")
+  const [comparativoMensal, setComparativoMensal] = useState(false)
   const [dataInicio, setDataInicio] = useState<string>("")
   const [dataFim, setDataFim] = useState<string>("")
 
@@ -146,6 +148,17 @@ export function Insights() {
     [filtradas, checklists],
   )
   const resumo = useMemo(() => resumoConformidade(filtradas), [filtradas])
+  const conformidadeMensal = useMemo(() => {
+    const grupos = new Map<string, { mes: string; conforme: number; inconforme: number; na: number }>()
+    for (const monitoria of filtradas) {
+      const chave = monitoria.data.slice(0, 7)
+      const [ano, mes] = chave.split("-")
+      const grupo = grupos.get(chave) ?? { mes: `${mes}/${ano}`, conforme: 0, inconforme: 0, na: 0 }
+      for (const apontamento of monitoria.apontamentos) grupo[apontamento.status] += 1
+      grupos.set(chave, grupo)
+    }
+    return Array.from(grupos.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([, grupo]) => grupo)
+  }, [filtradas])
 
   const topAderencia = useMemo(
     () => [...itens]
@@ -202,8 +215,20 @@ export function Insights() {
 
   return (
   <div className="flex flex-col gap-6">
-  <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
-  {/* Filtros */}
+      <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
+      <div className="flex justify-end">
+        <Button
+          variant={comparativoMensal ? "default" : "outline"}
+          size="sm"
+          className="gap-2"
+          onClick={() => setComparativoMensal((ativo) => !ativo)}
+          aria-pressed={comparativoMensal}
+        >
+          <BarChart3 className="size-4" />
+          Comparativo Mensal
+        </Button>
+      </div>
+      {/* Filtros */}
       <div className="rounded-xl border border-border bg-card">
         <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-medium">
           <CalendarDays className="size-4 text-primary" />
@@ -310,16 +335,16 @@ export function Insights() {
         <Card>
           <CardHeader>
             <CardTitleHint
-              title="Conformidade Geral"
-              description="Distribuição de Conforme · Inconforme · Não se aplica"
+              title={comparativoMensal ? "Conformidade por Mês" : "Conformidade Geral"}
+              description={comparativoMensal ? "Resultados mensais de toda a carteira" : "Distribuição de Conforme · Inconforme · Não se aplica"}
             />
           </CardHeader>
           <CardContent>
-            <ConformidadePieChart data={pieData} />
+            {comparativoMensal ? <ConformidadeMensalChart data={conformidadeMensal} /> : <ConformidadePieChart data={pieData} />}
           </CardContent>
         </Card>
 
-        <Card>
+        {!comparativoMensal && <Card>
           <CardHeader>
             <CardTitleHint
               icon={<TrendingUp className="size-4 text-chart-5" />}
@@ -342,9 +367,9 @@ export function Insights() {
               </div>
             ))}
           </CardContent>
-        </Card>
+        </Card>}
 
-        <Card>
+        {!comparativoMensal && <Card>
           <CardHeader>
             <CardTitleHint
               icon={<XCircle className="size-4 text-destructive" />}
@@ -367,7 +392,7 @@ export function Insights() {
               </div>
             ))}
           </CardContent>
-        </Card>
+        </Card>}
       </div>
 
       {/* Visão por gráfico (toggle aderência / oportunidade) */}
