@@ -213,6 +213,143 @@ export function TendenciaChart({
   )
 }
 
+/* ---------- Nota média mensal da carteira ---------- */
+export function NotaMensalChart({
+  data,
+}: {
+  data: { rotulo: string; nota: number; volume: number }[]
+}) {
+  const config = {
+    nota: { label: "Nota média da carteira", color: CHART_BLUE },
+  } satisfies ChartConfig
+  const { mostrarTodas } = useNotasGlobais()
+  const [mostrarLocal, setMostrarNotas] = useState(false)
+  const mostrarNotas = mostrarTodas || mostrarLocal
+
+  return (
+    <div className="relative">
+      <div className="absolute right-0 top-0 z-20">
+        <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
+      </div>
+      <ChartContainer config={config} className="h-[260px] w-full">
+        <BarChart data={data} margin={{ left: -16, right: 8, top: 24 }}>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis dataKey="rotulo" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+          <YAxis domain={[0, 100]} tickLine={false} axisLine={false} fontSize={12} width={40} />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Bar dataKey="nota" fill="var(--color-nota)" radius={[4, 4, 0, 0]}>
+            {mostrarNotas && (
+              <LabelList dataKey="nota" position="top" offset={8} fontSize={12} fontWeight={600} fill="var(--foreground)" />
+            )}
+          </Bar>
+        </BarChart>
+      </ChartContainer>
+    </div>
+  )
+}
+
+/* ---------- Comparativos mensais de distribuição ---------- */
+export function DistribuicaoMensalChart({
+  data,
+  categorias,
+  chave,
+}: {
+  data: Record<string, string | number>[]
+  categorias: string[]
+  chave: "faixa" | "tabulacao"
+}) {
+  const config = categorias.reduce((acc, categoria, index) => {
+    acc[`c${index}`] = { label: categoria, color: PIE_COLORS[index % PIE_COLORS.length] }
+    return acc
+  }, {} as ChartConfig)
+  const chartData = data.map((item) => Object.fromEntries([
+    ["mes", item.mes],
+    ...categorias.map((categoria, index) => [`c${index}`, item[categoria] ?? 0]),
+  ]))
+  return (
+    <ChartContainer config={config} className="h-[340px] w-full">
+      <BarChart data={chartData} margin={{ top: 20, right: 12, left: 0, bottom: 8 }}>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis dataKey="mes" tickLine={false} axisLine={false} fontSize={12} />
+        <YAxis tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} width={34} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        {categorias.map((categoria, index) => (
+          <Bar key={categoria} dataKey={`c${index}`} stackId="total" fill={`var(--color-c${index})`} name={categoria} radius={index === categorias.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]} />
+        ))}
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function ParetoMensalChart({ data }: { data: { mes: string; inconformidades: number; acumulado: number }[] }) {
+  const config = {
+    inconformidades: { label: "Inconformidades", color: CHART_RED },
+    acumulado: { label: "Acumulado", color: CHART_ORANGE },
+  } satisfies ChartConfig
+  return (
+    <ChartContainer config={config} className="h-[340px] w-full">
+      <ComposedChart data={data} margin={{ top: 20, right: 12, left: 0, bottom: 8 }}>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis dataKey="mes" tickLine={false} axisLine={false} fontSize={12} />
+        <YAxis yAxisId="qtd" tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} width={34} />
+        <YAxis yAxisId="pct" orientation="right" domain={[0, 100]} tickLine={false} axisLine={false} fontSize={12} width={38} unit="%" />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar yAxisId="qtd" dataKey="inconformidades" fill="var(--color-inconformidades)" radius={[4, 4, 0, 0]} />
+        <Line yAxisId="pct" type="monotone" dataKey="acumulado" stroke="var(--color-acumulado)" strokeWidth={2} dot={{ r: 3 }} />
+      </ComposedChart>
+    </ChartContainer>
+  )
+}
+
+/* ---------- Oportunidades por item e mês ---------- */
+export function OportunidadesMensaisChart({
+  data,
+  itens,
+}: {
+  data: { mes: string; [key: string]: string | number }[]
+  itens: { chave: string; label: string }[]
+}) {
+  const config = itens.reduce((acc, item, index) => {
+    acc[item.chave] = { label: item.label, color: PIE_COLORS[index % PIE_COLORS.length] }
+    return acc
+  }, {} as ChartConfig)
+  return (
+    <ChartContainer config={config} className="h-[360px] w-full">
+      <BarChart data={data} margin={{ top: 20, right: 12, left: 0, bottom: 8 }}>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis dataKey="mes" tickLine={false} axisLine={false} fontSize={12} />
+        <YAxis domain={[0, 100]} tickLine={false} axisLine={false} fontSize={12} width={40} unit="%" />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        {itens.map((item) => (
+          <Bar key={item.chave} dataKey={item.chave} fill={`var(--color-${item.chave})`} radius={[4, 4, 0, 0]} />
+        ))}
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+/* ---------- Comparativo mensal de conformidade ---------- */
+export function ConformidadeMensalChart({ data }: { data: { mes: string; conforme: number; inconforme: number; na: number }[] }) {
+  const config = {
+    conforme: { label: "Conforme", color: CHART_GREEN },
+    inconforme: { label: "Inconforme", color: CHART_RED },
+    na: { label: "Não se aplica", color: "var(--muted-foreground)" },
+  } satisfies ChartConfig
+  return (
+    <ChartContainer config={config} className="h-[280px] w-full">
+      <BarChart data={data} margin={{ top: 20, right: 12, left: 0, bottom: 8 }}>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis dataKey="mes" tickLine={false} axisLine={false} fontSize={12} />
+        <YAxis tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} width={34} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="conforme" stackId="conformidade" fill="var(--color-conforme)" radius={[0, 0, 0, 0]} />
+        <Bar dataKey="inconforme" stackId="conformidade" fill="var(--color-inconforme)" radius={[0, 0, 0, 0]} />
+        <Bar dataKey="na" stackId="conformidade" fill="var(--color-na)" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
 /* ---------- Comparativo de volume vs nota (composto) ---------- */
 export function VolumeNotaChart({
   data,

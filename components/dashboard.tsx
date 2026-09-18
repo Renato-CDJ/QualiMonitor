@@ -9,6 +9,7 @@ import {
   TrendingUp,
   Eye,
   EyeOff,
+  BarChart3,
 } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { CardTitleHint } from "@/components/card-title-hint"
@@ -27,18 +28,41 @@ import {
 import {
   TendenciaChart,
   VolumeNotaChart,
+  NotaMensalChart,
   FaixasPieChart,
   TabulacaoPieChart,
+  DistribuicaoMensalChart,
+  ParetoMensalChart,
   ParetoChart,
   ChartFullscreen,
 } from "@/components/dashboard-charts"
 import { OperadoresResumoDialog } from "@/components/operadores-resumo-dialog"
 import { cn } from "@/lib/utils"
+import type { Monitoria } from "@/lib/types"
+import { faixaNota } from "@/lib/analytics"
 import { FiltrosAnaliticos, filtrarMonitorias, type FiltrosAnaliticosState } from "@/components/filtros-analiticos"
 
 function formatBr(iso: string) {
   const [y, m, d] = iso.split("-")
   return `${d}/${m}/${y}`
+}
+
+function mesLabel(chave: string) {
+  const [ano, mes] = chave.split("-")
+  return `${mes}/${ano}`
+}
+
+function agruparMensal<T extends string>(monitorias: Monitoria[], obterCategoria: (monitoria: Monitoria) => T) {
+  const categorias = Array.from(new Set(monitorias.map(obterCategoria)))
+  const grupos = new Map<string, Record<string, string | number>>()
+  for (const monitoria of monitorias) {
+    const chave = monitoria.data.slice(0, 7)
+    const grupo = grupos.get(chave) ?? { mes: mesLabel(chave) }
+    const categoria = obterCategoria(monitoria)
+    grupo[categoria] = Number(grupo[categoria] ?? 0) + 1
+    grupos.set(chave, grupo)
+  }
+  return { categorias, data: Array.from(grupos.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([, grupo]) => grupo) }
 }
 
 function Kpi({
@@ -89,7 +113,8 @@ export function Dashboard() {
   const { monitorias, checklists, ready } = useQualityData()
   const { carteira: carteiraSelecionada } = useAuth()
   const { mostrarTodas, setMostrarTodas } = useNotasGlobais()
-  const periodo: Periodicidade = "diario"
+  const [comparativoMensal, setComparativoMensal] = useState(false)
+  const periodo: Periodicidade = comparativoMensal ? "mensal" : "diario"
   const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: carteiraSelecionada ?? "todas", checklistId: "todos", tabulacao: "todas" })
   const [dataInicio, setDataInicio] = useState<string>(() => {
     const hoje = new Date()
@@ -145,6 +170,21 @@ export function Dashboard() {
   const tabData = useMemo(() => porTabulacao(filtradas), [filtradas])
   const faixaData = useMemo(() => distribuicaoFaixas(filtradas), [filtradas])
   const pareto = useMemo(() => paretoItens(filtradas, checklists), [filtradas, checklists])
+  const mensalFaixas = useMemo(() => agruparMensal(filtradas, (monitoria) => faixaNota(monitoria.nota)), [filtradas])
+  const mensalTabulacoes = useMemo(() => agruparMensal(filtradas, (monitoria) => monitoria.tabulacao || "Sem tabulação"), [filtradas])
+  const paretoMensal = useMemo(() => {
+    const grupos = new Map<string, number>()
+    for (const monitoria of filtradas) {
+      const inconformidades = monitoria.apontamentos.filter((item) => item.status === "inconforme").length
+      grupos.set(monitoria.data.slice(0, 7), (grupos.get(monitoria.data.slice(0, 7)) ?? 0) + inconformidades)
+    }
+    const total = Array.from(grupos.values()).reduce((soma, valor) => soma + valor, 0)
+    let acumulado = 0
+    return Array.from(grupos.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([mes, inconformidades]) => {
+      acumulado += inconformidades
+      return { mes: mesLabel(mes), inconformidades, acumulado: total ? Number(((acumulado / total) * 100).toFixed(1)) : 0 }
+    })
+  }, [filtradas])
 
   if (!ready) {
     return <div className="p-6 text-sm text-muted-foreground">Carregando...</div>
@@ -161,6 +201,17 @@ export function Dashboard() {
             Filtros
           </div>
           <div className="flex items-center gap-2">
+          <Button
+            variant={comparativoMensal ? "default" : "outline"}
+            size="sm"
+            onClick={() => setComparativoMensal((ativo) => !ativo)}
+            className="gap-2"
+            aria-pressed={comparativoMensal}
+            title="Comparar resultados mês a mês"
+          >
+            <BarChart3 className="size-4" />
+            <span className="hidden sm:inline">Comparativo Mensal</span>
+          </Button>
           <Button
             variant={mostrarTodas ? "default" : "outline"}
             size="sm"
@@ -213,13 +264,27 @@ export function Dashboard() {
         </OperadoresResumoDialog>
       </div>
 
+      {comparativoMensal && (
+        <Card>
+          <CardHeader>
+            <CardTitleHint
+              title="Notas por Mês"
+              description="Nota média de toda a carteira em cada mês com monitorias"
+            />
+          </CardHeader>
+          <CardContent>
+            <ChartFullscreen title="Notas por Mês"><NotaMensalChart data={serie} /></ChartFullscreen>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Tendência + comparativo */}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitleHint
-              title="Evolução da Nota Média"
-              description={<span className="capitalize">Agrupado por {periodo}</span>}
+              title={comparativoMensal ? "Comparativo Mensal da Nota Média" : "Evolução da Nota Média"}
+              description={<span>{comparativoMensal ? "Cada ponto representa um mês" : `Agrupado por ${periodo}`}</span>}
             />
           </CardHeader>
           <CardContent>
@@ -229,8 +294,8 @@ export function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitleHint
-              title="Volume vs Nota"
-              description="Monitorias realizadas e nota média"
+              title={comparativoMensal ? "Comparativo Mensal: Volume vs Nota" : "Volume vs Nota"}
+              description={comparativoMensal ? "Barras por mês com volume e nota média" : "Monitorias realizadas e nota média"}
             />
           </CardHeader>
           <CardContent>
@@ -244,23 +309,23 @@ export function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitleHint
-              title="Distribuição por Faixa"
-              description="Pizza ou barras"
+              title={comparativoMensal ? "Distribuição por Faixa — Mensal" : "Distribuição por Faixa"}
+              description={comparativoMensal ? "Monitorias por faixa em cada mês" : "Pizza ou barras"}
             />
           </CardHeader>
           <CardContent>
-            <ChartFullscreen title="Distribuição por Faixa"><FaixasPieChart data={faixaData} monitorias={filtradas} /></ChartFullscreen>
+            <ChartFullscreen title={comparativoMensal ? "Distribuição por Faixa — Mensal" : "Distribuição por Faixa"}>{comparativoMensal ? <DistribuicaoMensalChart data={mensalFaixas.data} categorias={mensalFaixas.categorias} chave="faixa" /> : <FaixasPieChart data={faixaData} monitorias={filtradas} />}</ChartFullscreen>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitleHint
-              title="Monitorias por Tabulação"
-              description="Gráfico de pizza"
+              title={comparativoMensal ? "Monitorias por Tabulação — Mensal" : "Monitorias por Tabulação"}
+              description={comparativoMensal ? "Distribuição mensal por tabulação" : "Gráfico de pizza"}
             />
           </CardHeader>
           <CardContent>
-            <ChartFullscreen title="Monitorias por Tabulação"><TabulacaoPieChart data={tabData} /></ChartFullscreen>
+            <ChartFullscreen title={comparativoMensal ? "Monitorias por Tabulação — Mensal" : "Monitorias por Tabulação"}>{comparativoMensal ? <DistribuicaoMensalChart data={mensalTabulacoes.data} categorias={mensalTabulacoes.categorias} chave="tabulacao" /> : <TabulacaoPieChart data={tabData} />}</ChartFullscreen>
           </CardContent>
         </Card>
       </div>
@@ -269,13 +334,13 @@ export function Dashboard() {
       <Card>
         <CardHeader>
           <CardTitleHint
-            title="Pareto de Inconformidades"
-            description="Itens mais reprovados e % acumulado"
+            title={comparativoMensal ? "Pareto Mensal de Inconformidades" : "Pareto de Inconformidades"}
+            description={comparativoMensal ? "Inconformidades registradas em cada mês" : "Itens mais reprovados e % acumulado"}
           />
         </CardHeader>
         <CardContent>
-          {pareto.length ? (
-            <ChartFullscreen title="Pareto de Inconformidades"><ParetoChart data={pareto} /></ChartFullscreen>
+          {(comparativoMensal ? paretoMensal.length : pareto.length) ? (
+            <ChartFullscreen title={comparativoMensal ? "Pareto Mensal de Inconformidades" : "Pareto de Inconformidades"}>{comparativoMensal ? <ParetoMensalChart data={paretoMensal} /> : <ParetoChart data={pareto} />}</ChartFullscreen>
           ) : (
             <p className="py-16 text-center text-sm text-muted-foreground">
               Sem inconformidades no período.

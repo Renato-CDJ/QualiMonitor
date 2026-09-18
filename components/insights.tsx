@@ -8,6 +8,7 @@ import {
   MinusCircle,
   TrendingUp,
   ListChecks,
+  BarChart3,
 } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { CardTitleHint } from "@/components/card-title-hint"
@@ -33,7 +34,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useQualityData } from "@/lib/use-quality-data"
 import { aderenciaItens, resumoConformidade, type ItemAderencia } from "@/lib/aggregations"
-import { ConformidadePieChart, AderenciaItensChart } from "@/components/dashboard-charts"
+import { ConformidadePieChart, ConformidadeMensalChart, AderenciaItensChart, OportunidadesMensaisChart } from "@/components/dashboard-charts"
 import { cn } from "@/lib/utils"
 import { FiltrosAnaliticos, filtrarMonitorias, type FiltrosAnaliticosState } from "@/components/filtros-analiticos"
 
@@ -108,6 +109,7 @@ export function Insights() {
   const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: "todas", checklistId: "todos", tabulacao: "todas" })
   const [operadorFiltro, setOperadorFiltro] = useState<string>("todos")
   const [visao, setVisao] = useState<"aderencia" | "oportunidade">("aderencia")
+  const [comparativoMensal, setComparativoMensal] = useState(false)
   const [dataInicio, setDataInicio] = useState<string>("")
   const [dataFim, setDataFim] = useState<string>("")
 
@@ -146,6 +148,17 @@ export function Insights() {
     [filtradas, checklists],
   )
   const resumo = useMemo(() => resumoConformidade(filtradas), [filtradas])
+  const conformidadeMensal = useMemo(() => {
+    const grupos = new Map<string, { mes: string; conforme: number; inconforme: number; na: number }>()
+    for (const monitoria of filtradas) {
+      const chave = monitoria.data.slice(0, 7)
+      const [ano, mes] = chave.split("-")
+      const grupo = grupos.get(chave) ?? { mes: `${mes}/${ano}`, conforme: 0, inconforme: 0, na: 0 }
+      for (const apontamento of monitoria.apontamentos) grupo[apontamento.status] += 1
+      grupos.set(chave, grupo)
+    }
+    return Array.from(grupos.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([, grupo]) => grupo)
+  }, [filtradas])
 
   const topAderencia = useMemo(
     () => [...itens]
@@ -165,6 +178,58 @@ export function Insights() {
     () => [...itens].sort((a, b) => b.na - a.na).slice(0, 8),
     [itens],
   )
+  const oportunidadesMensais = useMemo(() => {
+    const grupos = new Map<string, Map<string, { conforme: number; inconforme: number; total: number }>>()
+    for (const monitoria of filtradas) {
+      const mes = monitoria.data.slice(0, 7)
+      const porItem = grupos.get(mes) ?? new Map()
+      for (const apontamento of monitoria.apontamentos) {
+        const atual = porItem.get(apontamento.itemId) ?? { conforme: 0, inconforme: 0, total: 0 }
+        atual.total += apontamento.status === "na" ? 0 : 1
+        if (apontamento.status === "conforme") atual.conforme += 1
+        if (apontamento.status === "inconforme") atual.inconforme += 1
+        porItem.set(apontamento.itemId, atual)
+      }
+      grupos.set(mes, porItem)
+    }
+    const itemIds = [...new Set([...grupos.values()].flatMap((grupo) => [...grupo.keys()]))]
+    const ranking = itemIds.map((itemId) => {
+      const registros = [...grupos.values()].map((grupo) => grupo.get(itemId)).filter(Boolean) as { conforme: number; inconforme: number; total: number }[]
+      const total = registros.reduce((soma, item) => soma + item.total, 0)
+      const inconforme = registros.reduce((soma, item) => soma + item.inconforme, 0)
+      return { itemId, pct: total ? (inconforme / total) * 100 : 0 }
+    }).sort((a, b) => b.pct - a.pct).slice(0, 8)
+    const itensChart = ranking.map(({ itemId }) => ({ chave: `item_${itemId.replace(/[^a-zA-Z0-9]/g, "_")}`, label: itens.find((item) => item.itemId === itemId)?.texto ?? itemId, itemId }))
+    const detalhamento = [...grupos.entries()].sort(([a], [b]) => b.localeCompare(a)).flatMap(([mes, grupo]) => [...grupo.entries()]
+      .map(([itemId, registro]) => ({ mes, itemId, ...registro, pctInconforme: registro.total ? Math.round((registro.inconforme / registro.total) * 1000) / 10 : 0 }))
+      .sort((a, b) => b.pctInconforme - a.pctInconforme))
+    const data = [...grupos.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([mes, grupo]) => {
+      const [ano, numeroMes] = mes.split("-")
+      const row: { mes: string; [key: string]: string | number } = { mes: `${numeroMes}/${ano}` }
+      for (const item of itensChart) {
+        const registro = grupo.get(item.itemId)
+        row[item.chave] = registro?.total ? Math.round((registro.inconforme / registro.total) * 1000) / 10 : 0
+      }
+      return row
+    })
+    const aderenciaRanking = itemIds.map((itemId) => {
+      const registros = [...grupos.values()].map((grupo) => grupo.get(itemId)).filter(Boolean) as { conforme: number; inconforme: number; total: number }[]
+      const total = registros.reduce((soma, item) => soma + item.total, 0)
+      const conforme = registros.reduce((soma, item) => soma + item.conforme, 0)
+      return { itemId, pct: total ? (conforme / total) * 100 : 0 }
+    }).sort((a, b) => b.pct - a.pct).slice(0, 8)
+    const aderenciaItens = aderenciaRanking.map(({ itemId }) => ({ chave: `aderencia_${itemId.replace(/[^a-zA-Z0-9]/g, "_")}`, label: itens.find((item) => item.itemId === itemId)?.texto ?? itemId, itemId }))
+    const aderenciaData = [...grupos.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([mes, grupo]) => {
+      const [ano, numeroMes] = mes.split("-")
+      const row: { mes: string; [key: string]: string | number } = { mes: `${numeroMes}/${ano}` }
+      for (const item of aderenciaItens) {
+        const registro = grupo.get(item.itemId)
+        row[item.chave] = registro?.total ? Math.round((registro.conforme / registro.total) * 1000) / 10 : 0
+      }
+      return row
+    })
+    return { data, itens: itensChart, detalhamento, aderenciaData, aderenciaItens }
+  }, [filtradas, itens])
 
   const tabelaOrdenada = useMemo(
     () =>
@@ -202,8 +267,20 @@ export function Insights() {
 
   return (
   <div className="flex flex-col gap-6">
-  <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
-  {/* Filtros */}
+      <FiltrosAnaliticos value={filtrosAnaliticos} onChange={setFiltrosAnaliticos} />
+      <div className="flex justify-end">
+        <Button
+          variant={comparativoMensal ? "default" : "outline"}
+          size="sm"
+          className="gap-2"
+          onClick={() => setComparativoMensal((ativo) => !ativo)}
+          aria-pressed={comparativoMensal}
+        >
+          <BarChart3 className="size-4" />
+          Comparativo Mensal
+        </Button>
+      </div>
+      {/* Filtros */}
       <div className="rounded-xl border border-border bg-card">
         <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-medium">
           <CalendarDays className="size-4 text-primary" />
@@ -310,16 +387,16 @@ export function Insights() {
         <Card>
           <CardHeader>
             <CardTitleHint
-              title="Conformidade Geral"
-              description="Distribuição de Conforme · Inconforme · Não se aplica"
+              title={comparativoMensal ? "Conformidade por Mês" : "Conformidade Geral"}
+              description={comparativoMensal ? "Resultados mensais de toda a carteira" : "Distribuição de Conforme · Inconforme · Não se aplica"}
             />
           </CardHeader>
           <CardContent>
-            <ConformidadePieChart data={pieData} />
+            {comparativoMensal ? <ConformidadeMensalChart data={conformidadeMensal} /> : <ConformidadePieChart data={pieData} />}
           </CardContent>
         </Card>
 
-        <Card>
+        {!comparativoMensal && <Card>
           <CardHeader>
             <CardTitleHint
               icon={<TrendingUp className="size-4 text-chart-5" />}
@@ -342,9 +419,9 @@ export function Insights() {
               </div>
             ))}
           </CardContent>
-        </Card>
+        </Card>}
 
-        <Card>
+        {!comparativoMensal && <Card>
           <CardHeader>
             <CardTitleHint
               icon={<XCircle className="size-4 text-destructive" />}
@@ -367,7 +444,7 @@ export function Insights() {
               </div>
             ))}
           </CardContent>
-        </Card>
+        </Card>}
       </div>
 
       {/* Visão por gráfico (toggle aderência / oportunidade) */}
@@ -391,7 +468,11 @@ export function Insights() {
           </Tabs>
         </CardHeader>
         <CardContent>
-          {chartData.length ? (
+          {comparativoMensal ? (
+            visao === "aderencia"
+              ? oportunidadesMensais.aderenciaItens.length ? <OportunidadesMensaisChart data={oportunidadesMensais.aderenciaData} itens={oportunidadesMensais.aderenciaItens} /> : <p className="py-16 text-center text-sm text-muted-foreground">Sem dados de aderência no período selecionado.</p>
+              : oportunidadesMensais.itens.length ? <OportunidadesMensaisChart data={oportunidadesMensais.data} itens={oportunidadesMensais.itens} /> : <p className="py-16 text-center text-sm text-muted-foreground">Sem oportunidades no período selecionado.</p>
+          ) : chartData.length ? (
             <AderenciaItensChart data={chartData} tipo={visao} />
           ) : (
             <p className="py-16 text-center text-sm text-muted-foreground">
@@ -405,12 +486,11 @@ export function Insights() {
       <Card>
         <CardHeader>
           <CardTitleHint
-            title="Detalhamento por Item"
+            title={comparativoMensal ? "Detalhamento Mensal por Item" : "Detalhamento por Item"}
             description={
-              <>
-                Conforme, Inconforme e Não se aplica com percentuais. Ordenado por{" "}
-                {visao === "aderencia" ? "maior aderência" : "maior oportunidade"}.
-              </>
+              comparativoMensal
+                ? `Matriz mensal de ${visao === "aderencia" ? "conformidade" : "inconformidade"}: cada linha é um item e cada coluna é um mês.`
+                : <>Conforme, Inconforme e Não se aplica com percentuais. Ordenado por {visao === "aderencia" ? "maior aderência" : "maior oportunidade"}.</>
             }
           />
         </CardHeader>
@@ -419,16 +499,29 @@ export function Insights() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[220px]">Item do Checklist</TableHead>
-                  <TableHead>Carteira</TableHead>
-                  <TableHead className="text-right text-chart-5">Conforme</TableHead>
-                  <TableHead className="text-right text-destructive">Inconforme</TableHead>
-                  <TableHead className="text-right">N.A.</TableHead>
-                  <TableHead className="min-w-[140px]">Proporção</TableHead>
+                  {comparativoMensal ? <>
+                    <TableHead className="sticky left-0 z-10 min-w-[240px] bg-card">Item do Checklist</TableHead>
+                    {(visao === "aderencia" ? oportunidadesMensais.aderenciaData : oportunidadesMensais.data).map((mes) => <TableHead key={String(mes.mes)} className="min-w-[92px] text-center">{String(mes.mes)}</TableHead>)}
+                  </> : <>
+                    <TableHead className="min-w-[220px]">Item do Checklist</TableHead><TableHead>Carteira</TableHead><TableHead className="text-right text-chart-5">Conforme</TableHead><TableHead className="text-right text-destructive">Inconforme</TableHead><TableHead className="text-right">N.A.</TableHead><TableHead className="min-w-[140px]">Proporção</TableHead>
+                  </>}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tabelaOrdenada.length ? (
+                {comparativoMensal ? (
+                  (visao === "aderencia" ? oportunidadesMensais.aderenciaItens : oportunidadesMensais.itens).length ? (visao === "aderencia" ? oportunidadesMensais.aderenciaItens : oportunidadesMensais.itens).map((item) => {
+                    const dados = visao === "aderencia" ? oportunidadesMensais.aderenciaData : oportunidadesMensais.data
+                    return <TableRow key={item.itemId}>
+                      <TableCell className="sticky left-0 z-10 bg-card font-medium" title={item.label}>{item.label}</TableCell>
+                      {dados.map((mes) => {
+                        const valor = Number(mes[item.chave] ?? 0)
+                        const intensidade = Math.min(100, valor) / 100
+                        const cor = visao === "aderencia" ? "var(--chart-5)" : "var(--destructive)"
+                        return <TableCell key={`${item.itemId}-${String(mes.mes)}`} className="p-2 text-center"><span className="inline-flex min-w-12 justify-center rounded-md px-2 py-1 text-xs font-semibold tabular-nums" style={{ backgroundColor: `color-mix(in oklab, ${cor} ${Math.max(8, intensidade * 72)}%, transparent)`, color: valor >= 50 ? "var(--foreground)" : cor }}>{valor}%</span></TableCell>
+                      })}
+                    </TableRow>
+                  }) : <TableRow><TableCell colSpan={1} className="py-10 text-center text-muted-foreground">Sem dados no período selecionado.</TableCell></TableRow>
+                ) : tabelaOrdenada.length ? (
                   tabelaOrdenada.map((it) => (
                     <TableRow key={it.itemId}>
                       <TableCell className="font-medium">
