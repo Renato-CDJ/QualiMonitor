@@ -212,7 +212,23 @@ export function Insights() {
       }
       return row
     })
-    return { data, itens: itensChart, detalhamento }
+    const aderenciaRanking = itemIds.map((itemId) => {
+      const registros = [...grupos.values()].map((grupo) => grupo.get(itemId)).filter(Boolean) as { conforme: number; inconforme: number; total: number }[]
+      const total = registros.reduce((soma, item) => soma + item.total, 0)
+      const conforme = registros.reduce((soma, item) => soma + item.conforme, 0)
+      return { itemId, pct: total ? (conforme / total) * 100 : 0 }
+    }).sort((a, b) => b.pct - a.pct).slice(0, 8)
+    const aderenciaItens = aderenciaRanking.map(({ itemId }) => ({ chave: `aderencia_${itemId.replace(/[^a-zA-Z0-9]/g, "_")}`, label: itens.find((item) => item.itemId === itemId)?.texto ?? itemId, itemId }))
+    const aderenciaData = [...grupos.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([mes, grupo]) => {
+      const [ano, numeroMes] = mes.split("-")
+      const row: { mes: string; [key: string]: string | number } = { mes: `${numeroMes}/${ano}` }
+      for (const item of aderenciaItens) {
+        const registro = grupo.get(item.itemId)
+        row[item.chave] = registro?.total ? Math.round((registro.conforme / registro.total) * 1000) / 10 : 0
+      }
+      return row
+    })
+    return { data, itens: itensChart, detalhamento, aderenciaData, aderenciaItens }
   }, [filtradas, itens])
 
   const tabelaOrdenada = useMemo(
@@ -452,8 +468,10 @@ export function Insights() {
           </Tabs>
         </CardHeader>
         <CardContent>
-          {comparativoMensal && visao === "oportunidade" ? (
-            oportunidadesMensais.itens.length ? <OportunidadesMensaisChart data={oportunidadesMensais.data} itens={oportunidadesMensais.itens} /> : <p className="py-16 text-center text-sm text-muted-foreground">Sem oportunidades no período selecionado.</p>
+          {comparativoMensal ? (
+            visao === "aderencia"
+              ? oportunidadesMensais.aderenciaItens.length ? <OportunidadesMensaisChart data={oportunidadesMensais.aderenciaData} itens={oportunidadesMensais.aderenciaItens} /> : <p className="py-16 text-center text-sm text-muted-foreground">Sem dados de aderência no período selecionado.</p>
+              : oportunidadesMensais.itens.length ? <OportunidadesMensaisChart data={oportunidadesMensais.data} itens={oportunidadesMensais.itens} /> : <p className="py-16 text-center text-sm text-muted-foreground">Sem oportunidades no período selecionado.</p>
           ) : chartData.length ? (
             <AderenciaItensChart data={chartData} tipo={visao} />
           ) : (
@@ -468,10 +486,10 @@ export function Insights() {
       <Card>
         <CardHeader>
           <CardTitleHint
-            title={comparativoMensal && visao === "oportunidade" ? "Detalhamento Mensal por Item" : "Detalhamento por Item"}
+            title={comparativoMensal ? "Detalhamento Mensal por Item" : "Detalhamento por Item"}
             description={
-              comparativoMensal && visao === "oportunidade"
-                ? "Matriz mensal: cada linha é um item e cada coluna é um mês. A intensidade da cor destaca maiores oportunidades."
+              comparativoMensal
+                ? `Matriz mensal de ${visao === "aderencia" ? "conformidade" : "inconformidade"}: cada linha é um item e cada coluna é um mês.`
                 : <>Conforme, Inconforme e Não se aplica com percentuais. Ordenado por {visao === "aderencia" ? "maior aderência" : "maior oportunidade"}.</>
             }
           />
@@ -481,26 +499,28 @@ export function Insights() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  {comparativoMensal && visao === "oportunidade" ? <>
+                  {comparativoMensal ? <>
                     <TableHead className="sticky left-0 z-10 min-w-[240px] bg-card">Item do Checklist</TableHead>
-                    {oportunidadesMensais.data.map((mes) => <TableHead key={String(mes.mes)} className="min-w-[92px] text-center">{String(mes.mes)}</TableHead>)}
+                    {(visao === "aderencia" ? oportunidadesMensais.aderenciaData : oportunidadesMensais.data).map((mes) => <TableHead key={String(mes.mes)} className="min-w-[92px] text-center">{String(mes.mes)}</TableHead>)}
                   </> : <>
                     <TableHead className="min-w-[220px]">Item do Checklist</TableHead><TableHead>Carteira</TableHead><TableHead className="text-right text-chart-5">Conforme</TableHead><TableHead className="text-right text-destructive">Inconforme</TableHead><TableHead className="text-right">N.A.</TableHead><TableHead className="min-w-[140px]">Proporção</TableHead>
                   </>}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {comparativoMensal && visao === "oportunidade" ? (
-                  oportunidadesMensais.itens.length ? oportunidadesMensais.itens.map((item) => (
-                    <TableRow key={item.itemId}>
+                {comparativoMensal ? (
+                  (visao === "aderencia" ? oportunidadesMensais.aderenciaItens : oportunidadesMensais.itens).length ? (visao === "aderencia" ? oportunidadesMensais.aderenciaItens : oportunidadesMensais.itens).map((item) => {
+                    const dados = visao === "aderencia" ? oportunidadesMensais.aderenciaData : oportunidadesMensais.data
+                    return <TableRow key={item.itemId}>
                       <TableCell className="sticky left-0 z-10 bg-card font-medium" title={item.label}>{item.label}</TableCell>
-                      {oportunidadesMensais.data.map((mes) => {
+                      {dados.map((mes) => {
                         const valor = Number(mes[item.chave] ?? 0)
                         const intensidade = Math.min(100, valor) / 100
-                        return <TableCell key={`${item.itemId}-${String(mes.mes)}`} className="p-2 text-center"><span className="inline-flex min-w-12 justify-center rounded-md px-2 py-1 text-xs font-semibold tabular-nums" style={{ backgroundColor: `color-mix(in oklab, var(--destructive) ${Math.max(8, intensidade * 72)}%, transparent)`, color: valor >= 50 ? "var(--destructive-foreground)" : "var(--destructive)" }}>{valor}%</span></TableCell>
+                        const cor = visao === "aderencia" ? "var(--chart-5)" : "var(--destructive)"
+                        return <TableCell key={`${item.itemId}-${String(mes.mes)}`} className="p-2 text-center"><span className="inline-flex min-w-12 justify-center rounded-md px-2 py-1 text-xs font-semibold tabular-nums" style={{ backgroundColor: `color-mix(in oklab, ${cor} ${Math.max(8, intensidade * 72)}%, transparent)`, color: valor >= 50 ? "var(--foreground)" : cor }}>{valor}%</span></TableCell>
                       })}
                     </TableRow>
-                  )) : <TableRow><TableCell colSpan={1} className="py-10 text-center text-muted-foreground">Sem dados no período selecionado.</TableCell></TableRow>
+                  }) : <TableRow><TableCell colSpan={1} className="py-10 text-center text-muted-foreground">Sem dados no período selecionado.</TableCell></TableRow>
                 ) : tabelaOrdenada.length ? (
                   tabelaOrdenada.map((it) => (
                     <TableRow key={it.itemId}>
