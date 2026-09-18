@@ -471,7 +471,7 @@ export function Insights() {
             title={comparativoMensal && visao === "oportunidade" ? "Detalhamento Mensal por Item" : "Detalhamento por Item"}
             description={
               comparativoMensal && visao === "oportunidade"
-                ? "Percentual de inconformidade de cada item em cada mês com monitorias."
+                ? "Matriz mensal: cada linha é um item e cada coluna é um mês. A intensidade da cor destaca maiores oportunidades."
                 : <>Conforme, Inconforme e Não se aplica com percentuais. Ordenado por {visao === "aderencia" ? "maior aderência" : "maior oportunidade"}.</>
             }
           />
@@ -482,7 +482,8 @@ export function Insights() {
               <TableHeader>
                 <TableRow>
                   {comparativoMensal && visao === "oportunidade" ? <>
-                    <TableHead>Mês</TableHead><TableHead className="min-w-[220px]">Item do Checklist</TableHead><TableHead className="text-right text-destructive">Inconforme</TableHead><TableHead className="text-right">Avaliações</TableHead>
+                    <TableHead className="sticky left-0 z-10 min-w-[240px] bg-card">Item do Checklist</TableHead>
+                    {oportunidadesMensais.data.map((mes) => <TableHead key={String(mes.mes)} className="min-w-[92px] text-center">{String(mes.mes)}</TableHead>)}
                   </> : <>
                     <TableHead className="min-w-[220px]">Item do Checklist</TableHead><TableHead>Carteira</TableHead><TableHead className="text-right text-chart-5">Conforme</TableHead><TableHead className="text-right text-destructive">Inconforme</TableHead><TableHead className="text-right">N.A.</TableHead><TableHead className="min-w-[140px]">Proporção</TableHead>
                   </>}
@@ -490,11 +491,16 @@ export function Insights() {
               </TableHeader>
               <TableBody>
                 {comparativoMensal && visao === "oportunidade" ? (
-                  oportunidadesMensais.detalhamento.length ? oportunidadesMensais.detalhamento.map((registro) => {
-                    const item = itens.find((itemAtual) => itemAtual.itemId === registro.itemId)
-                    const [ano, mes] = registro.mes.split("-")
-                    return <TableRow key={`${registro.mes}-${registro.itemId}`}><TableCell>{mes}/{ano}</TableCell><TableCell className="font-medium">{item?.texto ?? registro.itemId}</TableCell><TableCell className="text-right font-medium text-destructive">{registro.pctInconforme}%</TableCell><TableCell className="text-right text-muted-foreground">{registro.total}</TableCell></TableRow>
-                  }) : <TableRow><TableCell colSpan={4} className="py-10 text-center text-muted-foreground">Sem dados no período selecionado.</TableCell></TableRow>
+                  oportunidadesMensais.itens.length ? oportunidadesMensais.itens.map((item) => (
+                    <TableRow key={item.itemId}>
+                      <TableCell className="sticky left-0 z-10 bg-card font-medium" title={item.label}>{item.label}</TableCell>
+                      {oportunidadesMensais.data.map((mes) => {
+                        const valor = Number(mes[item.chave] ?? 0)
+                        const intensidade = Math.min(100, valor) / 100
+                        return <TableCell key={`${item.itemId}-${String(mes.mes)}`} className="p-2 text-center"><span className="inline-flex min-w-12 justify-center rounded-md px-2 py-1 text-xs font-semibold tabular-nums" style={{ backgroundColor: `color-mix(in oklab, var(--destructive) ${Math.max(8, intensidade * 72)}%, transparent)`, color: valor >= 50 ? "var(--destructive-foreground)" : "var(--destructive)" }}>{valor}%</span></TableCell>
+                      })}
+                    </TableRow>
+                  )) : <TableRow><TableCell colSpan={1} className="py-10 text-center text-muted-foreground">Sem dados no período selecionado.</TableCell></TableRow>
                 ) : tabelaOrdenada.length ? (
                   tabelaOrdenada.map((it) => (
                     <TableRow key={it.itemId}>
