@@ -213,6 +213,41 @@ export function TendenciaChart({
   )
 }
 
+/* ---------- Nota média mensal da carteira ---------- */
+export function NotaMensalChart({
+  data,
+}: {
+  data: { rotulo: string; nota: number; volume: number }[]
+}) {
+  const config = {
+    nota: { label: "Nota média da carteira", color: CHART_BLUE },
+  } satisfies ChartConfig
+  const { mostrarTodas } = useNotasGlobais()
+  const [mostrarLocal, setMostrarNotas] = useState(false)
+  const mostrarNotas = mostrarTodas || mostrarLocal
+
+  return (
+    <div className="relative">
+      <div className="absolute right-0 top-0 z-20">
+        <ToggleNotasButton mostrar={mostrarNotas} onToggle={() => setMostrarNotas((v) => !v)} />
+      </div>
+      <ChartContainer config={config} className="h-[260px] w-full">
+        <BarChart data={data} margin={{ left: -16, right: 8, top: 24 }}>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis dataKey="rotulo" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+          <YAxis domain={[0, 100]} tickLine={false} axisLine={false} fontSize={12} width={40} />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Bar dataKey="nota" fill="var(--color-nota)" radius={[4, 4, 0, 0]}>
+            {mostrarNotas && (
+              <LabelList dataKey="nota" position="top" offset={8} fontSize={12} fontWeight={600} fill="var(--foreground)" />
+            )}
+          </Bar>
+        </BarChart>
+      </ChartContainer>
+    </div>
+  )
+}
+
 /* ---------- Comparativo de volume vs nota (composto) ---------- */
 export function VolumeNotaChart({
   data,

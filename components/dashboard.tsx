@@ -28,6 +28,7 @@ import {
 import {
   TendenciaChart,
   VolumeNotaChart,
+  NotaMensalChart,
   FaixasPieChart,
   TabulacaoPieChart,
   ParetoChart,
@@ -225,6 +226,20 @@ export function Dashboard() {
           <Kpi icon={Activity} label="Inconformidades" value={String(k.totalInconf)} sub="total de apontamentos" interactive />
         </OperadoresResumoDialog>
       </div>
+
+      {comparativoMensal && (
+        <Card>
+          <CardHeader>
+            <CardTitleHint
+              title="Notas por Mês"
+              description="Nota média de toda a carteira em cada mês com monitorias"
+            />
+          </CardHeader>
+          <CardContent>
+            <ChartFullscreen title="Notas por Mês"><NotaMensalChart data={serie} /></ChartFullscreen>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tendência + comparativo */}
       <div className="grid gap-4 lg:grid-cols-2">
