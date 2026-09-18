@@ -301,6 +301,33 @@ export function ParetoMensalChart({ data }: { data: { mes: string; inconformidad
   )
 }
 
+/* ---------- Oportunidades por item e mês ---------- */
+export function OportunidadesMensaisChart({
+  data,
+  itens,
+}: {
+  data: { mes: string; [key: string]: string | number }[]
+  itens: { chave: string; label: string }[]
+}) {
+  const config = itens.reduce((acc, item, index) => {
+    acc[item.chave] = { label: item.label, color: PIE_COLORS[index % PIE_COLORS.length] }
+    return acc
+  }, {} as ChartConfig)
+  return (
+    <ChartContainer config={config} className="h-[360px] w-full">
+      <BarChart data={data} margin={{ top: 20, right: 12, left: 0, bottom: 8 }}>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis dataKey="mes" tickLine={false} axisLine={false} fontSize={12} />
+        <YAxis domain={[0, 100]} tickLine={false} axisLine={false} fontSize={12} width={40} unit="%" />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        {itens.map((item) => (
+          <Bar key={item.chave} dataKey={item.chave} fill={`var(--color-${item.chave})`} radius={[4, 4, 0, 0]} />
+        ))}
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
 /* ---------- Comparativo mensal de conformidade ---------- */
 export function ConformidadeMensalChart({ data }: { data: { mes: string; conforme: number; inconforme: number; na: number }[] }) {
   const config = {
