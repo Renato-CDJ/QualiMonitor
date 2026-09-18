@@ -9,6 +9,7 @@ import {
   TrendingUp,
   Eye,
   EyeOff,
+  BarChart3,
 } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { CardTitleHint } from "@/components/card-title-hint"
@@ -89,7 +90,8 @@ export function Dashboard() {
   const { monitorias, checklists, ready } = useQualityData()
   const { carteira: carteiraSelecionada } = useAuth()
   const { mostrarTodas, setMostrarTodas } = useNotasGlobais()
-  const periodo: Periodicidade = "diario"
+  const [comparativoMensal, setComparativoMensal] = useState(false)
+  const periodo: Periodicidade = comparativoMensal ? "mensal" : "diario"
   const [filtrosAnaliticos, setFiltrosAnaliticos] = useState<FiltrosAnaliticosState>({ carteira: carteiraSelecionada ?? "todas", checklistId: "todos", tabulacao: "todas" })
   const [dataInicio, setDataInicio] = useState<string>(() => {
     const hoje = new Date()
@@ -162,6 +164,17 @@ export function Dashboard() {
           </div>
           <div className="flex items-center gap-2">
           <Button
+            variant={comparativoMensal ? "default" : "outline"}
+            size="sm"
+            onClick={() => setComparativoMensal((ativo) => !ativo)}
+            className="gap-2"
+            aria-pressed={comparativoMensal}
+            title="Comparar resultados mês a mês"
+          >
+            <BarChart3 className="size-4" />
+            <span className="hidden sm:inline">Comparativo Mensal</span>
+          </Button>
+          <Button
             variant={mostrarTodas ? "default" : "outline"}
             size="sm"
             onClick={() => setMostrarTodas(!mostrarTodas)}
@@ -218,8 +231,8 @@ export function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitleHint
-              title="Evolução da Nota Média"
-              description={<span className="capitalize">Agrupado por {periodo}</span>}
+              title={comparativoMensal ? "Comparativo Mensal da Nota Média" : "Evolução da Nota Média"}
+              description={<span>{comparativoMensal ? "Cada ponto representa um mês" : `Agrupado por ${periodo}`}</span>}
             />
           </CardHeader>
           <CardContent>
@@ -229,8 +242,8 @@ export function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitleHint
-              title="Volume vs Nota"
-              description="Monitorias realizadas e nota média"
+              title={comparativoMensal ? "Comparativo Mensal: Volume vs Nota" : "Volume vs Nota"}
+              description={comparativoMensal ? "Barras por mês com volume e nota média" : "Monitorias realizadas e nota média"}
             />
           </CardHeader>
           <CardContent>
